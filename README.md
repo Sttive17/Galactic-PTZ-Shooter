@@ -1,6 +1,6 @@
 # Galactic PTZ
 
-**Simulador táctico 3D de cámara PTZ y combate orbital**, desarrollado con React, TypeScript y Three.js. Explora biomas, supera oleadas y niveles, y juega con teclado y ratón o con un mando compatible con la Gamepad API.
+**Simulador táctico 3D de cámara PTZ y combate orbital**, desarrollado con React, TypeScript y Three.js. Explora biomas, supera oleadas y niveles, y juega en computadora con teclado y ratón o mando, o en dispositivos táctiles con controles en pantalla.
 
 [![CI](https://github.com/Sttive17/Galactic-PTZ-Shooter/actions/workflows/ci.yml/badge.svg)](https://github.com/Sttive17/Galactic-PTZ-Shooter/actions/workflows/ci.yml)
 
@@ -8,7 +8,7 @@
 
 **Prueba el juego en el navegador:** [Abrir Galactic PTZ](https://sttive17.github.io/Galactic-PTZ-Shooter/)
 
-Funciona mejor en un navegador de escritorio con WebGL. Para activar el audio, haz clic en la página; para jugar con un mando, conéctalo antes de iniciar la partida.
+Requiere un navegador moderno con WebGL. En móviles, abre el enlace en el navegador y gira el dispositivo para una vista más amplia. Para activar el audio, toca o haz clic en la página; para jugar con un mando, conéctalo antes de iniciar la partida.
 
 ## Contenido
 
@@ -35,6 +35,7 @@ Funciona mejor en un navegador de escritorio con WebGL. Para activar el audio, h
 - Jefes, escudos, combos, puntuación y poderes.
 - Campaña de hasta 50 niveles, mapa estelar y modo de oleadas de entrenamiento.
 - Biomas y escenarios generados para los niveles.
+- Controles táctiles en pantalla para jugar desde teléfonos y tabletas.
 - Mando compatible con Gamepad API.
 - Ajustes de gráficos, audio, sensibilidad y accesibilidad.
 - Música y ambiente que cambian según el estado de la partida.
@@ -123,6 +124,22 @@ La interfaz muestra información de partida como salud, escudo, munición, puntu
 | Pausar / reanudar | `P` o `Escape` |
 
 El primer clic dentro del área de juego puede bloquear el puntero para permitir mirar alrededor. Pulsa `Escape` para liberar el puntero.
+
+### Pantallas táctiles
+
+| Acción | Control |
+|---|---|
+| Moverse | Joystick izquierdo |
+| Mirar | Joystick derecho |
+| Disparar | Mantener **FUEGO** |
+| Zoom táctico | Mantener **ZOOM** |
+| Saltar | **SALTAR** |
+| Recargar | **RECARGA** |
+| Correr | Mantener **CORRER** mientras te mueves |
+| Entrar al portal activo | **ENTRAR** |
+| Pausar / reanudar | **PAUSA** |
+
+Los controles aparecen durante una ronda activa cuando el navegador detecta una pantalla táctil. El rendimiento 3D depende de las capacidades del dispositivo; si la imagen va lenta, reduce la calidad gráfica en Ajustes.
 
 ### Mando Xbox / Gamepad API
 

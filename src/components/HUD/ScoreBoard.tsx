@@ -77,7 +77,7 @@ export const ScoreBoard = () => {
       initial={{ x: 24, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-      className="absolute top-12 right-5 flex flex-col gap-2 pointer-events-none z-10 w-52"
+      className="absolute top-12 right-5 flex flex-col gap-2 pointer-events-none z-10 w-52 max-lg:left-2 max-lg:right-auto max-lg:w-40 max-lg:scale-75 max-lg:origin-top-left"
     >
       {/* Card 1: Score & Compact Mission Readout */}
       <div className="bg-slate-950/50 backdrop-blur-md border border-white/10 rounded-lg px-3.5 py-2.5 relative">

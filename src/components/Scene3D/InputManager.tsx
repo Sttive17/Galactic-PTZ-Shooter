@@ -18,6 +18,22 @@ const tryStartReload = (state: GameState) => {
   playReload();
 };
 
+const tryJump = (state: GameState, airJumpsUsed: { current: number }) => {
+  const jetStacks = state.activePowers.JET_BOOTS || 0;
+  const jumpVelocity = JUMP_IMPULSE * (1 + jetStacks * 0.25);
+
+  if (SceneState.isGrounded) {
+    SceneState.playerVelocity.y = jumpVelocity;
+    SceneState.isGrounded = false;
+    airJumpsUsed.current = 0;
+    playSound('zoom');
+  } else if (airJumpsUsed.current < jetStacks) {
+    SceneState.playerVelocity.y = jumpVelocity;
+    airJumpsUsed.current += 1;
+    playSound('zoom');
+  }
+};
+
 const WALK_SPEED = 14;
 const SPRINT_SPEED = 22;
 const JUMP_IMPULSE = 9.5;
@@ -118,6 +134,7 @@ export const InputManager = () => {
     if (!active) {
       isLeftMouseDown.current = false;
       isRightMouseDown.current = false;
+      SceneState.resetTouchControls();
       if (document.pointerLockElement) {
         document.exitPointerLock?.();
       }
@@ -134,19 +151,19 @@ export const InputManager = () => {
       playSound('zoom');
     };
 
-    const tryJump = (state: GameState) => {
-      const jetStacks = state.activePowers.JET_BOOTS || 0;
-      const jumpVelocity = JUMP_IMPULSE * (1 + jetStacks * 0.25);
+    const handleTouchJump = () => {
+      const state = useGameStore.getState();
+      if (canPlayFPS(state)) {
+        initAudio();
+        tryJump(state, airJumpsUsedRef);
+      }
+    };
 
-      if (SceneState.isGrounded) {
-        SceneState.playerVelocity.y = jumpVelocity;
-        SceneState.isGrounded = false;
-        airJumpsUsedRef.current = 0;
-        playSound('zoom');
-      } else if (airJumpsUsedRef.current < jetStacks) {
-        SceneState.playerVelocity.y = jumpVelocity;
-        airJumpsUsedRef.current += 1;
-        playSound('zoom');
+    const handleTouchReload = () => {
+      const state = useGameStore.getState();
+      if (canPlayFPS(state)) {
+        initAudio();
+        tryStartReload(state);
       }
     };
 
@@ -164,7 +181,7 @@ export const InputManager = () => {
         if (canPlayFPS(state)) {
           e.preventDefault();
           if (!e.repeat) {
-            tryJump(state);
+            tryJump(state, airJumpsUsedRef);
           }
         }
       }
@@ -298,6 +315,8 @@ export const InputManager = () => {
     };
 
     window.addEventListener('ptz-zoom-step', handleZoomStep);
+    window.addEventListener('touch-jump', handleTouchJump);
+    window.addEventListener('touch-reload', handleTouchReload);
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     window.addEventListener('mousedown', handleMouseDown);
@@ -311,6 +330,8 @@ export const InputManager = () => {
 
     return () => {
       window.removeEventListener('ptz-zoom-step', handleZoomStep);
+      window.removeEventListener('touch-jump', handleTouchJump);
+      window.removeEventListener('touch-reload', handleTouchReload);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('mousedown', handleMouseDown);
@@ -347,6 +368,7 @@ export const InputManager = () => {
     let isSprinting = keys.current.shift;
     let ltValue = 0;
     let rtValue = 0;
+    const touchControls = SceneState.touchControls;
 
     // 1. Gamepad FPS Dual-Stick Logic (LS = Walk, RS = Aim, A = Jump, LT = Zoom, RT = Shoot)
     const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -419,6 +441,13 @@ export const InputManager = () => {
       // L3 (10) -> Sprint
       if (gp.buttons[10]?.pressed) isSprinting = true;
     }
+
+    moveRight += touchControls.moveX;
+    moveForward -= touchControls.moveY;
+    panDelta += touchControls.lookX * GAME_CONFIG.camera.panSpeed * 1.4 * clampedDelta * finalSensitivity;
+    tiltDelta -= touchControls.lookY * GAME_CONFIG.camera.tiltSpeed * 1.4 * clampedDelta * finalSensitivity * ySign;
+    isSprinting = isSprinting || touchControls.sprint;
+    if (touchControls.zoom) ltValue = 1;
 
     // Advance active magazine reload progress
     if (SceneState.isReloading) {
@@ -601,7 +630,7 @@ export const InputManager = () => {
     SceneState.moveSpeedNormalized = Math.min(1, horizSpeed / WALK_SPEED);
 
     // 4. Continuous Rapid-Fire when holding Left Click or Gamepad RT
-    const wantsFire = isLeftMouseDown.current || rtValue > 0.5;
+    const wantsFire = isLeftMouseDown.current || rtValue > 0.5 || touchControls.fire;
     if (wantsFire) {
       attemptFire(state, lastFireRef, registerShot);
     }

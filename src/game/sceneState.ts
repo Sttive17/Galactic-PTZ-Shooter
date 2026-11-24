@@ -12,6 +12,16 @@ export interface AllyRadarEntry {
   hasTarget: boolean;
 }
 
+export interface TouchControlsState {
+  moveX: number;
+  moveY: number;
+  lookX: number;
+  lookY: number;
+  fire: boolean;
+  zoom: boolean;
+  sprint: boolean;
+}
+
 export const PLAYER_EYE_HEIGHT = 2.0;
 export const PLAYER_START_POS = new THREE.Vector3(0, PLAYER_EYE_HEIGHT, 14);
 
@@ -21,6 +31,15 @@ export const SceneState = {
   targets: [] as Target[],
   projectiles: [] as Projectile[],
   colliders: [] as MapBox[],
+  touchControls: {
+    moveX: 0,
+    moveY: 0,
+    lookX: 0,
+    lookY: 0,
+    fire: false,
+    zoom: false,
+    sprint: false,
+  } as TouchControlsState,
 
   // First-person player transform & physics state
   playerPosition: PLAYER_START_POS.clone(),
@@ -39,6 +58,15 @@ export const SceneState = {
   reloadProgress: 0,
   reloadDuration: 1.35,
   portalDistance: 0,
+  resetTouchControls: () => {
+    SceneState.touchControls.moveX = 0;
+    SceneState.touchControls.moveY = 0;
+    SceneState.touchControls.lookX = 0;
+    SceneState.touchControls.lookY = 0;
+    SceneState.touchControls.fire = false;
+    SceneState.touchControls.zoom = false;
+    SceneState.touchControls.sprint = false;
+  },
   allies: [0, 1, 2].map((id) => ({
     id,
     active: false,
@@ -75,6 +103,7 @@ export const SceneState = {
     SceneState.isReloading = false;
     SceneState.reloadProgress = 0;
     SceneState.portalDistance = 24;
+    SceneState.resetTouchControls();
     SceneState.resetAllies();
   },
   

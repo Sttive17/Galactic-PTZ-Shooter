@@ -16,23 +16,23 @@ export const Crosshair = () => {
         className="relative"
       >
         {/* Outer Tech Ring */}
-        <div className={`w-40 h-40 border-2 border-dashed rounded-full transition-colors duration-300 ${isTargeted ? 'border-red-500/50 animate-[spin_4s_linear_infinite]' : 'border-cyan-500/20 animate-[spin_10s_linear_infinite]'}`} />
+        <div className={`w-40 h-40 max-lg:w-28 max-lg:h-28 border-2 border-dashed rounded-full transition-colors duration-300 ${isTargeted ? 'border-red-500/50 animate-[spin_4s_linear_infinite]' : 'border-cyan-500/20 animate-[spin_10s_linear_infinite]'}`} />
         
         {/* Inner Tech Ring with ticks */}
-        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border-t-2 border-b-2 ${isTargeted ? 'border-red-500/80' : 'border-cyan-500/40'} rounded-full opacity-60 transition-colors duration-200`} />
+        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 max-lg:w-14 max-lg:h-14 border-t-2 border-b-2 ${isTargeted ? 'border-red-500/80' : 'border-cyan-500/40'} rounded-full opacity-60 transition-colors duration-200`} />
         
         {/* Center Dot */}
         <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-1 ${isTargeted ? 'bg-red-500' : 'bg-cyan-400'} rounded-full opacity-100 shadow-[0_0_10px_rgba(34,211,238,0.8)]`} />
         
         {/* Precision Crosshair Lines */}
-        <div className={`absolute top-1/2 -left-20 w-16 h-[1px] -translate-y-1/2 ${isTargeted ? 'bg-red-500' : 'bg-cyan-500/80'}`}>
+        <div className={`absolute top-1/2 -left-20 max-lg:-left-14 w-16 max-lg:w-10 h-[1px] -translate-y-1/2 ${isTargeted ? 'bg-red-500' : 'bg-cyan-500/80'}`}>
            <div className={`absolute top-0 right-0 w-1 h-1 -translate-y-[1.5px] ${isTargeted ? 'bg-red-500' : 'bg-cyan-400'}`} />
         </div>
-        <div className={`absolute top-1/2 -right-20 w-16 h-[1px] -translate-y-1/2 ${isTargeted ? 'bg-red-500' : 'bg-cyan-500/80'}`}>
+        <div className={`absolute top-1/2 -right-20 max-lg:-right-14 w-16 max-lg:w-10 h-[1px] -translate-y-1/2 ${isTargeted ? 'bg-red-500' : 'bg-cyan-500/80'}`}>
            <div className={`absolute top-0 left-0 w-1 h-1 -translate-y-[1.5px] ${isTargeted ? 'bg-red-500' : 'bg-cyan-400'}`} />
         </div>
-        <div className={`absolute -top-20 left-1/2 w-[1px] h-16 -translate-x-1/2 ${isTargeted ? 'bg-red-500' : 'bg-cyan-500/80'}`} />
-        <div className={`absolute -bottom-20 left-1/2 w-[1px] h-16 -translate-x-1/2 ${isTargeted ? 'bg-red-500' : 'bg-cyan-500/80'}`} />
+        <div className={`absolute -top-20 max-lg:-top-14 left-1/2 w-[1px] h-16 max-lg:h-10 -translate-x-1/2 ${isTargeted ? 'bg-red-500' : 'bg-cyan-500/80'}`} />
+        <div className={`absolute -bottom-20 max-lg:-bottom-14 left-1/2 w-[1px] h-16 max-lg:h-10 -translate-x-1/2 ${isTargeted ? 'bg-red-500' : 'bg-cyan-500/80'}`} />
 
       </motion.div>
 
@@ -43,7 +43,7 @@ export const Crosshair = () => {
             initial={{ opacity: 0, x: 20, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="absolute top-1/2 left-1/2 ml-24 -mt-16 w-48 glass-panel tech-border bg-red-950/80 p-3 text-[10px] border border-red-900 shadow-[0_0_20px_rgba(220,38,38,0.3)] text-red-100"
+            className="absolute top-1/2 left-1/2 ml-24 max-lg:ml-16 -mt-16 w-48 max-lg:w-40 glass-panel tech-border bg-red-950/80 p-3 max-lg:p-2 text-[10px] border border-red-900 shadow-[0_0_20px_rgba(220,38,38,0.3)] text-red-100"
           >
             <div className="font-bold border-b border-red-500/40 pb-1 mb-2 flex items-center justify-between text-red-400 tracking-widest">
               <div className="flex items-center gap-1.5">

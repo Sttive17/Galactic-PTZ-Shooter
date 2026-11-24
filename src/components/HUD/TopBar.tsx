@@ -37,7 +37,7 @@ export const TopBar = () => {
           : { cls: 'border-emerald-400/35 text-emerald-300 bg-emerald-950/35', label: `OLEADA ${currentRound}` };
 
   return (
-    <div className="absolute top-0 left-0 right-0 h-10 bg-slate-950/45 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-5 z-20 pointer-events-none">
+    <div className="absolute top-0 left-0 right-0 h-10 bg-slate-950/45 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-2 lg:px-5 z-20 pointer-events-none">
       {/* Left - Brand */}
       <div className="flex items-center gap-2">
         <IconBadge accent="cyan" size="sm" shape="hex">
@@ -75,7 +75,7 @@ export const TopBar = () => {
       </div>
 
       {/* Right - Input Link & Compact Mute Button */}
-      <div className="flex items-center gap-3 text-[10px] font-mono tracking-wider">
+      <div className="flex items-center gap-1.5 lg:gap-3 text-[10px] font-mono tracking-wider">
         <div className="flex items-center gap-1.5">
           <OrbitalLinkIcon
             size={14}

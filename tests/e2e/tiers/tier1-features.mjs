@@ -47,6 +47,35 @@ import {
 } from '../helpers/assertions.mjs';
 
 export const tests = [
+  {
+    name: 't1_mobile_touch_controls_render_and_fire',
+    async run({ page, baseUrl }) {
+      await page.addInitScript(() => {
+        Object.defineProperty(navigator, 'maxTouchPoints', { configurable: true, value: 1 });
+      });
+      await page.setViewportSize({ width: 390, height: 844 });
+      await gotoApp(page, baseUrl);
+      await enterCombatMode(page, 'CAMPAÑA');
+
+      const moveStick = page.getByRole('group', { name: 'MOVER' });
+      const lookStick = page.getByRole('group', { name: 'MIRAR' });
+      const fireButton = page.getByRole('button', { name: 'FUEGO' });
+      await assert(await moveStick.isVisible(), 'Mobile movement joystick must be visible');
+      await assert(await lookStick.isVisible(), 'Mobile look joystick must be visible');
+      await assert(await fireButton.isVisible(), 'Mobile fire button must be visible');
+
+      const fireBox = await fireButton.boundingBox();
+      assert(fireBox !== null, 'Mobile fire button must have a clickable area');
+      const initialAmmo = (await getAmmoState(page)).current;
+      await page.mouse.move(fireBox.x + fireBox.width / 2, fireBox.y + fireBox.height / 2);
+      await page.mouse.down();
+      await page.waitForTimeout(450);
+      await page.mouse.up();
+
+      const remainingAmmo = (await getAmmoState(page)).current;
+      assert(remainingAmmo < initialAmmo, 'Holding the mobile fire button must consume ammo');
+    },
+  },
   // ==================== R1: Ammo HUD & Magazine (6 tests) ====================
   {
     name: 't1_r1_ammo_hud_visible_bottom_right_50_infinity',

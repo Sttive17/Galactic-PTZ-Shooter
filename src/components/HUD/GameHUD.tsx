@@ -14,6 +14,7 @@ import { BossBar } from './BossBar';
 import { FpsCounter } from './FpsCounter';
 import { WaveBanner } from './WaveBanner';
 import { PortalCinematic } from './PortalCinematic';
+import { TouchControls } from './TouchControls';
 import { AnimatePresence } from 'framer-motion';
 
 export const GameHUD = () => {
@@ -58,6 +59,7 @@ export const GameHUD = () => {
             <PortalCinematic />
             <RoundTransition />
             <PauseMenu />
+            <TouchControls />
           </div>
         )}
 

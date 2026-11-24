@@ -3,7 +3,7 @@ import { GameHUD } from './components/HUD/GameHUD';
 
 function App() {
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-black text-white">
+    <div className="relative h-screen w-full overflow-hidden bg-black text-white [height:100dvh]">
       <GameEngine />
       <GameHUD />
     </div>

@@ -124,7 +124,7 @@ export const AmmoHUD = () => {
       initial={{ x: 24, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-      className="absolute bottom-4 right-5 pointer-events-none z-10 w-52"
+      className="absolute bottom-4 right-5 pointer-events-none z-10 w-52 max-lg:top-12 max-lg:right-2 max-lg:bottom-auto max-lg:w-40 max-lg:scale-75 max-lg:origin-top-right"
     >
       <div
         className={`bg-slate-950/55 backdrop-blur-md border rounded-lg px-3.5 py-2.5 flex flex-col gap-1.5 transition-colors duration-150 ${borderClass}`}
