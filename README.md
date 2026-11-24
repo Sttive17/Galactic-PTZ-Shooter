@@ -2,7 +2,7 @@
 
 **Simulador táctico 3D de cámara PTZ y combate orbital**, desarrollado con React, TypeScript y Three.js. Explora biomas, supera oleadas y niveles, y juega con teclado y ratón o con un mando compatible con la Gamepad API.
 
-[![CI](https://github.com/Sttive17/Proyecto-camara-con-xbox/actions/workflows/ci.yml/badge.svg)](https://github.com/Sttive17/Proyecto-camara-con-xbox/actions/workflows/ci.yml)
+[![CI](https://github.com/Sttive17/Galactic-PTZ-Shooter/actions/workflows/ci.yml/badge.svg)](https://github.com/Sttive17/Galactic-PTZ-Shooter/actions/workflows/ci.yml)
 
 ## Contenido
 
@@ -44,8 +44,8 @@
 Se requiere Node.js **20.19+** o **22.12+**, npm y un navegador moderno con WebGL.
 
 ```bash
-git clone https://github.com/Sttive17/Proyecto-camara-con-xbox.git
-cd Proyecto-camara-con-xbox
+git clone https://github.com/Sttive17/Galactic-PTZ-Shooter.git
+cd Galactic-PTZ-Shooter
 npm install
 npm run dev
 ```
