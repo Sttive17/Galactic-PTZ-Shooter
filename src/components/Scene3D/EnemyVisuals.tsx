@@ -38,7 +38,7 @@ const StrikerHull = ({ isTargeted, coreRef, ring1Ref, ring2Ref }: BossHullProps)
   const accentColor = isTargeted ? '#fde047' : '#fb923c';
   return (
     <>
-      <ModelCraft modelKey="CRAFT_BOSS" scale={1.85} rotation={[0, Math.PI, 0]} position={[0, -0.15, 0]} />
+      <ModelCraft modelKey="BOSS_RACER" scale={2.3} rotation={[0, Math.PI, 0]} position={[0, -0.14, 0]} />
       <mesh ref={coreRef}>
         <octahedronGeometry args={[0.4, 1]} />
         <meshPhysicalMaterial
@@ -86,7 +86,7 @@ const AegisHull = ({ isTargeted, isShielded, coreRef, ring1Ref, ring2Ref }: Boss
   const coreColor = isTargeted ? '#ff3b5c' : '#06b6d4';
   return (
     <>
-      <ModelCraft modelKey="CRAFT_BOSS" scale={2.0} rotation={[0, Math.PI, 0]} position={[0, -0.16, 0]} />
+      <ModelCraft modelKey="BOSS_TITAN" scale={2.4} rotation={[0, Math.PI, 0]} position={[0, -0.16, 0]} />
       <mesh ref={coreRef}>
         <icosahedronGeometry args={[0.38, 1]} />
         <meshPhysicalMaterial
@@ -160,7 +160,7 @@ const StormHull = ({ isTargeted, coreRef, ring1Ref, ring2Ref }: BossHullProps) =
   ];
   return (
     <>
-      <ModelCraft modelKey="CRAFT_BOSS" scale={2.1} rotation={[0, Math.PI, 0]} position={[0, -0.16, 0]} />
+      <ModelCraft modelKey="BOSS_MINER" scale={2.4} rotation={[0, Math.PI, 0]} position={[0, -0.15, 0]} />
       <mesh ref={coreRef}>
         <icosahedronGeometry args={[0.42, 0]} />
         <meshPhysicalMaterial
@@ -254,7 +254,8 @@ const ArtilleryBossHull = ({ isTargeted, coreRef, ring1Ref, ring2Ref }: BossHull
   const accentColor = isTargeted ? '#fde047' : '#fb923c';
   return (
     <>
-      <ModelCraft modelKey="CRAFT_TANK" scale={2.35} rotation={[0, Math.PI, 0]} position={[0, -0.15, 0]} />
+      <ModelCraft modelKey="CRAFT_TANK" scale={2.5} rotation={[0, Math.PI, 0]} position={[0, -0.16, 0]} />
+      <ModelCraft modelKey="TURRET_HEAVY" scale={1.2} rotation={[0, Math.PI, 0]} position={[0, 0.38, 0]} />
       <mesh ref={coreRef}>
         <sphereGeometry args={[0.42, 16, 16]} />
         <meshPhysicalMaterial
@@ -301,6 +302,7 @@ const HydraBossHull = ({ isTargeted, isShielded, coreRef, ring1Ref, ring2Ref, ri
   const coreColor = isTargeted ? '#ff3b5c' : '#0ea5e9';
   return (
     <>
+      <ModelCraft modelKey="BOSS_VORTEX" scale={2.2} rotation={[0, Math.PI, 0]} position={[0, -0.14, 0]} />
       <mesh ref={coreRef} scale={[0.8, 1.25, 0.8]}>
         <dodecahedronGeometry args={[0.42, 0]} />
         <meshPhysicalMaterial
@@ -362,6 +364,7 @@ const VortexBossHull = ({ isTargeted, coreRef, ring1Ref, ring2Ref, ring3Ref }: B
   const coreColor = isTargeted ? '#ff3b5c' : '#e879f9';
   return (
     <>
+      <ModelCraft modelKey="BOSS_VORTEX" scale={2.5} rotation={[0, Math.PI, 0]} position={[0, -0.14, 0]} />
       <mesh ref={coreRef}>
         <icosahedronGeometry args={[0.45, 0]} />
         <meshPhysicalMaterial
@@ -417,6 +420,7 @@ const OmegaHull = ({ isTargeted, isShielded, coreRef, ring1Ref, ring2Ref, ring3R
   ];
   return (
     <>
+      <ModelCraft modelKey="BOSS_OMEGA" scale={3.0} rotation={[0, Math.PI, 0]} position={[0, -0.16, 0]} />
       <mesh ref={coreRef}>
         <dodecahedronGeometry args={[0.46, 0]} />
         <meshPhysicalMaterial

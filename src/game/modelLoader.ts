@@ -3,14 +3,22 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 export const MODEL_PATHS = {
-  // Enemies
+  // Enemies & Craft Archetypes
   CRAFT_SCOUT: 'models/enemies/craft_scout.glb',
   CRAFT_KAMIKAZE: 'models/enemies/craft_kamikaze.glb',
   CRAFT_SNIPER: 'models/enemies/craft_sniper.glb',
   CRAFT_TANK: 'models/enemies/craft_tank.glb',
   CRAFT_BOSS: 'models/enemies/craft_boss.glb',
 
-  // Environment props & scenery
+  // Dedicated Boss Flagships & Super-Weapons
+  BOSS_OMEGA: 'models/enemies/boss_omega.glb',
+  BOSS_VORTEX: 'models/enemies/boss_vortex.glb',
+  BOSS_TITAN: 'models/enemies/boss_titan.glb',
+  BOSS_RACER: 'models/enemies/boss_racer.glb',
+  BOSS_MINER: 'models/enemies/boss_miner.glb',
+  TURRET_HEAVY: 'models/enemies/turret_heavy.glb',
+
+  // Standard Environment Props
   CONTAINER: 'models/props/container.glb',
   CONTAINER_TALL: 'models/props/container_tall.glb',
   GENERATOR: 'models/props/generator.glb',
@@ -19,6 +27,27 @@ export const MODEL_PATHS = {
   HOLOGRAM_TABLE: 'models/props/hologram_table.glb',
   COMPUTER_TERMINAL: 'models/props/computer_terminal.glb',
   METEOR: 'models/props/meteor.glb',
+
+  // Trees & Nature Biome (Campo Abierto Terrestre)
+  TREE_PINE: 'models/props/tree_pine.glb',
+  TREE_OAK: 'models/props/tree_oak.glb',
+  TREE_PALM: 'models/props/tree_palm.glb',
+  TREE_DEFAULT: 'models/props/tree_default.glb',
+  PLANT_BUSH: 'models/props/plant_bush.glb',
+  ROCK_TALL: 'models/props/rock_tall.glb',
+  ROVER: 'models/props/rover.glb',
+
+  // Rocket & Spaceport Biome (Zona de Lanzamiento)
+  ROCKET_BASE: 'models/props/rocket_base.glb',
+  ROCKET_FUEL: 'models/props/rocket_fuel.glb',
+  ROCKET_TOP: 'models/props/rocket_top.glb',
+  ROCKET_FINS: 'models/props/rocket_fins.glb',
+  HANGAR: 'models/props/hangar.glb',
+  SATELLITE_LARGE: 'models/props/satellite_large.glb',
+
+  // Crystals & Deep Space Biome (Arena Galáctica / Nebulosa)
+  CRYSTAL_LARGE: 'models/props/crystal_large.glb',
+  CRYSTAL_CLUSTER: 'models/props/crystal_cluster.glb',
 } as const;
 
 export type ModelKey = keyof typeof MODEL_PATHS;

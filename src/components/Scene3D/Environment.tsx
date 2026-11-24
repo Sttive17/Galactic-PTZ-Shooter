@@ -892,27 +892,39 @@ const EarthOpenFieldWorld = ({ theme }: { theme: MapTheme }) => {
         </mesh>
       ))}
 
-      {/* 18 Stylized Pine Trees Around Valley Meadow */}
-      {EARTH_TREES.map((tr, i) => (
-        <group key={`tree-${i}`} position={[tr.x, 0, tr.z]} scale={tr.scale}>
-          <mesh position={[0, 2.2, 0]} castShadow>
-            <cylinderGeometry args={[0.42, 0.6, 4.4, 7]} />
-            <meshStandardMaterial color="#5c4033" roughness={0.9} />
-          </mesh>
-          <mesh position={[0, 5.4, 0]} castShadow>
-            <coneGeometry args={[2.8, 4.6, 7]} />
-            <meshStandardMaterial color="#166534" roughness={0.85} />
-          </mesh>
-          <mesh position={[0, 8.2, 0]} castShadow>
-            <coneGeometry args={[2.2, 4.2, 7]} />
-            <meshStandardMaterial color="#15803d" roughness={0.85} />
-          </mesh>
-          <mesh position={[0, 10.6, 0]} castShadow>
-            <coneGeometry args={[1.5, 3.4, 7]} />
-            <meshStandardMaterial color="#22c55e" roughness={0.82} />
-          </mesh>
-        </group>
-      ))}
+      {/* 18 High-Detail 3D Forest Trees & Foliage Around Valley Meadow */}
+      {EARTH_TREES.map((tr, i) => {
+        const treeKeys: ModelKey[] = ['TREE_PINE', 'TREE_OAK', 'TREE_PALM', 'TREE_DEFAULT'];
+        const mKey = treeKeys[i % treeKeys.length];
+        return (
+          <group key={`tree-${i}`} position={[tr.x, 0, tr.z]}>
+            <ModelProp
+              modelKey={mKey}
+              scale={tr.scale * 3.4}
+              position={[0, 0, 0]}
+              rotation={[0, (i * 1.3) % (Math.PI * 2), 0]}
+            />
+            {/* Ambient lush foliage bushes at base of trees */}
+            <ModelProp
+              modelKey="PLANT_BUSH"
+              scale={tr.scale * 1.6}
+              position={[1.4, 0, 0.8]}
+              rotation={[0, i * 0.7, 0]}
+            />
+          </group>
+        );
+      })}
+
+      {/* Planetary Surface Exploration Rover */}
+      <group position={[24, 0.05, -12]} rotation={[0, -0.6, 0]}>
+        <ModelProp modelKey="ROVER" scale={2.4} position={[0, 0, 0]} />
+      </group>
+
+      {/* Natural Tall Rock Pillars & Outcroppings */}
+      <group>
+        <ModelProp modelKey="ROCK_TALL" scale={3.2} position={[-42, 0, -22]} rotation={[0, 0.4, 0]} />
+        <ModelProp modelKey="ROCK_TALL" scale={2.8} position={[44, 0, -18]} rotation={[0, -0.8, 0]} />
+      </group>
 
       {/* 4 Spinning Green-Energy Wind Turbines */}
       {EARTH_TURBINES.map((wt, i) => (
@@ -946,36 +958,8 @@ const EarthOpenFieldWorld = ({ theme }: { theme: MapTheme }) => {
       {/* 6 Bioluminescent Alien Quartz Crystal Formations */}
       {EARTH_CRYSTALS.map((cry, i) => (
         <group key={`crystal-${i}`} position={[cry.x, 0, cry.z]} rotation={[0, cry.rotY, 0]}>
-          <mesh position={[0, 1.4, 0]}>
-            <coneGeometry args={[0.55, 2.8, 5]} />
-            <meshPhysicalMaterial
-              color={theme.primaryGlow}
-              emissive={theme.primaryGlow}
-              emissiveIntensity={1.8}
-              roughness={0.15}
-              metalness={0.2}
-              toneMapped={false}
-            />
-          </mesh>
-          <mesh position={[0.4, 0.9, 0.2]} rotation={[0.2, 0.4, -0.2]}>
-            <coneGeometry args={[0.38, 1.9, 5]} />
-            <meshPhysicalMaterial
-              color={theme.secondaryGlow}
-              emissive={theme.secondaryGlow}
-              emissiveIntensity={1.6}
-              roughness={0.15}
-              metalness={0.2}
-              toneMapped={false}
-            />
-          </mesh>
-          <mesh position={[-0.3, 0.7, -0.2]} rotation={[-0.15, -0.3, 0.25]}>
-            <coneGeometry args={[0.32, 1.5, 5]} />
-            <meshBasicMaterial color={theme.primaryGlow} toneMapped={false} />
-          </mesh>
-          <mesh position={[0, 0.25, 0]}>
-            <sphereGeometry args={[0.9, 8, 6]} />
-            <meshStandardMaterial color="#1e293b" roughness={0.9} />
-          </mesh>
+          <ModelProp modelKey="CRYSTAL_CLUSTER" scale={2.2} position={[0, 0, 0]} />
+          <pointLight color={theme.primaryGlow} intensity={1.8} distance={14} decay={2} position={[0, 1.8, 0]} />
         </group>
       ))}
 
@@ -1099,36 +1083,15 @@ const RocketLaunchWorld = ({ theme, wallMat, crateMat }: { theme: MapTheme; wall
             </mesh>
           </group>
 
-          {/* Main Space Rocket Body (height ~56m) */}
+          {/* Main Space Rocket Assembly Body */}
           <group position={[1.8, 3, 0]}>
-            {/* Main White-Titanium Core Stage */}
-            <mesh position={[0, 19, 0]}>
-              <cylinderGeometry args={[2.5, 2.7, 38, 16]} />
-              <meshStandardMaterial color="#f8fafc" metalness={0.35} roughness={0.3} />
-            </mesh>
-            {/* Dark Interstage Band */}
-            <mesh position={[0, 34, 0]}>
-              <cylinderGeometry args={[2.55, 2.55, 3.2, 16]} />
-              <meshStandardMaterial color="#0f172a" metalness={0.5} roughness={0.4} />
-            </mesh>
-            {/* Upper Payload Fairing & Nose Cone */}
-            <mesh position={[0, 44.5, 0]}>
-              <coneGeometry args={[2.55, 13, 16]} />
-              <meshStandardMaterial color="#e2e8f0" metalness={0.35} roughness={0.28} />
-            </mesh>
-            {/* Twin Orange Solid Rocket Boosters */}
-            {[-3.4, 3.4].map((bx, bIdx) => (
-              <group key={bIdx} position={[bx, 0, 0]}>
-                <mesh position={[0, 13, 0]}>
-                  <cylinderGeometry args={[1.25, 1.35, 26, 12]} />
-                  <meshStandardMaterial color="#ea580c" metalness={0.3} roughness={0.45} />
-                </mesh>
-                <mesh position={[0, 28.5, 0]}>
-                  <coneGeometry args={[1.25, 5, 12]} />
-                  <meshStandardMaterial color="#f8fafc" metalness={0.35} roughness={0.3} />
-                </mesh>
-              </group>
-            ))}
+            {/* 3D Modular Assembled Heavy Launch Rocket */}
+            <ModelProp modelKey="ROCKET_BASE" scale={4.4} position={[0, 4.2, 0]} />
+            <ModelProp modelKey="ROCKET_FINS" scale={4.4} position={[0, 4.2, 0]} />
+            <ModelProp modelKey="ROCKET_FUEL" scale={4.4} position={[0, 16.2, 0]} />
+            <ModelProp modelKey="ROCKET_FUEL" scale={4.1} position={[0, 25.4, 0]} />
+            <ModelProp modelKey="ROCKET_TOP" scale={4.4} position={[0, 34.6, 0]} />
+
             {/* Glowing Ignition Engine Bells */}
             <mesh position={[0, 0.8, 0]}>
               <cylinderGeometry args={[1.6, 2.3, 1.6, 12]} />
@@ -1156,6 +1119,23 @@ const RocketLaunchWorld = ({ theme, wallMat, crateMat }: { theme: MapTheme; wall
           </group>
         </group>
       ))}
+
+      {/* 3D Giant Spacecraft Assembly Hangars */}
+      <group>
+        <ModelProp modelKey="HANGAR" scale={5.5} position={[-52, 0, -44]} rotation={[0, 0.42, 0]} />
+        <ModelProp modelKey="HANGAR" scale={5.5} position={[52, 0, -44]} rotation={[0, -0.42, 0]} />
+      </group>
+
+      {/* 3D Deep-Space Telemetry Radar Tracking Dishes */}
+      <group>
+        <ModelProp modelKey="SATELLITE_LARGE" scale={3.6} position={[-42, 0, -16]} rotation={[0, 0.55, 0]} />
+        <ModelProp modelKey="SATELLITE_LARGE" scale={3.6} position={[42, 0, -16]} rotation={[0, -0.55, 0]} />
+      </group>
+
+      {/* Surface Logistics Support Rover */}
+      <group position={[-16, 0.05, -6]} rotation={[0, 0.35, 0]}>
+        <ModelProp modelKey="ROVER" scale={2.4} position={[0, 0, 0]} />
+      </group>
 
       {/* 2 Spherical Cryogenic LOX Storage Tanks & Industrial Pipeline Conduits */}
       {[-52, 52].map((tx, idx) => (
@@ -1391,6 +1371,17 @@ const OrbitalStratosphereWorld = ({
           </mesh>
         </group>
       ))}
+
+      {/* 3D Deep Space Orbital Telemetry Tracking Arrays */}
+      <group>
+        <ModelProp modelKey="SATELLITE_LARGE" scale={3.4} position={[-52, 14, -48]} rotation={[0.4, 0.75, 0]} />
+        <ModelProp modelKey="SATELLITE_LARGE" scale={3.4} position={[52, 14, -48]} rotation={[0.4, -0.75, 0]} />
+      </group>
+
+      {/* Heavy Orbital Carrier Cruising in High Orbit */}
+      <group position={[0, 48, -120]} rotation={[0.1, 0, 0]}>
+        <ModelProp modelKey="BOSS_TITAN" scale={4.5} position={[0, 0, 0]} />
+      </group>
     </group>
   );
 };
@@ -2533,10 +2524,14 @@ export const Environment = () => {
             <ModelProp modelKey="COMPUTER_TERMINAL" scale={1.2} position={[3.6, 0.5, 0.4]} rotation={[0, -0.45, 0]} />
           </group>
 
-          {/* Drifting Cosmic Asteroid Formations */}
+          {/* Drifting Cosmic Asteroid Formations & Giant Extraterrestrial Crystals */}
           <group>
             <ModelProp modelKey="METEOR" scale={3.6} position={[44, 18, -48]} rotation={[0.4, 0.8, 0.2]} />
             <ModelProp modelKey="METEOR" scale={4.4} position={[-48, 24, -42]} rotation={[-0.3, 1.2, 0.5]} />
+            <ModelProp modelKey="CRYSTAL_LARGE" scale={3.8} position={[-36, 0.2, -32]} rotation={[0.1, 0.6, 0]} />
+            <ModelProp modelKey="CRYSTAL_LARGE" scale={3.4} position={[38, 0.2, -30]} rotation={[-0.1, -0.7, 0]} />
+            <ModelProp modelKey="CRYSTAL_CLUSTER" scale={2.8} position={[-24, 0.2, -18]} rotation={[0, 0.3, 0]} />
+            <ModelProp modelKey="CRYSTAL_CLUSTER" scale={2.8} position={[26, 0.2, -16]} rotation={[0, -0.4, 0]} />
           </group>
 
           {/* 4 Perimeter Holographic Status Pylons */}
