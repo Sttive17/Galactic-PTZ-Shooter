@@ -217,16 +217,20 @@ async function main() {
   process.once('SIGTERM', () => void handleSignal('SIGTERM'));
 
   try {
-    const launchArgs =
-      process.env.E2E_GPU === '1'
-        ? ['--enable-webgl', '--ignore-gpu-blocklist']
+    const launchArgs = [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--enable-webgl',
+      '--ignore-gpu-blocklist',
+      ...(process.env.E2E_GPU === '1'
+        ? []
         : [
-            '--enable-webgl',
             '--use-gl=angle',
             '--use-angle=swiftshader',
             '--enable-unsafe-swiftshader',
-            '--ignore-gpu-blocklist',
-          ];
+          ]),
+    ];
 
     browser = await chromium.launch({
       executablePath,
