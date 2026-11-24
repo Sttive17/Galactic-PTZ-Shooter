@@ -9,7 +9,8 @@ export type VoiceCue =
   | 'round_victory'
   | 'drop_confirmed'
   | 'titan_detected'
-  | 'titan_neutralized';
+  | 'titan_neutralized'
+  | 'autolock_active';
 
 const CUE_PHRASES: Record<VoiceCue, string> = {
   shield_critical: 'Advertencia. Escudo colapsado.',
@@ -21,6 +22,7 @@ const CUE_PHRASES: Record<VoiceCue, string> = {
   drop_confirmed: 'Cápsula de despliegue en descenso. Listo para combate.',
   titan_detected: 'Alerta máxima. Titán hostil detectado.',
   titan_neutralized: 'Titán enemigo neutralizado. Sector asegurado.',
+  autolock_active: 'Sistema Smart-Lock enlazado. Autoapuntado y disparo autónomo activos.',
 };
 
 let lastSpeechTime = 0;

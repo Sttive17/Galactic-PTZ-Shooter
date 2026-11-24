@@ -533,6 +533,10 @@ export const useGameStore = create<GameState>((set) => ({
       playSound('zoom');
       triggerHaptic('dash');
       speakTacticalCue('drop_confirmed');
+    } else if (powerId === 'SMART_AUTOLOCK') {
+      playSound('zoom');
+      triggerHaptic('crit');
+      speakTacticalCue('autolock_active');
     }
 
     return {

@@ -14,6 +14,7 @@ interface WeaponViewmodelProps {
 }
 
 export function getWeaponAccentHex(activePowers: Partial<Record<PowerId, number>>): string {
+  if ((activePowers.SMART_AUTOLOCK || 0) > 0) return '#06b6d4';
   if ((activePowers.HEAVY_DAMAGE || 0) > 0) return '#fb7185';
   if ((activePowers.CRITICAL_OPTICS || 0) > 0) return '#facc15';
   if ((activePowers.RICOCHET_ROUNDS || 0) > 0) return '#c084fc';
@@ -58,6 +59,7 @@ export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelPr
   const hasShield = (activePowers.VAMPIRIC_SHIELD || 0) > 0 || (activePowers.TITAN_ARMOR || 0) > 0;
   const hasCryo = (activePowers.SLOW_MO_DRONES || 0) > 0;
   const hasAlly = (activePowers.ALLY_DRONE || 0) > 0;
+  const hasAutoLock = (activePowers.SMART_AUTOLOCK || 0) > 0;
   const hasUtility =
     (activePowers.SCORE_BOOST || 0) > 0 ||
     (activePowers.TIME_SURGE || 0) > 0 ||
@@ -569,6 +571,24 @@ export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelPr
           <mesh position={[0, 0.052, 0]}>
             <sphereGeometry args={[0.007, 10, 10]} />
             <meshBasicMaterial color="#34d399" toneMapped={false} />
+          </mesh>
+        </group>
+      )}
+
+      {/* SMART_AUTOLOCK: Cybernetic AI Smart-Lock Optics Module & Forward Targeting Laser */}
+      {hasAutoLock && (
+        <group position={[-0.046, 0.072, 0.02]}>
+          <mesh>
+            <boxGeometry args={[0.024, 0.022, 0.08]} />
+            <meshStandardMaterial color="#0f172a" metalness={0.85} roughness={0.2} />
+          </mesh>
+          <mesh position={[0, 0.014, 0.01]}>
+            <boxGeometry args={[0.014, 0.008, 0.05]} />
+            <meshBasicMaterial color="#06b6d4" toneMapped={false} />
+          </mesh>
+          <mesh position={[0, 0, -0.042]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.006, 0.008, 0.012, 10]} />
+            <meshStandardMaterial color="#22d3ee" emissive="#06b6d4" emissiveIntensity={3.2} />
           </mesh>
         </group>
       )}

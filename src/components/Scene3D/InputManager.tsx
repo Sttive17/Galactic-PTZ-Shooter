@@ -11,6 +11,7 @@ import { triggerHaptic } from '../../game/haptics';
 import * as THREE from 'three';
 
 const _aimAssistVec = new THREE.Vector3();
+const _autoAimVec = new THREE.Vector3();
 
 const tryStartReload = (state: GameState) => {
   if (SceneState.isReloading || SceneState.ammo >= SceneState.maxAmmo) return;
@@ -96,14 +97,15 @@ const canPlayFPS = (state: GameState) => {
 
 const getFireCooldown = (state: GameState) => {
   const rapidStacks = state.activePowers.RAPID_FIRE || 0;
-  const mult = Math.pow(0.7, rapidStacks);
+  const autoLockStacks = state.activePowers.SMART_AUTOLOCK || 0;
+  const mult = Math.pow(0.7, rapidStacks) * (autoLockStacks > 1 ? (autoLockStacks >= 3 ? 0.65 : 0.8) : 1.0);
   if (state.selectedWeapon === 'SCATTER_SHOTGUN') {
-    return Math.max(160, Math.round(420 * mult));
+    return Math.max(140, Math.round(420 * mult));
   }
   if (state.selectedWeapon === 'HEAVY_RAILGUN') {
-    return Math.max(280, Math.round(750 * mult));
+    return Math.max(240, Math.round(750 * mult));
   }
-  return Math.max(55, Math.round(160 * mult));
+  return Math.max(45, Math.round(160 * mult));
 };
 
 const attemptFire = (
@@ -632,6 +634,63 @@ export const InputManager = () => {
       baseZoomRef.current = Math.max(GAME_CONFIG.camera.zoomMin, baseZoomRef.current - GAME_CONFIG.camera.zoomSpeed * clampedDelta);
     }
 
+    // SMART-LOCK AUTO-AIM: Autonomous AI Target Tracking & Lock-on
+    const autoLockStacks = state.activePowers.SMART_AUTOLOCK || 0;
+    let autoLockTarget: (typeof SceneState.targets)[0] | null = null;
+    let autoLockPanDiff = 0;
+    let autoLockTiltDiff = 0;
+
+    if (autoLockStacks > 0) {
+      const pPos = SceneState.playerPosition;
+      const pForward = SceneState.playerForward;
+      const maxLockRange = 38 + autoLockStacks * 14;
+      let bestScore = -Infinity;
+
+      for (let i = 0; i < SceneState.targets.length; i++) {
+        const t = SceneState.targets[i];
+        if (!t.active || t.health <= 0) continue;
+
+        _autoAimVec.set(t.position[0] - pPos.x, t.position[1] - pPos.y, t.position[2] - pPos.z);
+        const dist = _autoAimVec.length();
+        if (dist < 1.0 || dist > maxLockRange) continue;
+
+        _autoAimVec.normalize();
+        const forwardDot = pForward.dot(_autoAimVec);
+
+        const threatWeight = t.isBoss ? 50 : t.enemyType === 'KAMIKAZE' ? 40 : 10;
+        const score = threatWeight + (1.0 - dist / maxLockRange) * 55 + forwardDot * 30;
+
+        if (score > bestScore) {
+          bestScore = score;
+          autoLockTarget = t;
+        }
+      }
+
+      if (autoLockTarget) {
+        const aimX = autoLockTarget.position[0];
+        const aimY = autoLockTarget.position[1];
+        const aimZ = autoLockTarget.position[2];
+
+        _autoAimVec.set(aimX - pPos.x, aimY - pPos.y, aimZ - pPos.z).normalize();
+
+        const targetPan = -THREE.MathUtils.radToDeg(Math.atan2(_autoAimVec.x, -_autoAimVec.z));
+        const targetTilt = THREE.MathUtils.radToDeg(Math.asin(_autoAimVec.y));
+
+        autoLockPanDiff = THREE.MathUtils.euclideanModulo(targetPan - state.ptz.pan + 180, 360) - 180;
+        autoLockTiltDiff = targetTilt - state.ptz.tilt;
+
+        const steerSpeed = 10.0 + autoLockStacks * 8.0;
+        const maxPanStep = 18 + autoLockStacks * 8;
+        const maxTiltStep = 14 + autoLockStacks * 6;
+
+        const steerPan = THREE.MathUtils.clamp(autoLockPanDiff * clampedDelta * steerSpeed, -maxPanStep, maxPanStep);
+        const steerTilt = THREE.MathUtils.clamp(autoLockTiltDiff * clampedDelta * steerSpeed, -maxTiltStep, maxTiltStep);
+
+        panDelta += steerPan;
+        tiltDelta += steerTilt;
+      }
+    }
+
     // 3. Apply First-Person Player Movement & Physics in 3D World
     const panRad = THREE.MathUtils.degToRad(state.ptz.pan);
     const forwardX = Math.sin(panRad);
@@ -779,8 +838,11 @@ export const InputManager = () => {
     const horizSpeed = Math.hypot(SceneState.playerVelocity.x, SceneState.playerVelocity.z);
     SceneState.moveSpeedNormalized = Math.min(1, horizSpeed / WALK_SPEED);
 
-    // 4. Continuous Rapid-Fire when holding Left Click or Gamepad RT
-    const wantsFire = isLeftMouseDown.current || rtValue > 0.5 || touchControls.fire;
+    // 4. Continuous Rapid-Fire (Manual Click / Gamepad Trigger / Touch OR Autonomous Smart-Lock)
+    const manualFire = isLeftMouseDown.current || rtValue > 0.5 || touchControls.fire;
+    const autoLockAligned = autoLockTarget !== null && Math.abs(autoLockPanDiff) < 32 && Math.abs(autoLockTiltDiff) < 26;
+    const wantsFire = manualFire || (autoLockStacks > 0 && autoLockAligned);
+
     if (wantsFire) {
       attemptFire(state, lastFireRef, registerShot);
     }

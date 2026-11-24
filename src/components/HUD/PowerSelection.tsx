@@ -50,6 +50,7 @@ const PowerIcon = ({ id, size = 28 }: { id: PowerId; size?: number }) => {
     case 'RICOCHET_ROUNDS': return <Repeat size={size} className={cls} strokeWidth={2.2} />;
     case 'ALLY_DRONE': return <Bot size={size} className={cls} strokeWidth={2.2} />;
     case 'EXTENDED_MAG': return <BatteryCharging size={size} className={cls} strokeWidth={2.2} />;
+    case 'SMART_AUTOLOCK': return <Cpu size={size} className={cls} strokeWidth={2.2} />;
   }
 };
 

@@ -4,7 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 export const Crosshair = () => {
   const currentTarget = useGameStore((state) => state.currentTarget);
   const ptz = useGameStore((state) => state.ptz);
+  const activePowers = useGameStore((state) => state.activePowers);
   const isTargeted = !!currentTarget;
+  const autoLockStacks = activePowers.SMART_AUTOLOCK || 0;
 
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none font-mono">
@@ -15,6 +17,22 @@ export const Crosshair = () => {
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
         className="relative"
       >
+        {/* Smart-Lock Autonomous Target Acquisition HUD Badge */}
+        {autoLockStacks > 0 && (
+          <div className="absolute -top-14 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/90 border border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.6)] whitespace-nowrap">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
+            </span>
+            <span className="text-[10px] font-orbitron font-extrabold text-cyan-300 tracking-widest uppercase">
+              SMART-LOCK AUTO-AIM {autoLockStacks >= 3 ? 'MK-III CORE' : autoLockStacks === 2 ? 'MK-II' : 'ONLINE'}
+            </span>
+            <span className="text-[8px] bg-cyan-500/20 text-cyan-200 px-1.5 py-0.2 rounded border border-cyan-500/40">
+              AUTO-FIRE
+            </span>
+          </div>
+        )}
+
         {/* Outer Tech Ring */}
         <div className={`w-40 h-40 max-lg:w-28 max-lg:h-28 border-2 border-dashed rounded-full transition-colors duration-300 ${isTargeted ? 'border-red-500/50 animate-[spin_4s_linear_infinite]' : 'border-cyan-500/20 animate-[spin_10s_linear_infinite]'}`} />
         
@@ -75,7 +93,9 @@ export const Crosshair = () => {
           <div>MAG: {ptz.zoom.toFixed(1)}X</div>
         </div>
         <div className="hidden lg:block whitespace-nowrap text-[9px] text-slate-400/80 tracking-[0.2em] bg-slate-950/60 px-3 py-1 border border-slate-800/80">
-          WASD MOVER • ESPACIO SALTAR • CLICK APUNTAR 360° Y DISPARAR • CLK DER ZOOM • ESC PAUSA
+          {autoLockStacks > 0
+            ? 'WASD MOVER • ESPACIO SALTAR • ¡SISTEMA AUTO-APUNTADO Y DISPARO AUTOMÁTICO EN ACCIÓN! • ESC PAUSA'
+            : 'WASD MOVER • ESPACIO SALTAR • CLICK APUNTAR 360° Y DISPARAR • CLK DER ZOOM • ESC PAUSA'}
         </div>
       </div>
     </div>

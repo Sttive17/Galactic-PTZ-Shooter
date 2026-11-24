@@ -16,7 +16,8 @@ export type PowerId =
   | 'CRITICAL_OPTICS'
   | 'RICOCHET_ROUNDS'
   | 'ALLY_DRONE'
-  | 'EXTENDED_MAG';
+  | 'EXTENDED_MAG'
+  | 'SMART_AUTOLOCK';
 
 export interface PowerDefinition {
   id: PowerId;
@@ -190,6 +191,15 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: 'Capacidad: 50 → 80 → 120 → 200 balas (+recarga rápida)',
     rarity: 'TÁCTICO',
     accent: 'amber',
+  },
+  SMART_AUTOLOCK: {
+    id: 'SMART_AUTOLOCK',
+    name: 'SISTEMA SMART-LOCK',
+    shortName: 'AUTO-AIM',
+    description: 'Inteligencia artificial balística: autoapunta a los enemigos y dispara continuamente sin descanso. ¡Solo muévete y esquiva!',
+    effectText: 'Autoapuntado magnético + Disparo automático autónomo (Nv2: +25% cadencia, Nv3: auto-críticos a núcleos)',
+    rarity: 'PROTOTIPO',
+    accent: 'cyan',
   },
 };
 
