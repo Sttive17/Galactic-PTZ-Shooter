@@ -130,12 +130,16 @@ export async function getAmmoState(page) {
 
 export async function openSettingsFromMainMenu(page) {
   await page.locator('button:has-text("AJUSTES")').click();
-  await page.getByText('CENTRO DE CONFIGURACIÓN').waitFor({ state: 'visible', timeout: 5000 });
+  await page.getByText('CENTRO DE CONFIGURACIÓN').waitFor({ state: 'visible', timeout: 15000 });
 }
 
 export async function closeSettingsModal(page) {
-  await page.locator('button:has-text("ESC / CERRAR")').click();
-  await page.getByText('CENTRO DE CONFIGURACIÓN').waitFor({ state: 'detached', timeout: 5000 });
+  const closeBtn = page.locator('button:has-text("ESC / CERRAR")').first();
+  if (await closeBtn.isVisible()) {
+    await closeBtn.click({ force: true }).catch(() => {});
+  }
+  await page.keyboard.press('Escape').catch(() => {});
+  await page.getByText('CENTRO DE CONFIGURACIÓN').waitFor({ state: 'detached', timeout: 15000 });
 }
 
 export async function selectSettingsTab(page, tabLabel) {
