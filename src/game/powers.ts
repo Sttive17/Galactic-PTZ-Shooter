@@ -236,8 +236,12 @@ export function getRandomPowerChoices(
     return current < max;
   });
 
-  // Si todos los poderes estuvieran al máximo (final de juego), usar el catálogo completo
-  const pool = available.length > 0 ? [...available] : [...ALL_POWER_IDS];
+  // Si todos los poderes están al máximo (final de juego), no ofrecer poderes repetidos
+  if (available.length === 0) {
+    return [];
+  }
+
+  const pool = [...available];
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];

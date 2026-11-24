@@ -620,6 +620,7 @@ export const Projectiles = () => {
     const currentTripleStacks = activePowers.TRIPLE_SHOT || 0;
     const currentHeavyDamage = activePowers.HEAVY_DAMAGE || 0;
     const currentCritStacks = activePowers.CRITICAL_OPTICS || 0;
+    const currentAutoLockStacks = activePowers.SMART_AUTOLOCK || 0;
     const projScale = 1 + currentBigHitbox * 0.6;
     const effectiveProjRadius = GAME_CONFIG.projectile.radius * projScale;
 
@@ -762,7 +763,8 @@ export const Projectiles = () => {
           const impactDistToCenter = _hitPos.distanceTo(_targetCenter);
           const isWeakpointHit = impactDistToCenter < closestTarget.scale * 0.42;
           const critChance = Math.min(1, currentCritStacks * 0.25);
-          const isCrit = isWeakpointHit || (critChance > 0 && Math.random() < critChance);
+          const isAutoLockCrit = currentAutoLockStacks >= 3;
+          const isCrit = isWeakpointHit || isAutoLockCrit || (critChance > 0 && Math.random() < critChance);
           const finalDmg = isCrit ? Math.ceil(baseDmg * 2.5) : baseDmg;
 
           closestTarget.health -= finalDmg;

@@ -181,6 +181,12 @@ export const PowerSelection = () => {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [roundState, powerChoices, handleChoose]);
 
+  useEffect(() => {
+    if (roundState === 'POWER_SELECT' && powerChoices.length === 0) {
+      useGameStore.setState({ roundState: 'PLAYING' });
+    }
+  }, [roundState, powerChoices]);
+
   if (roundState !== 'POWER_SELECT' || powerChoices.length === 0) return null;
 
   return (

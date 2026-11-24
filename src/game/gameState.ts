@@ -610,9 +610,10 @@ export const useGameStore = create<GameState>((set) => ({
 
   finishPortalCinematic: () => set((state) => {
     if (state.roundState !== 'WARP_CINEMATIC') return state;
+    const choices = getRandomPowerChoices(3, state.activePowers);
     return {
-      roundState: 'POWER_SELECT',
-      powerChoices: getRandomPowerChoices(3, state.activePowers),
+      roundState: choices.length > 0 ? 'POWER_SELECT' : 'PLAYING',
+      powerChoices: choices,
       portalTransition: null,
     };
   }),
@@ -628,11 +629,12 @@ export const useGameStore = create<GameState>((set) => ({
     SceneState.resetPlayerPosition();
     SceneState.resetAllies();
 
+    const choices = getRandomPowerChoices(3, state.activePowers);
     return {
       currentRound: nextWave,
       targetsDestroyed: 0,
-      roundState: 'POWER_SELECT',
-      powerChoices: getRandomPowerChoices(3, state.activePowers),
+      roundState: choices.length > 0 ? 'POWER_SELECT' : 'PLAYING',
+      powerChoices: choices,
       currentMap: newMap,
       bossInfo: null,
       playerShield: state.maxPlayerShield,
@@ -865,11 +867,12 @@ export const useGameStore = create<GameState>((set) => ({
     SceneState.colliders = newMap.obstacles;
     SceneState.resetPlayerPosition();
     SceneState.resetAllies();
+    const choices = getRandomPowerChoices(3, state.activePowers);
     return {
       currentRound: nextR,
       highestRound: isTraining ? state.highestRound : Math.max(state.highestRound, nextR),
-      roundState: 'POWER_SELECT',
-      powerChoices: getRandomPowerChoices(3, state.activePowers),
+      roundState: choices.length > 0 ? 'POWER_SELECT' : 'PLAYING',
+      powerChoices: choices,
       targetsDestroyed: 0,
       timeRemaining: isTraining ? state.timeRemaining : Math.min(240, state.timeRemaining + bonusTime),
       currentMap: newMap,

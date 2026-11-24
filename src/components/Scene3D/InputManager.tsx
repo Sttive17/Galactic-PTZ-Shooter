@@ -12,6 +12,8 @@ import * as THREE from 'three';
 
 const _aimAssistVec = new THREE.Vector3();
 const _autoAimVec = new THREE.Vector3();
+const _losRay = new THREE.Ray();
+const _losHit = new THREE.Vector3();
 
 const tryStartReload = (state: GameState) => {
   if (SceneState.isReloading || SceneState.ammo >= SceneState.maxAmmo) return;
@@ -173,6 +175,7 @@ export const InputManager = () => {
   const mouseDelta = useRef({ x: 0, y: 0 });
   const lastMousePos = useRef<{ x: number; y: number } | null>(null);
   const baseZoomRef = useRef<number>(1);
+  const lockedTargetIdRef = useRef<string | null>(null);
 
   // Reset base zoom on mode or round change
   useEffect(() => {
@@ -564,7 +567,7 @@ export const InputManager = () => {
           // 2. Subtle magnetic pull towards target center
           _aimAssistVec.set(closestTarget.position[0] - pPos.x, closestTarget.position[1] - pPos.y, closestTarget.position[2] - pPos.z);
           _aimAssistVec.normalize();
-          const targetPan = -THREE.MathUtils.radToDeg(Math.atan2(_aimAssistVec.x, -_aimAssistVec.z));
+          const targetPan = THREE.MathUtils.radToDeg(Math.atan2(_aimAssistVec.x, -_aimAssistVec.z));
           const targetTilt = THREE.MathUtils.radToDeg(Math.asin(_aimAssistVec.y));
           const panDiff = THREE.MathUtils.euclideanModulo(targetPan - state.ptz.pan + 180, 360) - 180;
           const tiltDiff = targetTilt - state.ptz.tilt;
@@ -619,7 +622,8 @@ export const InputManager = () => {
     if (keys.current.a || keys.current.arrowleft) moveRight -= 1;
 
     // Mouse Look (Pointer Lock or Drag)
-    if (mouseDelta.current.x !== 0 || mouseDelta.current.y !== 0) {
+    const hasMouseLook = mouseDelta.current.x !== 0 || mouseDelta.current.y !== 0;
+    if (hasMouseLook) {
       panDelta += mouseDelta.current.x * 0.18 * finalSensitivity;
       tiltDelta -= mouseDelta.current.y * 0.18 * finalSensitivity * ySign;
       mouseDelta.current.x = 0;
@@ -643,7 +647,7 @@ export const InputManager = () => {
     if (autoLockStacks > 0) {
       const pPos = SceneState.playerPosition;
       const pForward = SceneState.playerForward;
-      const maxLockRange = 38 + autoLockStacks * 14;
+      const maxLockRange = 36 + autoLockStacks * 12;
       let bestScore = -Infinity;
 
       for (let i = 0; i < SceneState.targets.length; i++) {
@@ -657,8 +661,34 @@ export const InputManager = () => {
         _autoAimVec.normalize();
         const forwardDot = pForward.dot(_autoAimVec);
 
-        const threatWeight = t.isBoss ? 50 : t.enemyType === 'KAMIKAZE' ? 40 : 10;
-        const score = threatWeight + (1.0 - dist / maxLockRange) * 55 + forwardDot * 30;
+        // Do not violently 180 snap to targets behind the player; evaluate the forward hemisphere
+        if (forwardDot < 0.08) continue;
+
+        // Line-of-sight check: do not lock onto targets occluded by walls / crates
+        _losRay.origin.copy(pPos);
+        _losRay.direction.copy(_autoAimVec);
+        let occluded = false;
+        for (let b = 0; b < SceneState.colliders.length; b++) {
+          const box = SceneState.colliders[b];
+          if (box.kind === 'jumppad') continue;
+          if (_losRay.intersectBox(box.box3, _losHit)) {
+            const hitDist = pPos.distanceTo(_losHit);
+            if (hitDist > 0.6 && hitDist < dist - 0.6) {
+              occluded = true;
+              break;
+            }
+          }
+        }
+        if (occluded) continue;
+
+        // Sticky target bonus prevents rapid jitter/switching between adjacent enemies
+        const isCurrentLock = lockedTargetIdRef.current === t.id;
+        const threatWeight = t.isBoss ? 60 : t.enemyType === 'KAMIKAZE' ? 45 : 15;
+        const score =
+          threatWeight +
+          (1.0 - dist / maxLockRange) * 50 +
+          forwardDot * 35 +
+          (isCurrentLock ? 40 : 0);
 
         if (score > bestScore) {
           bestScore = score;
@@ -666,29 +696,56 @@ export const InputManager = () => {
         }
       }
 
+      lockedTargetIdRef.current = autoLockTarget ? autoLockTarget.id : null;
+
       if (autoLockTarget) {
-        const aimX = autoLockTarget.position[0];
-        const aimY = autoLockTarget.position[1];
-        const aimZ = autoLockTarget.position[2];
+        let aimX = autoLockTarget.position[0];
+        let aimY = autoLockTarget.position[1];
+        let aimZ = autoLockTarget.position[2];
+
+        // Level 3 (MK-III): precision weakpoint core targeting
+        if (autoLockStacks >= 3) {
+          aimY += autoLockTarget.scale * 0.22;
+        }
 
         _autoAimVec.set(aimX - pPos.x, aimY - pPos.y, aimZ - pPos.z).normalize();
 
-        const targetPan = -THREE.MathUtils.radToDeg(Math.atan2(_autoAimVec.x, -_autoAimVec.z));
-        const targetTilt = THREE.MathUtils.radToDeg(Math.asin(_autoAimVec.y));
+        // Calculate correct horizontal angle (NO negative inversion) and vertical elevation
+        const targetPan = THREE.MathUtils.radToDeg(Math.atan2(_autoAimVec.x, -_autoAimVec.z));
+        const targetTilt = THREE.MathUtils.radToDeg(Math.asin(THREE.MathUtils.clamp(_autoAimVec.y, -1, 1)));
 
         autoLockPanDiff = THREE.MathUtils.euclideanModulo(targetPan - state.ptz.pan + 180, 360) - 180;
         autoLockTiltDiff = targetTilt - state.ptz.tilt;
 
-        const steerSpeed = 10.0 + autoLockStacks * 8.0;
-        const maxPanStep = 18 + autoLockStacks * 8;
-        const maxTiltStep = 14 + autoLockStacks * 6;
+        // Detect if player is actively providing manual look input (mouse/touch/gamepad stick)
+        const hasManualLook =
+          hasMouseLook ||
+          Math.abs(touchControls.lookX) > 0.04 ||
+          Math.abs(touchControls.lookY) > 0.04 ||
+          (gp !== null && (Math.abs(gp.axes[2] || 0) > 0.14 || Math.abs(gp.axes[3] || 0) > 0.14));
 
-        const steerPan = THREE.MathUtils.clamp(autoLockPanDiff * clampedDelta * steerSpeed, -maxPanStep, maxPanStep);
-        const steerTilt = THREE.MathUtils.clamp(autoLockTiltDiff * clampedDelta * steerSpeed, -maxTiltStep, maxTiltStep);
+        // When player is manually aiming, auto-aim acts as subtle friction/assist (0.35) rather than fighting the player's hands.
+        // When hands-off look (e.g. WASD movement only), auto-aim glides cleanly at full strength (1.0).
+        const userDamp = hasManualLook ? 0.35 : 1.0;
 
-        panDelta += steerPan;
-        tiltDelta += steerTilt;
+        const absPan = Math.abs(autoLockPanDiff);
+        const absTilt = Math.abs(autoLockTiltDiff);
+
+        // Deadzone of 0.35° prevents micro-vibrations
+        if (absPan > 0.35 || absTilt > 0.35) {
+          const trackSpeed = (5.2 + autoLockStacks * 2.4) * userDamp;
+          const maxDegPerSec = (85 + autoLockStacks * 45) * userDamp;
+          const maxStep = maxDegPerSec * clampedDelta;
+
+          const steerPan = THREE.MathUtils.clamp(autoLockPanDiff * trackSpeed * clampedDelta * 10, -maxStep, maxStep);
+          const steerTilt = THREE.MathUtils.clamp(autoLockTiltDiff * trackSpeed * clampedDelta * 10, -maxStep, maxStep);
+
+          panDelta += steerPan;
+          tiltDelta += steerTilt;
+        }
       }
+    } else {
+      lockedTargetIdRef.current = null;
     }
 
     // 3. Apply First-Person Player Movement & Physics in 3D World
@@ -840,7 +897,12 @@ export const InputManager = () => {
 
     // 4. Continuous Rapid-Fire (Manual Click / Gamepad Trigger / Touch OR Autonomous Smart-Lock)
     const manualFire = isLeftMouseDown.current || rtValue > 0.5 || touchControls.fire;
-    const autoLockAligned = autoLockTarget !== null && Math.abs(autoLockPanDiff) < 32 && Math.abs(autoLockTiltDiff) < 26;
+    const alignPanTolerance = autoLockStacks >= 2 ? 18 : 14;
+    const alignTiltTolerance = autoLockStacks >= 2 ? 15 : 12;
+    const autoLockAligned =
+      autoLockTarget !== null &&
+      Math.abs(autoLockPanDiff) < alignPanTolerance &&
+      Math.abs(autoLockTiltDiff) < alignTiltTolerance;
     const wantsFire = manualFire || (autoLockStacks > 0 && autoLockAligned);
 
     if (wantsFire) {
