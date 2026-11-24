@@ -1,12 +1,15 @@
 import { useGameStore } from './gameState';
 
-type VoiceCue =
+export type VoiceCue =
   | 'shield_critical'
   | 'boss_detected'
   | 'dash_ready'
   | 'critical_hit'
   | 'portal_ready'
-  | 'round_victory';
+  | 'round_victory'
+  | 'drop_confirmed'
+  | 'titan_detected'
+  | 'titan_neutralized';
 
 const CUE_PHRASES: Record<VoiceCue, string> = {
   shield_critical: 'Advertencia. Escudo colapsado.',
@@ -15,6 +18,9 @@ const CUE_PHRASES: Record<VoiceCue, string> = {
   critical_hit: 'Impacto en núcleo confirmado.',
   portal_ready: 'Sector despejado. Portal de evacuación activo.',
   round_victory: 'Amenazas neutralizadas.',
+  drop_confirmed: 'Cápsula de despliegue en descenso. Listo para combate.',
+  titan_detected: 'Alerta máxima. Titán hostil detectado.',
+  titan_neutralized: 'Titán enemigo neutralizado. Sector asegurado.',
 };
 
 let lastSpeechTime = 0;

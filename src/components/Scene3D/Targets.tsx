@@ -1362,6 +1362,12 @@ export const Targets = () => {
           tier,
           style: cfg.style,
         });
+        useGameStore.getState().triggerBossIntro({
+          name: bossName,
+          subtitle: cfg.subtitle,
+          tier,
+          style: cfg.style,
+        });
       } else {
         useGameStore.getState().setBossInfo(null);
         const count = getRoundTotalTargets(mode, currentRound);
@@ -1468,6 +1474,7 @@ export const Targets = () => {
     SceneState.onTargetDestroyed = (id) => {
       if (id.startsWith('boss-')) {
         useGameStore.getState().setBossInfo(null);
+        useGameStore.getState().triggerBossVictory();
       }
       const remaining = SceneState.targets.filter((t) => t.id !== id);
       SceneState.targets = remaining;

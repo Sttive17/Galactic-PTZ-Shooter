@@ -17,6 +17,8 @@ export const PTZCamera = () => {
   const muzzleRef = useRef<THREE.Mesh>(null);
   const muzzleLightRef = useRef<THREE.PointLight>(null);
   const bobPhaseRef = useRef(0);
+  const deployYRef = useRef(42);
+  const landingThudPlayedRef = useRef(false);
   const baseFov = useGameStore((state) =>
     THREE.MathUtils.clamp(state.preferences?.fov ?? 68, 55, 90)
   );
@@ -24,9 +26,68 @@ export const PTZCamera = () => {
   useFrame((state, delta) => {
     if (!cameraRef.current) return;
 
-    const { ptz, cameraShake, mode, roundState, currentRound, portalTransition, preferences } =
+    const { ptz, cameraShake, mode, roundState, currentRound, portalTransition, preferences, cinematicState } =
       useGameStore.getState();
     const clampedDelta = Math.min(delta, 0.05);
+    const t = state.clock.elapsedTime;
+
+    // Cinematic Combat Drop Pod Descent
+    if (cinematicState === 'DEPLOYMENT') {
+      const p = SceneState.playerPosition;
+      deployYRef.current = THREE.MathUtils.lerp(deployYRef.current, p.y + 1.7, Math.min(1, clampedDelta * 3.6));
+      cameraRef.current.position.set(p.x, deployYRef.current, p.z);
+      cameraRef.current.lookAt(p.x, p.y + 1.2, p.z - 15);
+      cameraRef.current.fov = THREE.MathUtils.lerp(cameraRef.current.fov, 74, Math.min(1, clampedDelta * 4));
+      cameraRef.current.updateProjectionMatrix();
+
+      if (deployYRef.current < p.y + 2.1 && !landingThudPlayedRef.current) {
+        landingThudPlayedRef.current = true;
+        useGameStore.getState().addCameraShake(0.55);
+      }
+      if (weaponRef.current) {
+        weaponRef.current.visible = true;
+        weaponRef.current.position.set(0.18, -0.22, -0.42);
+        weaponRef.current.rotation.set(-0.25, 0, 0);
+      }
+      return;
+    } else {
+      landingThudPlayedRef.current = false;
+      deployYRef.current = 42;
+    }
+
+    // Cinematic Boss Intro Dolly & Reveal
+    if (cinematicState === 'BOSS_INTRO') {
+      const boss = SceneState.targets.find((t) => t.active && t.isBoss);
+      const t = state.clock.elapsedTime;
+      if (boss) {
+        const [bx, by, bz] = boss.position;
+        const orbitRadius = 18;
+        const camX = bx + Math.sin(t * 0.45) * orbitRadius;
+        const camZ = bz + Math.cos(t * 0.45) * orbitRadius;
+        const camY = Math.max(3, by - 1.5 + Math.sin(t * 0.8) * 1.5);
+        cameraRef.current.position.set(camX, camY, camZ);
+        cameraRef.current.lookAt(bx, by + 1.2, bz);
+        cameraRef.current.fov = THREE.MathUtils.lerp(cameraRef.current.fov, 76, Math.min(1, clampedDelta * 5));
+      } else {
+        cameraRef.current.position.set(0, 8, 12);
+        cameraRef.current.lookAt(0, 7, -24);
+      }
+      cameraRef.current.updateProjectionMatrix();
+      if (weaponRef.current) weaponRef.current.visible = false;
+      return;
+    }
+
+    // Cinematic Boss Victory Slow-Mo Sweep
+    if (cinematicState === 'BOSS_VICTORY') {
+      const t = state.clock.elapsedTime;
+      const p = SceneState.playerPosition;
+      cameraRef.current.position.set(p.x + Math.sin(t * 0.5) * 4, p.y + 3.2, p.z + 8);
+      cameraRef.current.lookAt(p.x, p.y + 4.5, p.z - 20);
+      cameraRef.current.fov = THREE.MathUtils.lerp(cameraRef.current.fov, 70, Math.min(1, clampedDelta * 4));
+      cameraRef.current.updateProjectionMatrix();
+      if (weaponRef.current) weaponRef.current.visible = true;
+      return;
+    }
 
     // Cinematic hyperspace portal warp & biome arrival camera sweep
     if (roundState === 'WARP_CINEMATIC') {
@@ -133,7 +194,7 @@ export const PTZCamera = () => {
 
     // 5. First-Person Modular Tactical Weapon Viewmodel Animation (Recoil, ADS, Sway)
     if (weaponRef.current) {
-      const showWeapon = mode === 'CHALLENGE' || mode === 'TRAINING';
+      const showWeapon = (mode === 'CHALLENGE' || mode === 'TRAINING') && cinematicState === 'NONE';
       weaponRef.current.visible = showWeapon;
 
       if (showWeapon) {
@@ -147,8 +208,17 @@ export const PTZCamera = () => {
         const baseY = THREE.MathUtils.lerp(-0.26, -0.22, adsFactor);
         const baseZ = THREE.MathUtils.lerp(-0.55, -0.48, adsFactor);
 
-        const swayY = Math.sin(bobPhaseRef.current) * 0.012 * speedNorm;
-        const swayX = Math.cos(bobPhaseRef.current * 0.5) * 0.012 * speedNorm;
+        // Tactical Sprint lower & cant sway
+        const isSprinting = SceneState.isSprintingNow && speedNorm > 0.3;
+        const sprintOffsetY = isSprinting ? -0.07 : 0;
+        const sprintOffsetZ = isSprinting ? -0.04 : 0;
+        const sprintRotX = isSprinting ? -0.22 : 0;
+        const sprintRotZ = isSprinting ? 0.32 : 0;
+
+        // Organic idle breathing bob
+        const breathing = Math.sin(t * 2.2) * 0.0025;
+        const swayY = Math.sin(bobPhaseRef.current) * 0.012 * speedNorm + breathing;
+        const swayX = Math.cos(bobPhaseRef.current * 0.5) * 0.012 * speedNorm + Math.cos(t * 1.4) * 0.0015;
 
         // First-Person Reload dip, tilt & lock-in snap animation
         const progress = SceneState.isReloading ? SceneState.reloadProgress : 0;
@@ -160,11 +230,11 @@ export const PTZCamera = () => {
 
         weaponRef.current.position.set(
           baseX + swayX,
-          baseY + swayY + recoil * 0.015 - 0.11 * dipCurve + lockSnap,
-          baseZ + recoil * 0.07 + 0.04 * dipCurve
+          baseY + swayY + recoil * 0.015 - 0.11 * dipCurve + lockSnap + sprintOffsetY,
+          baseZ + recoil * 0.07 + 0.04 * dipCurve + sprintOffsetZ
         );
-        weaponRef.current.rotation.x = recoil * 0.08 - 0.28 * dipCurve;
-        weaponRef.current.rotation.z = 0.36 * dipCurve;
+        weaponRef.current.rotation.x = recoil * 0.08 - 0.28 * dipCurve + sprintRotX;
+        weaponRef.current.rotation.z = 0.36 * dipCurve + sprintRotZ;
 
         // Muzzle flash flare + dynamic shot illumination
         const flashVisible = !SceneState.isReloading && recoil > 0.65;

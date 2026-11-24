@@ -10,7 +10,8 @@ export type HapticPreset =
   | 'jump'
   | 'dash'
   | 'bossDeath'
-  | 'alarm';
+  | 'alarm'
+  | 'bossLaser';
 
 export function triggerHaptic(preset: HapticPreset, customIndex?: number | null) {
   if (typeof navigator === 'undefined' || !navigator.getGamepads) return;
@@ -119,6 +120,15 @@ export function triggerHaptic(preset: HapticPreset, customIndex?: number | null)
             duration: 100,
             weakMagnitude: 0.4,
             strongMagnitude: 0.3,
+          }).catch(() => {});
+          break;
+
+        case 'bossLaser':
+          actuator.playEffect('dual-rumble', {
+            startDelay: 0,
+            duration: 320,
+            weakMagnitude: 0.75,
+            strongMagnitude: 0.85,
           }).catch(() => {});
           break;
       }

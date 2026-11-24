@@ -17,6 +17,7 @@ import { PortalCinematic } from './PortalCinematic';
 import { TouchControls } from './TouchControls';
 import { PTZOpticsOverlay } from './PTZOpticsOverlay';
 import { AchievementToast } from './AchievementToast';
+import { CinematicDirector } from './CinematicDirector';
 import { AnimatePresence } from 'framer-motion';
 
 interface GameHUDProps {
@@ -32,6 +33,7 @@ export const GameHUD = ({ touchControlsEnabled }: GameHUDProps) => {
     <div className="absolute inset-0 pointer-events-none select-none overflow-hidden text-white font-mono z-10">
       {showFps && <FpsCounter />}
       <AchievementToast />
+      <CinematicDirector />
 
       {/* Subtle Global AAA Effects */}
       {hudEffects && (

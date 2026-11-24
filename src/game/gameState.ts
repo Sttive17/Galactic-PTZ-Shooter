@@ -12,7 +12,7 @@ import {
   GRAPHICS_PRESETS,
 } from './graphicsSettings';
 import type { GraphicsConfig, GraphicsPreset, HardwareInfo } from './graphicsSettings';
-import type { BossStyle, PTZOpticalMode, WeaponArchetype } from '../types/game';
+import type { BossStyle, PTZOpticalMode, WeaponArchetype, CinematicState, BossIntroData } from '../types/game';
 import { audioSystem, playSound } from './AudioSystem';
 import { triggerHaptic } from './haptics';
 import { loadArmoryState, saveArmoryState, UPGRADE_TIERS, SKIN_CATALOG } from './armory';
@@ -232,12 +232,21 @@ export interface GameState {
   selectedWeapon: WeaponArchetype;
   armory: ArmoryState;
   isArmoryOpen: boolean;
+  cinematicState: CinematicState;
+  activeBossIntro: BossIntroData | null;
   
   // Actions
   setMode: (mode: GameMode) => void;
   setRoundState: (state: RoundState) => void;
   setOpticalMode: (mode: PTZOpticalMode) => void;
   toggleOpticalMode: () => void;
+  setCinematicState: (state: CinematicState) => void;
+  triggerBossIntro: (data: BossIntroData) => void;
+  finishBossIntro: () => void;
+  triggerBossVictory: () => void;
+  finishBossVictory: () => void;
+  startDeploymentCinematic: () => void;
+  finishDeploymentCinematic: () => void;
   addNanites: (amount: number) => void;
   setDashCooldown: (cd: number) => void;
   switchWeapon: (weapon: WeaponArchetype) => void;
@@ -319,6 +328,31 @@ export const useGameStore = create<GameState>((set) => ({
   selectedWeapon: 'PLASMA_RIFLE',
   armory: loadArmoryState(),
   isArmoryOpen: false,
+  cinematicState: 'NONE',
+  activeBossIntro: null,
+
+  setCinematicState: (cinematicState) => set({ cinematicState }),
+  triggerBossIntro: (activeBossIntro) => {
+    playSound('alarm');
+    triggerHaptic('bossLaser');
+    speakTacticalCue('titan_detected');
+    set({ cinematicState: 'BOSS_INTRO', activeBossIntro });
+  },
+  finishBossIntro: () => set({ cinematicState: 'NONE', activeBossIntro: null }),
+  triggerBossVictory: () => {
+    playSound('crit');
+    triggerHaptic('bossDeath');
+    speakTacticalCue('titan_neutralized');
+    set({ cinematicState: 'BOSS_VICTORY' });
+  },
+  finishBossVictory: () => set({ cinematicState: 'NONE' }),
+  startDeploymentCinematic: () => {
+    playSound('zoom');
+    triggerHaptic('dash');
+    speakTacticalCue('drop_confirmed');
+    set({ cinematicState: 'DEPLOYMENT' });
+  },
+  finishDeploymentCinematic: () => set({ cinematicState: 'NONE' }),
 
   switchWeapon: (selectedWeapon) => {
     playSound('ui');
@@ -494,10 +528,18 @@ export const useGameStore = create<GameState>((set) => ({
     SceneState.isReloading = false;
     SceneState.reloadProgress = 0;
 
+    const shouldDeploy = state.currentRound === 1;
+    if (shouldDeploy) {
+      playSound('zoom');
+      triggerHaptic('dash');
+      speakTacticalCue('drop_confirmed');
+    }
+
     return {
       activePowers: updatedPowers,
       powerChoices: [],
       roundState: 'PLAYING',
+      cinematicState: shouldDeploy ? 'DEPLOYMENT' : 'NONE',
       maxPlayerShield: nextMaxShield,
       playerShield: nextShield,
       timeRemaining: Math.min(240, state.timeRemaining + extraTime),

@@ -59,6 +59,15 @@ export type WeaponArchetype = 'PLASMA_RIFLE' | 'SCATTER_SHOTGUN' | 'HEAVY_RAILGU
 
 export type CombatDropKind = 'SHIELD' | 'AMMO' | 'NANITE';
 
+export type CinematicState = 'NONE' | 'DEPLOYMENT' | 'BOSS_INTRO' | 'BOSS_VICTORY';
+
+export interface BossIntroData {
+  name: string;
+  subtitle: string;
+  tier: number;
+  style: string;
+}
+
 export interface CombatDrop {
   id: string;
   kind: CombatDropKind;

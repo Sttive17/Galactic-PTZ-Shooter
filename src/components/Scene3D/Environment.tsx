@@ -1376,6 +1376,467 @@ const OrbitalStratosphereWorld = ({
   );
 };
 
+// -------------------------------------------------------------
+// LIVING ARENA: Overhead Security Searchlight Patrol Drones
+// -------------------------------------------------------------
+interface PatrolDroneConfig {
+  rx: number;
+  rz: number;
+  y: number;
+  speed: number;
+  phase: number;
+}
+
+const PATROL_DRONE_CONFIGS: PatrolDroneConfig[] = [
+  { rx: 36, rz: 26, y: 22, speed: 0.32, phase: 0.0 },
+  { rx: 30, rz: 32, y: 24, speed: -0.26, phase: 3.14 },
+];
+
+interface LivingSearchlightPatrolDronesProps {
+  theme: MapTheme;
+  wallMat: THREE.MeshStandardMaterial;
+  crateMat: THREE.MeshStandardMaterial;
+}
+
+const LivingSearchlightPatrolDrones = ({ theme, wallMat, crateMat }: LivingSearchlightPatrolDronesProps) => {
+  const droneRefs = useRef<(THREE.Group | null)[]>([]);
+  const spotRefs = useRef<(THREE.Group | null)[]>([]);
+  const rotorLeftRefs = useRef<(THREE.Mesh | null)[]>([]);
+  const rotorRightRefs = useRef<(THREE.Mesh | null)[]>([]);
+
+  useFrame(({ clock }, delta) => {
+    const dt = Math.min(delta, 0.05);
+    const t = clock.elapsedTime;
+
+    for (let i = 0; i < PATROL_DRONE_CONFIGS.length; i++) {
+      const cfg = PATROL_DRONE_CONFIGS[i];
+      const drone = droneRefs.current[i];
+      const spot = spotRefs.current[i];
+      const rL = rotorLeftRefs.current[i];
+      const rR = rotorRightRefs.current[i];
+
+      if (!drone) continue;
+
+      const ang = t * cfg.speed + cfg.phase;
+      const x = Math.cos(ang) * cfg.rx;
+      const z = -10 + Math.sin(ang) * cfg.rz;
+      const y = cfg.y + Math.sin(t * 1.8 + i) * 0.9;
+
+      drone.position.set(x, y, z);
+      const forwardAng = -ang + (cfg.speed > 0 ? Math.PI / 2 : -Math.PI / 2);
+      drone.rotation.y = forwardAng;
+      drone.rotation.z = Math.sin(ang) * 0.12 * (cfg.speed > 0 ? 1 : -1);
+      drone.rotation.x = 0.05;
+
+      if (rL) rL.rotation.y += dt * 25;
+      if (rR) rR.rotation.y -= dt * 25;
+
+      if (spot) {
+        const sweepX = x + Math.sin(t * 1.2 + i * 2) * 6;
+        const sweepZ = z + Math.cos(t * 1.0 + i * 2) * 6;
+        spot.position.set(sweepX, 0.045, sweepZ);
+        spot.scale.setScalar(1 + Math.sin(t * 2 + i) * 0.08);
+      }
+    }
+  });
+
+  return (
+    <group>
+      {PATROL_DRONE_CONFIGS.map((cfg, idx) => {
+        const droneColor = idx === 0 ? theme.primaryGlow : theme.secondaryGlow;
+        return (
+          <group key={`patrol-drone-${idx}`}>
+            <group
+              ref={(el) => {
+                droneRefs.current[idx] = el;
+              }}
+              position={[cfg.rx, cfg.y, -10]}
+            >
+              <mesh material={wallMat}>
+                <boxGeometry args={[1.6, 0.45, 2.2]} />
+              </mesh>
+              <mesh position={[0, 0.3, -0.2]} material={crateMat}>
+                <boxGeometry args={[1.0, 0.28, 1.2]} />
+              </mesh>
+              <mesh position={[0, 0.12, -1.12]}>
+                <boxGeometry args={[0.9, 0.14, 0.08]} />
+                <meshBasicMaterial color={droneColor} toneMapped={false} />
+              </mesh>
+              <group position={[-1.2, 0.1, 0]}>
+                <mesh material={wallMat}>
+                  <cylinderGeometry args={[0.18, 0.18, 0.4, 8]} />
+                </mesh>
+                <mesh
+                  ref={(el) => {
+                    rotorLeftRefs.current[idx] = el;
+                  }}
+                  position={[0, 0.2, 0]}
+                >
+                  <boxGeometry args={[1.2, 0.04, 0.14]} />
+                  <meshBasicMaterial color={droneColor} toneMapped={false} />
+                </mesh>
+              </group>
+              <group position={[1.2, 0.1, 0]}>
+                <mesh material={wallMat}>
+                  <cylinderGeometry args={[0.18, 0.18, 0.4, 8]} />
+                </mesh>
+                <mesh
+                  ref={(el) => {
+                    rotorRightRefs.current[idx] = el;
+                  }}
+                  position={[0, 0.2, 0]}
+                >
+                  <boxGeometry args={[1.2, 0.04, 0.14]} />
+                  <meshBasicMaterial color={droneColor} toneMapped={false} />
+                </mesh>
+              </group>
+              <group position={[0, -0.25, 0.3]}>
+                <mesh material={crateMat}>
+                  <sphereGeometry args={[0.22, 10, 10]} />
+                </mesh>
+                <mesh position={[0, -10, 0]}>
+                  <coneGeometry args={[4.2, 20, 16, 1, true]} />
+                  <meshBasicMaterial
+                    color={droneColor}
+                    transparent
+                    opacity={0.09}
+                    blending={THREE.AdditiveBlending}
+                    side={THREE.DoubleSide}
+                    depthWrite={false}
+                    toneMapped={false}
+                  />
+                </mesh>
+              </group>
+            </group>
+
+            <group
+              ref={(el) => {
+                spotRefs.current[idx] = el;
+              }}
+              position={[cfg.rx, 0.045, -10]}
+            >
+              <mesh rotation={[-Math.PI / 2, 0, 0]}>
+                <ringGeometry args={[3.2, 3.8, 32]} />
+                <meshBasicMaterial
+                  color={droneColor}
+                  transparent
+                  opacity={0.35}
+                  blending={THREE.AdditiveBlending}
+                  depthWrite={false}
+                  toneMapped={false}
+                />
+              </mesh>
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.001, 0]}>
+                <circleGeometry args={[3.2, 32]} />
+                <meshBasicMaterial
+                  color={droneColor}
+                  transparent
+                  opacity={0.12}
+                  blending={THREE.AdditiveBlending}
+                  depthWrite={false}
+                  toneMapped={false}
+                />
+              </mesh>
+            </group>
+          </group>
+        );
+      })}
+    </group>
+  );
+};
+
+// -------------------------------------------------------------
+// LIVING ARENA: Intermittent High-Voltage Arc Lightning
+// -------------------------------------------------------------
+const ARC_PAIRS: [[number, number, number], [number, number, number]][] = [
+  [[38, 24, 28], [24, 11, 40]],
+  [[-38, 24, 28], [-24, 11, 40]],
+  [[-38, 24, -48], [-24, 11, -56]],
+  [[38, 24, -48], [24, 11, -56]],
+];
+
+interface LivingElectricArcsProps {
+  theme: MapTheme;
+}
+
+const LivingElectricArcs = ({ theme }: LivingElectricArcsProps) => {
+  const arcLines = useMemo(() => {
+    return ARC_PAIRS.map((_, idx) => {
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(5 * 3);
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const mat = new THREE.LineBasicMaterial({
+        color: idx % 2 === 0 ? theme.primaryGlow : theme.secondaryGlow,
+        transparent: true,
+        opacity: 0.88,
+        blending: THREE.AdditiveBlending,
+      });
+      const line = new THREE.Line(geo, mat);
+      line.visible = false;
+      return line;
+    });
+  }, [theme.primaryGlow, theme.secondaryGlow]);
+
+  useEffect(() => {
+    return () => {
+      arcLines.forEach((l) => {
+        l.geometry.dispose();
+        if (Array.isArray(l.material)) {
+          l.material.forEach((m) => m.dispose());
+        } else {
+          l.material.dispose();
+        }
+      });
+    };
+  }, [arcLines]);
+
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+
+    for (let i = 0; i < ARC_PAIRS.length; i++) {
+      const line = arcLines[i];
+      if (!line) continue;
+
+      const cycle = (t * 0.35 + i * 0.25) % 1;
+      const isFiring = cycle < 0.08;
+
+      line.visible = isFiring;
+      if (isFiring) {
+        const [p1, p2] = ARC_PAIRS[i];
+        const attr = line.geometry.getAttribute('position') as THREE.BufferAttribute;
+        const arr = attr.array as Float32Array;
+
+        for (let pt = 0; pt < 5; pt++) {
+          const alpha = pt / 4;
+          const jitter = pt === 0 || pt === 4 ? 0 : (Math.random() - 0.5) * 3.5;
+          const jitterY = pt === 0 || pt === 4 ? 0 : (Math.random() - 0.5) * 2.5;
+          const ix = pt * 3;
+          arr[ix] = THREE.MathUtils.lerp(p1[0], p2[0], alpha) + jitter;
+          arr[ix + 1] = THREE.MathUtils.lerp(p1[1], p2[1], alpha) + jitterY;
+          arr[ix + 2] = THREE.MathUtils.lerp(p1[2], p2[2], alpha) + jitter;
+        }
+        attr.needsUpdate = true;
+      }
+    }
+  });
+
+  return (
+    <group>
+      {arcLines.map((line, idx) => (
+        <primitive key={`arc-${idx}`} object={line} />
+      ))}
+    </group>
+  );
+};
+
+// -------------------------------------------------------------
+// LIVING ARENA: Industrial Sub-Floor Steam & Plasma Geysers
+// -------------------------------------------------------------
+const FLOOR_VENT_LOCATIONS = [
+  { x: -22, z: -4 },
+  { x: 22, z: -4 },
+  { x: -16, z: -26 },
+  { x: 16, z: -26 },
+];
+
+interface LivingFloorSteamGeysersProps {
+  theme: MapTheme;
+  wallMat: THREE.MeshStandardMaterial;
+}
+
+const LivingFloorSteamGeysers = ({ theme, wallMat }: LivingFloorSteamGeysersProps) => {
+  const plumeRefs = useRef<(THREE.Group | null)[]>([]);
+  const ringRefs = useRef<(THREE.Mesh | null)[]>([]);
+  const glowRefs = useRef<(THREE.MeshBasicMaterial | null)[]>([]);
+
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+
+    for (let i = 0; i < FLOOR_VENT_LOCATIONS.length; i++) {
+      const plume = plumeRefs.current[i];
+      const ring = ringRefs.current[i];
+      const glowMat = glowRefs.current[i];
+
+      const cycle = (t * 0.2 + i * 0.25) % 1;
+      const isActive = cycle < 0.35;
+      const progress = cycle / 0.35;
+
+      if (plume) {
+        plume.visible = isActive;
+        if (isActive) {
+          const height = Math.sin(progress * Math.PI) * 11;
+          const expansion = 1 + progress * 2.2;
+          plume.position.y = height * 0.5;
+          plume.scale.set(expansion, Math.max(0.1, height), expansion);
+        }
+      }
+
+      if (ring) {
+        ring.visible = isActive;
+        if (isActive) {
+          ring.position.y = progress * 10;
+          ring.scale.setScalar(0.8 + progress * 2.8);
+          const mat = ring.material as THREE.MeshBasicMaterial;
+          if (mat) {
+            mat.opacity = (1 - progress) * 0.6;
+          }
+        }
+      }
+
+      if (glowMat) {
+        glowMat.opacity = isActive ? 0.8 * (1 - progress * 0.5) : 0.2;
+      }
+    }
+  });
+
+  return (
+    <group>
+      {FLOOR_VENT_LOCATIONS.map((loc, idx) => (
+        <group key={`vent-${idx}`} position={[loc.x, 0.03, loc.z]}>
+          <mesh material={wallMat} position={[0, 0.02, 0]} receiveShadow>
+            <boxGeometry args={[2.4, 0.05, 2.4]} />
+          </mesh>
+          <mesh position={[0, 0.048, 0]}>
+            <boxGeometry args={[1.9, 0.01, 1.9]} />
+            <meshBasicMaterial
+              ref={(el) => {
+                glowRefs.current[idx] = el;
+              }}
+              color={theme.primaryGlow}
+              transparent
+              opacity={0.2}
+              toneMapped={false}
+            />
+          </mesh>
+
+          <group
+            ref={(el) => {
+              plumeRefs.current[idx] = el;
+            }}
+            position={[0, 0, 0]}
+            visible={false}
+          >
+            <mesh>
+              <cylinderGeometry args={[0.7, 0.3, 1, 12, 1, true]} />
+              <meshBasicMaterial
+                color={theme.primaryGlow}
+                transparent
+                opacity={0.22}
+                blending={THREE.AdditiveBlending}
+                side={THREE.DoubleSide}
+                depthWrite={false}
+                toneMapped={false}
+              />
+            </mesh>
+          </group>
+
+          <mesh
+            ref={(el) => {
+              ringRefs.current[idx] = el;
+            }}
+            position={[0, 0, 0]}
+            rotation={[Math.PI / 2, 0, 0]}
+            visible={false}
+          >
+            <torusGeometry args={[0.9, 0.12, 8, 20]} />
+            <meshBasicMaterial
+              color={theme.secondaryGlow}
+              transparent
+              opacity={0.5}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+              toneMapped={false}
+            />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+};
+
+// -------------------------------------------------------------
+// LIVING ARENA: Atmospheric Nano-Flock / Avian Swarm
+// -------------------------------------------------------------
+const FLOCK_COUNT = 10;
+
+interface LivingAirborneFlockProps {
+  color: string;
+}
+
+const LivingAirborneFlock = ({ color }: LivingAirborneFlockProps) => {
+  const birdRefs = useRef<(THREE.Group | null)[]>([]);
+  const wingLeftRefs = useRef<(THREE.Mesh | null)[]>([]);
+  const wingRightRefs = useRef<(THREE.Mesh | null)[]>([]);
+
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+
+    for (let i = 0; i < FLOCK_COUNT; i++) {
+      const b = birdRefs.current[i];
+      const wL = wingLeftRefs.current[i];
+      const wR = wingRightRefs.current[i];
+      if (!b) continue;
+
+      const offset = i * 0.28;
+      const angle = t * 0.32 + offset;
+      const x = Math.sin(angle) * 52 + Math.cos(angle * 2) * 8;
+      const z = -10 + Math.sin(angle * 2) * 32;
+      const y = 24 + Math.sin(t * 1.5 + offset) * 3;
+
+      b.position.set(x, y, z);
+
+      const nextAngle = angle + 0.05;
+      const nx = Math.sin(nextAngle) * 52 + Math.cos(nextAngle * 2) * 8;
+      const nz = -10 + Math.sin(nextAngle * 2) * 32;
+      const dx = nx - x;
+      const dz = nz - z;
+      b.rotation.y = Math.atan2(dx, dz);
+      b.rotation.z = -Math.sin(angle) * 0.3;
+
+      const flap = Math.sin(t * 9 + i * 1.2) * 0.55;
+      if (wL) wL.rotation.z = flap;
+      if (wR) wR.rotation.z = -flap;
+    }
+  });
+
+  return (
+    <group>
+      {Array.from({ length: FLOCK_COUNT }, (_, idx) => (
+        <group
+          key={`flock-${idx}`}
+          ref={(el) => {
+            birdRefs.current[idx] = el;
+          }}
+          scale={0.8}
+        >
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <coneGeometry args={[0.2, 1.2, 6]} />
+            <meshBasicMaterial color={color} toneMapped={false} />
+          </mesh>
+          <mesh
+            ref={(el) => {
+              wingLeftRefs.current[idx] = el;
+            }}
+            position={[-0.45, 0, 0]}
+          >
+            <boxGeometry args={[0.9, 0.04, 0.35]} />
+            <meshBasicMaterial color={color} transparent opacity={0.85} toneMapped={false} />
+          </mesh>
+          <mesh
+            ref={(el) => {
+              wingRightRefs.current[idx] = el;
+            }}
+            position={[0.45, 0, 0]}
+          >
+            <boxGeometry args={[0.9, 0.04, 0.35]} />
+            <meshBasicMaterial color={color} transparent opacity={0.85} toneMapped={false} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+};
+
 export const Environment = () => {
   const currentMap = useGameStore((state) => state.currentMap);
   const graphics = useGameStore((state) => state.settings.graphics);
@@ -2155,6 +2616,24 @@ export const Environment = () => {
             <meshBasicMaterial color={theme.primaryGlow} transparent opacity={0.14} side={THREE.DoubleSide} />
           </mesh>
         </>
+      )}
+
+      {/* Living Arena: Overhead Security Patrol Drones with Sweeping Floor Searchlights */}
+      <LivingSearchlightPatrolDrones
+        theme={theme}
+        wallMat={materials.wallMat}
+        crateMat={materials.crateMat}
+      />
+
+      {/* Living Arena: High-Voltage Lightning Arc Discharges */}
+      {!isEarthDay && <LivingElectricArcs theme={theme} />}
+
+      {/* Living Arena: Industrial Floor Steam & Plasma Geysers */}
+      <LivingFloorSteamGeysers theme={theme} wallMat={materials.wallMat} />
+
+      {/* Living Arena: Atmospheric Nano-Flock / Avian Swarm */}
+      {(isEarthDay || theme.architecture === 'BIO_DOME') && (
+        <LivingAirborneFlock color={isEarthDay ? '#f8fafc' : theme.primaryGlow} />
       )}
 
       {/* Dynamic Biome Weather & Energy Particles */}
