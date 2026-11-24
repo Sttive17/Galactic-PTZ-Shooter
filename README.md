@@ -7,16 +7,19 @@
 ## Contenido
 
 - [Características](#características)
+- [Experiencia de juego](#experiencia-de-juego)
 - [Tecnologías](#tecnologías)
 - [Requisitos e instalación](#requisitos-e-instalación)
 - [Comandos](#comandos)
 - [Cómo jugar](#cómo-jugar)
 - [Controles](#controles)
+- [Ajustes y compatibilidad](#ajustes-y-compatibilidad)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Pruebas](#pruebas)
 - [Contribuciones y protección](#contribuciones-y-protección)
 - [Seguridad](#seguridad)
-- [Créditos y licencia](#créditos-y-licencia)
+- [Privacidad y datos](#privacidad-y-datos)
+- [Créditos, copyright y licencia](#créditos-copyright-y-licencia)
 
 ## Características
 
@@ -29,6 +32,20 @@
 - Mando compatible con Gamepad API.
 - Ajustes de gráficos, audio, sensibilidad y accesibilidad.
 - Música y ambiente que cambian según el estado de la partida.
+
+## Experiencia de juego
+
+La partida se juega desde una vista en primera persona. Gira la cámara, desplázate por el escenario, elimina objetivos y usa el entorno para evitar obstáculos. Los impactos aumentan la puntuación y el combo; recibir daño afecta primero al escudo y después a la salud.
+
+| Sistema | Descripción |
+|---|---|
+| Campaña | Rondas cronometradas de dos minutos, progresión de niveles, encuentros con jefes y avance por biomas. |
+| Oleadas | Modo de entrenamiento sin temporizador de campaña; las oleadas aumentan y pueden incluir jefes. |
+| Mapa estelar | Vista para consultar y seleccionar niveles de la campaña que estén disponibles. |
+| Poderes | Mejoras seleccionables que modifican habilidades o estadísticas de la partida. |
+| Movimiento | Caminar, correr con resistencia, saltar, usar plataformas y colisionar con el escenario. |
+| Combate | Disparo continuo, cargador, recarga, combos, puntuación, objetivos y jefes. |
+| Audio adaptativo | Música, ambiente y efectos varían según el menú, el bioma y el estado del combate. |
 
 ## Tecnologías
 
@@ -63,7 +80,7 @@ Abre la dirección local que muestra Vite en la terminal. Para usar un mando, co
 | `npm run test:e2e` | Ejecuta las suites end-to-end. |
 | `npm run test:e2e -- --tier smoke` | Ejecuta las pruebas rápidas de arranque, WebGL y audio. |
 
-Las pruebas E2E necesitan Google Chrome o Microsoft Edge instalado. El proyecto usa `playwright-core` y no descarga un navegador automáticamente.
+Las pruebas E2E necesitan Google Chrome o Microsoft Edge instalado. El proyecto usa `playwright-core` y no descarga un navegador automáticamente. Se puede seleccionar el navegador mediante `E2E_BROWSER_PATH` y ejecutar pruebas concretas con `--grep`.
 
 ## Cómo jugar
 
@@ -74,7 +91,7 @@ En el menú principal se puede iniciar:
 - **Oleadas:** modo de entrenamiento sin el límite de tiempo de la campaña.
 - **Ajustes:** opciones de gráficos, pantalla, audio y controles.
 
-La interfaz muestra información de partida como salud, escudo, munición, puntuación y objetivos. Algunos controles, poderes y acciones dependen del estado actual del juego.
+La interfaz muestra información de partida como salud, escudo, munición, puntuación y objetivos. La campaña tiene un temporizador por ronda; el entrenamiento continúa mediante oleadas. Al terminar una ronda se puede elegir un poder y continuar la progresión.
 
 ## Controles
 
@@ -111,6 +128,19 @@ El primer clic dentro del área de juego puede bloquear el puntero para permitir
 
 Los nombres y la disponibilidad de los botones pueden variar con mandos no estándar o configuraciones particulares del navegador.
 
+## Ajustes y compatibilidad
+
+El panel de ajustes permite cambiar la calidad gráfica, brillo, sensibilidad de cámara, inversión vertical, vibración de cámara y volúmenes de música y efectos. Los perfiles gráficos disponibles son **Bajo**, **Medio**, **Alto** y **Personalizado**; también hay una opción de detección automática del hardware.
+
+La aplicación requiere WebGL. Si la escena aparece negra o el rendimiento es bajo:
+
+1. Actualiza el navegador y los controladores de gráficos.
+2. Comprueba que WebGL esté habilitado en el navegador.
+3. Selecciona el perfil **Bajo** desde Ajustes.
+4. Cierra otras aplicaciones que utilicen intensivamente la GPU.
+
+Para habilitar audio, interactúa primero con la aplicación: los navegadores suelen bloquear la reproducción de audio hasta que exista una acción del usuario. Si el mando no aparece, conéctalo, pulsa un botón y revisa que el navegador y el sistema operativo lo reconozcan.
+
 ## Estructura del proyecto
 
 ```text
@@ -129,9 +159,26 @@ public/
 
 El estado de alta frecuencia del bucle 3D se mantiene en `SceneState` para evitar renders de React en cada frame. El estado de partida e interfaz se gestiona con Zustand.
 
+### Flujo de datos
+
+```text
+Teclado / Gamepad
+        |
+        v
+   InputManager -----> SceneState (movimiento y objetos por frame)
+        |                       |
+        v                       v
+   Zustand Store <------ GameManager / sistemas 3D
+        |
+        v
+       HUD
+```
+
+`GameEngine` monta el lienzo WebGL y los sistemas de escena. `InputManager` convierte teclado y gamepad en movimiento, apuntado y disparos. `GameManager` coordina temporizadores, transiciones de rondas y estado de combate. Los componentes del HUD leen el estado de Zustand para mostrar menús e indicadores.
+
 ## Pruebas
 
-La integración continua ejecuta compilación, lint y pruebas smoke en Pull Requests y en cambios a `main`.
+La integración continua de GitHub Actions instala dependencias con `npm ci` y ejecuta la compilación, lint y pruebas smoke en Pull Requests y en cambios a `main`. Las pruebas usan Chrome en modo headless y verifican el arranque, la escena WebGL y funciones principales de audio y configuración.
 
 Para ejecutar una suite local:
 
@@ -141,6 +188,12 @@ npm run test:e2e -- --tier 1
 npm run test:e2e -- --tier 2
 npm run test:e2e -- --tier 3
 npm run test:e2e -- --tier 4
+```
+
+El runner también permite filtrar por nombre, por ejemplo:
+
+```bash
+npm run test:e2e -- --tier 1 --grep reload
 ```
 
 ## Contribuciones y protección
@@ -156,12 +209,20 @@ Las contribuciones externas deben llegar mediante Pull Request; **no hagas push 
 
 La rama `main` requiere una aprobación, revisión del propietario indicada en `CODEOWNERS`, checks de CI exitosos e hilos resueltos. Dependabot propone actualizaciones de dependencias. Consulta [CONTRIBUTING.md](CONTRIBUTING.md) para más detalles.
 
+Al preparar un cambio, mantén los commits acotados, actualiza la documentación si cambia el comportamiento visible y no incluyas `node_modules/`, `dist/`, credenciales o archivos locales. Los cambios de escena 3D deben comprobarse en un navegador con WebGL cuando sea posible.
+
 ## Seguridad
 
 No publiques tokens, contraseñas ni vulnerabilidades sin corregir en issues o Pull Requests. Consulta [SECURITY.md](SECURITY.md) para reportes privados y recomendaciones.
 
-## Créditos y licencia
+## Privacidad y datos
 
-Los recursos de audio incluidos tienen atribución CC0; revisa [public/audio/ATTRIBUTION.md](public/audio/ATTRIBUTION.md).
+El proyecto no necesita una cuenta ni un servidor propio para jugar. Las preferencias de juego y gráficos se guardan en el almacenamiento local del navegador. La carga de las fuentes visuales configuradas en `index.html` requiere conexión a Google Fonts.
 
-El repositorio no incluye actualmente un archivo de licencia para el código del juego. Por lo tanto, no se concede permiso general para reutilizar, redistribuir o publicar versiones modificadas del código. Para proponer cambios, envía un Pull Request y espera la aprobación del propietario.
+## Créditos, copyright y licencia
+
+**Copyright © 2026 Sttive17. Todos los derechos reservados** sobre el código del juego y el material original de este proyecto.
+
+El proyecto usa una licencia propietaria: no se concede permiso general para copiar, reutilizar, modificar, redistribuir o publicar el código o versiones derivadas. Se requiere autorización previa por escrito del titular, salvo que una ley aplicable indique lo contrario. Consulta el archivo [LICENSE](LICENSE).
+
+Los archivos de audio incluidos en `public/audio/` son recursos de terceros publicados bajo CC0 (incluido `tense-combat.mp3`, que también cuenta con una licencia CC-BY 3.0). La atribución, fuentes y contexto de uso están en [public/audio/ATTRIBUTION.md](public/audio/ATTRIBUTION.md). Esos permisos solo se aplican a los recursos identificados allí; no cambian la licencia del código del juego. Las dependencias también conservan sus propias licencias.
