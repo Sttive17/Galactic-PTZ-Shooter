@@ -139,7 +139,7 @@ El primer clic dentro del área de juego puede bloquear el puntero para permitir
 | Entrar al portal activo | **ENTRAR** |
 | Pausar / reanudar | **PAUSA** |
 
-Los controles aparecen durante una ronda activa cuando el navegador detecta una pantalla táctil. El rendimiento 3D depende de las capacidades del dispositivo; si la imagen va lenta, reduce la calidad gráfica en Ajustes.
+Al abrir la página, el juego detecta si el dispositivo ofrece entrada táctil o puntero y si la pantalla es compacta o amplia. Recalcula la orientación y el diseño al girar o cambiar el tamaño de la ventana. Los joysticks y botones táctiles aparecen durante una ronda activa en dispositivos táctiles; el rendimiento 3D depende de las capacidades del equipo, así que reduce la calidad gráfica en Ajustes si la imagen va lenta.
 
 ### Mando Xbox / Gamepad API
 

@@ -48,6 +48,16 @@ import {
 
 export const tests = [
   {
+    name: 't1_device_profile_detects_desktop_pointer_and_wide_screen',
+    async run({ page, baseUrl }) {
+      await gotoApp(page, baseUrl);
+
+      const app = page.locator('#root > div').first();
+      assertEqual(await app.getAttribute('data-input-mode'), 'pointer', 'Desktop input mode must be detected at startup');
+      assertEqual(await app.getAttribute('data-screen-layout'), 'wide', 'Desktop layout must be detected at startup');
+    },
+  },
+  {
     name: 't1_mobile_touch_controls_render_and_fire',
     async run({ page, baseUrl }) {
       await page.addInitScript(() => {
@@ -55,14 +65,35 @@ export const tests = [
       });
       await page.setViewportSize({ width: 390, height: 844 });
       await gotoApp(page, baseUrl);
+      const app = page.locator('#root > div').first();
+      assertEqual(await app.getAttribute('data-input-mode'), 'touch', 'Touch input mode must be detected at startup');
+      assertEqual(await app.getAttribute('data-screen-layout'), 'compact', 'Phone layout must be detected at startup');
+      assertEqual(await app.getAttribute('data-screen-orientation'), 'portrait', 'Phone orientation must be detected at startup');
       await enterCombatMode(page, 'CAMPAÑA');
 
       const moveStick = page.getByRole('group', { name: 'MOVER' });
       const lookStick = page.getByRole('group', { name: 'MIRAR' });
       const fireButton = page.getByRole('button', { name: 'FUEGO' });
+      const actionGrid = page.getByTestId('touch-action-grid');
+      const pauseButton = page.getByRole('button', { name: 'PAUSA' });
       await assert(await moveStick.isVisible(), 'Mobile movement joystick must be visible');
       await assert(await lookStick.isVisible(), 'Mobile look joystick must be visible');
       await assert(await fireButton.isVisible(), 'Mobile fire button must be visible');
+
+      const moveBox = await moveStick.boundingBox();
+      const knob = page.getByTestId('joystick-knob-move');
+      assert(moveBox !== null, 'Mobile movement joystick must have a clickable area');
+      const knobBefore = await knob.boundingBox();
+      assert(knobBefore !== null, 'Mobile movement joystick knob must be visible');
+      await page.mouse.move(moveBox.x + moveBox.width / 2, moveBox.y + moveBox.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(moveBox.x + moveBox.width / 2, moveBox.y + moveBox.height / 2 - 24, { steps: 4 });
+      const knobAfter = await knob.boundingBox();
+      await page.mouse.up();
+      assert(
+        knobAfter !== null && knobAfter.y < knobBefore.y - 8,
+        `Dragging the movement joystick must move its knob (before=${knobBefore.y}, after=${knobAfter?.y})`
+      );
 
       const fireBox = await fireButton.boundingBox();
       assert(fireBox !== null, 'Mobile fire button must have a clickable area');
@@ -74,6 +105,28 @@ export const tests = [
 
       const remainingAmmo = (await getAmmoState(page)).current;
       assert(remainingAmmo < initialAmmo, 'Holding the mobile fire button must consume ammo');
+
+      await page.setViewportSize({ width: 844, height: 390 });
+      await page.waitForFunction(() =>
+        document.querySelector('#root > div')?.getAttribute('data-screen-orientation') === 'landscape'
+      );
+      assertEqual(await app.getAttribute('data-screen-layout'), 'compact', 'Phone layout must remain compact in landscape');
+
+      const controlLocators = [moveStick, lookStick, actionGrid, pauseButton];
+      const controlBoxes = [];
+      for (const control of controlLocators) {
+        const box = await control.boundingBox();
+        assert(box !== null, 'Touch controls must remain visible after rotation');
+        assert(box.x >= 0 && box.y >= 0 && box.x + box.width <= 844 && box.y + box.height <= 390,
+          'Touch controls must stay within the landscape viewport');
+        controlBoxes.push(box);
+      }
+
+      for (let i = 0; i < controlBoxes.length; i++) {
+        for (let j = i + 1; j < controlBoxes.length; j++) {
+          assertBoxesDoNotOverlap(controlBoxes[i], controlBoxes[j], `touch control ${i}`, `touch control ${j}`);
+        }
+      }
     },
   },
   // ==================== R1: Ammo HUD & Magazine (6 tests) ====================

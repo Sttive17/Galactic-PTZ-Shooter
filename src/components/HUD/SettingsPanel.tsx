@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../../game/gameState';
+import { getDeviceProfile } from '../../game/deviceProfile';
 import { initAudio, playSound } from '../../game/AudioSystem';
 import { resolveGraphicsPreset } from '../../game/graphicsSettings';
 import type { GraphicsConfig, GraphicsPreset } from '../../game/graphicsSettings';
@@ -821,7 +822,7 @@ export const SettingsPanel = ({
             onClick={() => {
               playSound('ui');
               const canvas = document.querySelector('canvas');
-              if (canvas?.requestPointerLock) {
+              if (getDeviceProfile().inputMode === 'pointer' && canvas?.requestPointerLock) {
                 Promise.resolve(canvas.requestPointerLock()).catch(() => {});
               }
               if (onClose) onClose();

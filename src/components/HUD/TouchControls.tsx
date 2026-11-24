@@ -39,15 +39,22 @@ const VirtualJoystick = ({ label, axis, onChange }: VirtualJoystickProps) => {
     if (!pad) return;
 
     const bounds = pad.getBoundingClientRect();
-    const radius = Math.min(bounds.width, bounds.height) * 0.34;
+    const padSize = Math.min(bounds.width, bounds.height);
+    const radius = ((padSize * 0.58) / 2) * 0.9;
     const deltaX = event.clientX - (bounds.left + bounds.width / 2);
     const deltaY = event.clientY - (bounds.top + bounds.height / 2);
     const distance = Math.hypot(deltaX, deltaY);
     const scale = distance > radius ? radius / distance : 1;
-    const x = (deltaX * scale) / radius;
-    const y = (deltaY * scale) / radius;
+    const rawX = (deltaX * scale) / radius;
+    const rawY = (deltaY * scale) / radius;
+    const magnitude = Math.hypot(rawX, rawY);
+    const deadzone = 0.12;
+    const outputMagnitude = magnitude <= deadzone ? 0 : (magnitude - deadzone) / (1 - deadzone);
+    const outputScale = magnitude > 0 ? outputMagnitude / magnitude : 0;
+    const x = rawX * outputScale;
+    const y = rawY * outputScale;
 
-    setOffset({ x: x * radius, y: y * radius });
+    setOffset({ x: rawX * radius, y: rawY * radius });
     onChange(x, y);
   };
 
@@ -71,7 +78,8 @@ const VirtualJoystick = ({ label, axis, onChange }: VirtualJoystickProps) => {
       ref={padRef}
       role="group"
       aria-label={label}
-      className="pointer-events-auto relative flex h-28 w-28 touch-none items-center justify-center rounded-full border border-cyan-300/35 bg-slate-950/45 shadow-[0_0_24px_rgba(34,211,238,0.18)] backdrop-blur-sm sm:h-32 sm:w-32"
+      className="pointer-events-auto relative flex touch-none items-center justify-center rounded-full border border-cyan-300/45 bg-slate-950/65 shadow-[0_0_24px_rgba(34,211,238,0.22)] backdrop-blur-md"
+      style={{ width: 'clamp(5rem, calc(10vw + 3rem), 7rem)', height: 'clamp(5rem, calc(10vw + 3rem), 7rem)' }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerEnd}
@@ -83,12 +91,13 @@ const VirtualJoystick = ({ label, axis, onChange }: VirtualJoystickProps) => {
       <div className="pointer-events-none absolute h-px w-3/4 bg-white/10" />
       <div className="pointer-events-none absolute h-3/4 w-px bg-white/10" />
       <div
-        className={`pointer-events-none absolute flex h-12 w-12 items-center justify-center rounded-full border shadow-[0_0_16px_rgba(34,211,238,0.3)] ${
+        data-testid={`joystick-knob-${axis}`}
+        className={`pointer-events-none absolute left-1/2 top-1/2 flex h-[42%] w-[42%] items-center justify-center rounded-full border shadow-[0_0_16px_rgba(34,211,238,0.3)] ${
           axis === 'move'
             ? 'border-cyan-200/70 bg-cyan-500/45'
             : 'border-violet-200/70 bg-violet-500/45'
         }`}
-        style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}
+        style={{ transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px))` }}
       >
         {axis === 'move' ? <ArrowUp size={18} /> : <Crosshair size={18} />}
       </div>
@@ -173,18 +182,15 @@ const ActionButton = ({ action, label, icon: Icon, prominent = false }: ActionBu
   );
 };
 
-export const TouchControls = () => {
+interface TouchControlsProps {
+  enabled: boolean;
+}
+
+export const TouchControls = ({ enabled }: TouchControlsProps) => {
   const mode = useGameStore((state) => state.mode);
   const roundState = useGameStore((state) => state.roundState);
   const isPaused = useGameStore((state) => state.isPaused);
   const isSettingsOpen = useGameStore((state) => state.isSettingsOpen);
-  const [touchAvailable] = useState(() =>
-    typeof window !== 'undefined' && (
-      navigator.maxTouchPoints > 0 ||
-      'ontouchstart' in window ||
-      window.matchMedia('(pointer: coarse)').matches
-    )
-  );
 
   useEffect(() => {
     return () => SceneState.resetTouchControls();
@@ -193,7 +199,7 @@ export const TouchControls = () => {
   const isPlayingMode = mode === 'CHALLENGE' || mode === 'TRAINING';
   const isActiveRound = roundState === 'PLAYING' || roundState === 'PORTAL_ACTIVE';
 
-  if (!touchAvailable || !isPlayingMode || !isActiveRound || isPaused || isSettingsOpen) {
+  if (!enabled || !isPlayingMode || !isActiveRound || isPaused || isSettingsOpen) {
     return null;
   }
 
@@ -208,16 +214,16 @@ export const TouchControls = () => {
   };
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-40 select-none">
-      <div className="absolute bottom-[calc(1rem+env(safe-area-inset-bottom))] left-[calc(1rem+env(safe-area-inset-left))]">
+    <div data-testid="touch-controls" className="pointer-events-none fixed inset-0 z-40 select-none">
+      <div className="absolute bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-[calc(0.75rem+env(safe-area-inset-left))]">
         <VirtualJoystick label="MOVER" axis="move" onChange={updateMove} />
       </div>
 
-      <div className="absolute bottom-[calc(1rem+env(safe-area-inset-bottom))] right-[calc(1rem+env(safe-area-inset-right))]">
+      <div className="absolute bottom-[calc(0.75rem+env(safe-area-inset-bottom))] right-[calc(0.75rem+env(safe-area-inset-right))]">
         <VirtualJoystick label="MIRAR" axis="look" onChange={updateLook} />
       </div>
 
-      <div className="absolute bottom-[calc(9rem+env(safe-area-inset-bottom))] right-[calc(1rem+env(safe-area-inset-right))] grid w-40 grid-cols-3 justify-items-center gap-1.5">
+      <div data-testid="touch-action-grid" className="absolute bottom-[calc(8.5rem+env(safe-area-inset-bottom))] right-[calc(0.75rem+env(safe-area-inset-right))] grid w-max grid-cols-3 justify-items-center gap-1">
         <ActionButton action="fire" label="FUEGO" icon={Target} prominent />
         <ActionButton action="jump" label="SALTAR" icon={ArrowUp} />
         <ActionButton action="zoom" label="ZOOM" icon={Crosshair} />
@@ -228,7 +234,7 @@ export const TouchControls = () => {
         )}
       </div>
 
-      <div className="absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2">
+      <div className="absolute bottom-[calc(1rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2">
         <ActionButton action="pause" label="PAUSA" icon={Pause} />
       </div>
     </div>

@@ -6,6 +6,7 @@ import type { GameState } from '../../game/gameState';
 import { SceneState, PLAYER_EYE_HEIGHT } from '../../game/sceneState';
 import { GAME_CONFIG } from '../../game/config';
 import { audioSystem, initAudio, playSound, playReload, playPortalWarp } from '../../game/AudioSystem';
+import { getDeviceProfile } from '../../game/deviceProfile';
 import * as THREE from 'three';
 
 const tryStartReload = (state: GameState) => {
@@ -44,10 +45,13 @@ const PLAYER_HEAD_CLEARANCE = 0.25;
 
 const isInteractiveElement = (target: EventTarget | null) => {
   if (!target || !(target as HTMLElement).closest) return false;
-  return !!(target as HTMLElement).closest('button, input, a, select, textarea, [role="button"]');
+  return !!(target as HTMLElement).closest(
+    'button, input, a, select, textarea, [role="button"], [role="group"], [data-testid="touch-controls"]'
+  );
 };
 
 const requestCanvasPointerLock = () => {
+  if (getDeviceProfile().inputMode === 'touch') return;
   if (document.pointerLockElement) return;
   const target = document.querySelector('canvas') || document.body;
   if (target?.requestPointerLock) {

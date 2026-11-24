@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useGameStore } from '../../game/gameState';
+import { getDeviceProfile } from '../../game/deviceProfile';
 import { POWERS_CATALOG } from '../../game/powers';
 import type { PowerId, PowerDefinition } from '../../game/powers';
 import { playSound, initAudio } from '../../game/AudioSystem';
@@ -114,7 +115,7 @@ export const PowerSelection = () => {
     initAudio();
     playSound('alarm');
     const canvas = document.querySelector('canvas');
-    if (canvas?.requestPointerLock) {
+    if (getDeviceProfile().inputMode === 'pointer' && canvas?.requestPointerLock) {
       Promise.resolve(canvas.requestPointerLock()).catch(() => {});
     }
     selectPower(id);

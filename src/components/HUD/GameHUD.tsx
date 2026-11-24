@@ -17,7 +17,11 @@ import { PortalCinematic } from './PortalCinematic';
 import { TouchControls } from './TouchControls';
 import { AnimatePresence } from 'framer-motion';
 
-export const GameHUD = () => {
+interface GameHUDProps {
+  touchControlsEnabled: boolean;
+}
+
+export const GameHUD = ({ touchControlsEnabled }: GameHUDProps) => {
   const mode = useGameStore((state) => state.mode);
   const showFps = useGameStore((state) => state.preferences.showFps);
   const hudEffects = useGameStore((state) => state.preferences.hudEffects);
@@ -59,7 +63,7 @@ export const GameHUD = () => {
             <PortalCinematic />
             <RoundTransition />
             <PauseMenu />
-            <TouchControls />
+            <TouchControls enabled={touchControlsEnabled} />
           </div>
         )}
 
