@@ -83,24 +83,25 @@ interface LayerState {
 }
 
 const PREFS_STORAGE_KEY = 'scifi_fps_prefs_v1';
+const audioAsset = (file: string) => `${import.meta.env.BASE_URL}audio/${file}`;
 
 const TRACK_REGISTRY: Record<string, TrackSpec> = {
   // Menus & Waiting Rooms
   menu_main: {
-    url: '/audio/menu-main.ogg',
+    url: audioAsset('menu-main.ogg'),
     layer: 'music',
     loop: true,
     baseGain: 0.32,
     fallbackKey: 'ambience_galactic',
   },
   ambience_menu_main: {
-    url: '/audio/space-ambient.ogg',
+    url: audioAsset('space-ambient.ogg'),
     layer: 'ambience',
     loop: true,
     baseGain: 0.18,
   },
   menu_level_map: {
-    url: '/audio/menu-main.ogg',
+    url: audioAsset('menu-main.ogg'),
     layer: 'music',
     loop: true,
     baseGain: 0.28,
@@ -108,28 +109,28 @@ const TRACK_REGISTRY: Record<string, TrackSpec> = {
     fallbackKey: 'menu_main',
   },
   ambience_level_map: {
-    url: '/audio/biome-orbital.mp3',
+    url: audioAsset('biome-orbital.mp3'),
     layer: 'ambience',
     loop: true,
     baseGain: 0.18,
     fallbackKey: 'ambience_galactic',
   },
   menu_settings: {
-    url: '/audio/menu-settings.mp3',
+    url: audioAsset('menu-settings.mp3'),
     layer: 'music',
     loop: true,
     baseGain: 0.30,
     fallbackKey: 'menu_main',
   },
   ambience_settings: {
-    url: '/audio/biome-lab.ogg',
+    url: audioAsset('biome-lab.ogg'),
     layer: 'ambience',
     loop: true,
     baseGain: 0.14,
     fallbackKey: 'ambience_galactic',
   },
   menu_paused: {
-    url: '/audio/menu-settings.mp3',
+    url: audioAsset('menu-settings.mp3'),
     layer: 'music',
     loop: true,
     baseGain: 0.16,
@@ -139,35 +140,35 @@ const TRACK_REGISTRY: Record<string, TrackSpec> = {
 
   // 5 Biome Ambience Beds
   ambience_lab: {
-    url: '/audio/biome-lab.ogg',
+    url: audioAsset('biome-lab.ogg'),
     layer: 'ambience',
     loop: true,
     baseGain: 0.30,
     fallbackKey: 'ambience_galactic',
   },
   ambience_earth: {
-    url: '/audio/biome-earth.ogg',
+    url: audioAsset('biome-earth.ogg'),
     layer: 'ambience',
     loop: true,
     baseGain: 0.34,
     fallbackKey: 'ambience_galactic',
   },
   ambience_launch: {
-    url: '/audio/biome-launch.ogg',
+    url: audioAsset('biome-launch.ogg'),
     layer: 'ambience',
     loop: true,
     baseGain: 0.28,
     fallbackKey: 'ambience_galactic',
   },
   ambience_orbital: {
-    url: '/audio/biome-orbital.mp3',
+    url: audioAsset('biome-orbital.mp3'),
     layer: 'ambience',
     loop: true,
     baseGain: 0.30,
     fallbackKey: 'ambience_galactic',
   },
   ambience_galactic: {
-    url: '/audio/space-ambient.ogg',
+    url: audioAsset('space-ambient.ogg'),
     layer: 'ambience',
     loop: true,
     baseGain: 0.32,
@@ -175,32 +176,32 @@ const TRACK_REGISTRY: Record<string, TrackSpec> = {
 
   // 5 Biome Exploration Music Layers (distinct keys, non-overlapping URLs vs each biome's ambience)
   music_biome_lab: {
-    url: '/audio/space-ambient.ogg',
+    url: audioAsset('space-ambient.ogg'),
     layer: 'music',
     loop: true,
     baseGain: 0.10,
   },
   music_biome_earth: {
-    url: '/audio/space-ambient.ogg',
+    url: audioAsset('space-ambient.ogg'),
     layer: 'music',
     loop: true,
     baseGain: 0.08,
   },
   music_biome_launch: {
-    url: '/audio/space-ambient.ogg',
+    url: audioAsset('space-ambient.ogg'),
     layer: 'music',
     loop: true,
     baseGain: 0.10,
   },
   music_biome_orbital: {
-    url: '/audio/menu-main.ogg',
+    url: audioAsset('menu-main.ogg'),
     layer: 'music',
     loop: true,
     baseGain: 0.12,
     fallbackKey: 'ambience_galactic',
   },
   music_biome_galactic: {
-    url: '/audio/menu-main.ogg',
+    url: audioAsset('menu-main.ogg'),
     layer: 'music',
     loop: true,
     baseGain: 0.12,
@@ -209,7 +210,7 @@ const TRACK_REGISTRY: Record<string, TrackSpec> = {
 
   // Combat & Tension Situations
   music_combat: {
-    url: '/audio/tense-combat.mp3',
+    url: audioAsset('tense-combat.mp3'),
     layer: 'music',
     loop: true,
     baseGain: 0.24,
@@ -217,7 +218,7 @@ const TRACK_REGISTRY: Record<string, TrackSpec> = {
     fallbackKey: 'menu_main',
   },
   music_high_tension: {
-    url: '/audio/tense-combat.mp3',
+    url: audioAsset('tense-combat.mp3'),
     layer: 'music',
     loop: true,
     baseGain: 0.36,
@@ -225,7 +226,7 @@ const TRACK_REGISTRY: Record<string, TrackSpec> = {
     fallbackKey: 'music_combat',
   },
   music_critical: {
-    url: '/audio/tense-combat.mp3',
+    url: audioAsset('tense-combat.mp3'),
     layer: 'music',
     loop: true,
     baseGain: 0.44,
@@ -235,14 +236,14 @@ const TRACK_REGISTRY: Record<string, TrackSpec> = {
 
   // Power Select, Portal, Warp, Victory & Game Over
   music_power_select: {
-    url: '/audio/situation-power-select.mp3',
+    url: audioAsset('situation-power-select.mp3'),
     layer: 'music',
     loop: true,
     baseGain: 0.30,
     fallbackKey: 'menu_main',
   },
   music_portal: {
-    url: '/audio/situation-power-select.mp3',
+    url: audioAsset('situation-power-select.mp3'),
     layer: 'music',
     loop: true,
     baseGain: 0.34,
@@ -250,7 +251,7 @@ const TRACK_REGISTRY: Record<string, TrackSpec> = {
     fallbackKey: 'music_power_select',
   },
   music_warp: {
-    url: '/audio/situation-power-select.mp3',
+    url: audioAsset('situation-power-select.mp3'),
     layer: 'music',
     loop: true,
     baseGain: 0.38,
@@ -258,14 +259,14 @@ const TRACK_REGISTRY: Record<string, TrackSpec> = {
     fallbackKey: 'music_power_select',
   },
   music_round_complete: {
-    url: '/audio/situation-victory.mp3',
+    url: audioAsset('situation-victory.mp3'),
     layer: 'music',
     loop: true,
     baseGain: 0.34,
     fallbackKey: 'menu_main',
   },
   music_victory: {
-    url: '/audio/situation-victory.mp3',
+    url: audioAsset('situation-victory.mp3'),
     layer: 'music',
     loop: true,
     baseGain: 0.40,
@@ -273,14 +274,14 @@ const TRACK_REGISTRY: Record<string, TrackSpec> = {
     fallbackKey: 'music_round_complete',
   },
   music_gameover: {
-    url: '/audio/situation-gameover.mp3',
+    url: audioAsset('situation-gameover.mp3'),
     layer: 'music',
     loop: true,
     baseGain: 0.36,
     fallbackKey: 'ambience_galactic',
   },
   ambience_gameover: {
-    url: '/audio/space-ambient.ogg',
+    url: audioAsset('space-ambient.ogg'),
     layer: 'ambience',
     loop: true,
     baseGain: 0.12,
@@ -289,14 +290,14 @@ const TRACK_REGISTRY: Record<string, TrackSpec> = {
 
   // Boss Encounters
   music_boss: {
-    url: '/audio/boss-standard.ogg',
+    url: audioAsset('boss-standard.ogg'),
     layer: 'music',
     loop: true,
     baseGain: 0.40,
     fallbackKey: 'music_high_tension',
   },
   music_boss_omega: {
-    url: '/audio/boss-omega.ogg',
+    url: audioAsset('boss-omega.ogg'),
     layer: 'music',
     loop: true,
     baseGain: 0.42,
@@ -305,7 +306,7 @@ const TRACK_REGISTRY: Record<string, TrackSpec> = {
 
   // Stinger SFX
   sfx_tension_alarm: {
-    url: '/audio/tension-alarm.ogg',
+    url: audioAsset('tension-alarm.ogg'),
     layer: 'sfx',
     loop: false,
     baseGain: 0.30,

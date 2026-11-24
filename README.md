@@ -4,6 +4,12 @@
 
 [![CI](https://github.com/Sttive17/Galactic-PTZ-Shooter/actions/workflows/ci.yml/badge.svg)](https://github.com/Sttive17/Galactic-PTZ-Shooter/actions/workflows/ci.yml)
 
+## Jugar
+
+**Prueba el juego en el navegador:** [Abrir Galactic PTZ](https://sttive17.github.io/Galactic-PTZ-Shooter/)
+
+Funciona mejor en un navegador de escritorio con WebGL. Para activar el audio, haz clic en la página; para jugar con un mando, conéctalo antes de iniciar la partida.
+
 ## Contenido
 
 - [Características](#características)
@@ -55,6 +61,7 @@ La partida se juega desde una vista en primera persona. Gira la cámara, desplá
 - Zustand
 - Tailwind CSS
 - Playwright Core para pruebas end-to-end
+- GitHub Pages para alojar la versión web
 
 ## Requisitos e instalación
 
@@ -81,6 +88,10 @@ Abre la dirección local que muestra Vite en la terminal. Para usar un mando, co
 | `npm run test:e2e -- --tier smoke` | Ejecuta las pruebas rápidas de arranque, WebGL y audio. |
 
 Las pruebas E2E necesitan Google Chrome o Microsoft Edge instalado. El proyecto usa `playwright-core` y no descarga un navegador automáticamente. Se puede seleccionar el navegador mediante `E2E_BROWSER_PATH` y ejecutar pruebas concretas con `--grep`.
+
+## Publicación web
+
+GitHub Actions compila la aplicación con la ruta base de GitHub Pages y publica el contenido de `dist/` automáticamente al actualizar `main`. El flujo está definido en `.github/workflows/deploy-pages.yml`. Los cambios a la aplicación se publican después de que termine el despliegue; revisa la ejecución **Deploy GitHub Pages** en la pestaña **Actions** del repositorio.
 
 ## Cómo jugar
 
