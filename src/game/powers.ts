@@ -27,6 +27,7 @@ export interface PowerDefinition {
   effectText: string;
   rarity: 'TÁCTICO' | 'ÉPICO' | 'PROTOTIPO';
   accent: 'cyan' | 'amber' | 'purple' | 'emerald' | 'rose';
+  maxStacks: number;
 }
 
 export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
@@ -38,6 +39,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: '+30% velocidad de disparo (acumulable)',
     rarity: 'TÁCTICO',
     accent: 'amber',
+    maxStacks: 5,
   },
   TRIPLE_SHOT: {
     id: 'TRIPLE_SHOT',
@@ -47,6 +49,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: '3 rayos por tiro (+2 proyectiles extra por mejora)',
     rarity: 'PROTOTIPO',
     accent: 'rose',
+    maxStacks: 4,
   },
   EMP_BLAST: {
     id: 'EMP_BLAST',
@@ -56,6 +59,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: 'Radio de explosión 10m (+4m por mejora)',
     rarity: 'PROTOTIPO',
     accent: 'purple',
+    maxStacks: 4,
   },
   BIG_HITBOX: {
     id: 'BIG_HITBOX',
@@ -65,6 +69,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: '+60% tamaño y área de impacto del disparo',
     rarity: 'TÁCTICO',
     accent: 'cyan',
+    maxStacks: 4,
   },
   RAILGUN_SPEED: {
     id: 'RAILGUN_SPEED',
@@ -74,6 +79,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: '+45% velocidad de proyectiles',
     rarity: 'TÁCTICO',
     accent: 'cyan',
+    maxStacks: 4,
   },
   SLOW_MO_DRONES: {
     id: 'SLOW_MO_DRONES',
@@ -83,6 +89,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: '-25% velocidad de todos los drones (hasta -65%)',
     rarity: 'ÉPICO',
     accent: 'emerald',
+    maxStacks: 3,
   },
   SCORE_BOOST: {
     id: 'SCORE_BOOST',
@@ -92,6 +99,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: '+50% puntos en cada impacto confirmado',
     rarity: 'ÉPICO',
     accent: 'amber',
+    maxStacks: 5,
   },
   TIME_SURGE: {
     id: 'TIME_SURGE',
@@ -101,6 +109,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: '+25s inmediatos y +10s extra en futuras rondas',
     rarity: 'TÁCTICO',
     accent: 'emerald',
+    maxStacks: 4,
   },
   HEAVY_DAMAGE: {
     id: 'HEAVY_DAMAGE',
@@ -110,6 +119,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: '+1 de daño base por disparo (acumulable)',
     rarity: 'PROTOTIPO',
     accent: 'rose',
+    maxStacks: 5,
   },
   PIERCING_SHOT: {
     id: 'PIERCING_SHOT',
@@ -119,6 +129,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: 'Atraviesa +1 objetivo extra por mejora',
     rarity: 'PROTOTIPO',
     accent: 'cyan',
+    maxStacks: 4,
   },
   VAMPIRIC_SHIELD: {
     id: 'VAMPIRIC_SHIELD',
@@ -128,6 +139,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: 'Restaura +6 de Escudo/Salud por baja (+6 por nivel)',
     rarity: 'ÉPICO',
     accent: 'emerald',
+    maxStacks: 4,
   },
   TITAN_ARMOR: {
     id: 'TITAN_ARMOR',
@@ -137,6 +149,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: '+35 Escudo máx. y curación + -15% daño recibido',
     rarity: 'TÁCTICO',
     accent: 'cyan',
+    maxStacks: 4,
   },
   JET_BOOTS: {
     id: 'JET_BOOTS',
@@ -146,6 +159,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: '+25% altura de salto y +1 salto aéreo',
     rarity: 'TÁCTICO',
     accent: 'purple',
+    maxStacks: 3,
   },
   TURBO_SPRINT: {
     id: 'TURBO_SPRINT',
@@ -155,6 +169,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: '+18% velocidad, -25% gasto y +35% recarga de sprint',
     rarity: 'TÁCTICO',
     accent: 'amber',
+    maxStacks: 4,
   },
   CRITICAL_OPTICS: {
     id: 'CRITICAL_OPTICS',
@@ -164,6 +179,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: '+25% prob. de crítico (2.5x de daño al activar)',
     rarity: 'ÉPICO',
     accent: 'amber',
+    maxStacks: 4,
   },
   RICOCHET_ROUNDS: {
     id: 'RICOCHET_ROUNDS',
@@ -173,6 +189,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: '+1 rebote en superficies por mejora',
     rarity: 'ÉPICO',
     accent: 'purple',
+    maxStacks: 4,
   },
   ALLY_DRONE: {
     id: 'ALLY_DRONE',
@@ -182,6 +199,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: 'Nv1-2: 1 aliado · Nv3-4: 2 aliados · Nv5+: 3 aliados (más cadencia y daño)',
     rarity: 'PROTOTIPO',
     accent: 'cyan',
+    maxStacks: 5,
   },
   EXTENDED_MAG: {
     id: 'EXTENDED_MAG',
@@ -191,6 +209,7 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: 'Capacidad: 50 → 80 → 120 → 200 balas (+recarga rápida)',
     rarity: 'TÁCTICO',
     accent: 'amber',
+    maxStacks: 3,
   },
   SMART_AUTOLOCK: {
     id: 'SMART_AUTOLOCK',
@@ -200,16 +219,28 @@ export const POWERS_CATALOG: Record<PowerId, PowerDefinition> = {
     effectText: 'Autoapuntado magnético + Disparo automático autónomo (Nv2: +25% cadencia, Nv3: auto-críticos a núcleos)',
     rarity: 'PROTOTIPO',
     accent: 'cyan',
+    maxStacks: 3,
   },
 };
 
 export const ALL_POWER_IDS = Object.keys(POWERS_CATALOG) as PowerId[];
 
-export function getRandomPowerChoices(count = 3): PowerId[] {
-  const pool = [...ALL_POWER_IDS];
+export function getRandomPowerChoices(
+  count = 3,
+  activePowers: Partial<Record<PowerId, number>> = {}
+): PowerId[] {
+  // Filtrar los poderes que ya alcanzaron su límite máximo de acumulaciones (maxStacks)
+  const available = ALL_POWER_IDS.filter((id) => {
+    const current = activePowers[id] || 0;
+    const max = POWERS_CATALOG[id]?.maxStacks ?? 5;
+    return current < max;
+  });
+
+  // Si todos los poderes estuvieran al máximo (final de juego), usar el catálogo completo
+  const pool = available.length > 0 ? [...available] : [...ALL_POWER_IDS];
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
-  return pool.slice(0, count);
+  return pool.slice(0, Math.min(count, pool.length));
 }

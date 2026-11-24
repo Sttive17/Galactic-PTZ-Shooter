@@ -275,11 +275,38 @@ export const PowerSelection = () => {
                     {power.name}
                   </h2>
 
-                  {currentStack > 0 && (
-                    <div className={`text-[10px] font-bold tracking-widest mb-2 ${style.text}`}>
-                      MEJORA: NVL {currentStack} → NVL {currentStack + 1}
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span className={`text-[10px] font-bold tracking-widest ${style.text}`}>
+                      {currentStack === 0
+                        ? `MÓDULO NUEVO (NV. 1/${power.maxStacks})`
+                        : `MEJORA: NV. ${currentStack} → NV. ${currentStack + 1}/${power.maxStacks}`}
+                    </span>
+                    {currentStack + 1 >= power.maxStacks && (
+                      <span className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/50 rounded">
+                        MÁXIMO NIVEL
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Level pip indicator bar */}
+                  <div className="flex items-center gap-1 mb-3.5">
+                    {Array.from({ length: power.maxStacks }).map((_, pipIdx) => {
+                      const isAcquired = pipIdx < currentStack;
+                      const isNext = pipIdx === currentStack;
+                      return (
+                        <div
+                          key={`pip-${pipIdx}`}
+                          className={`h-1.5 flex-1 rounded-sm transition-all ${
+                            isAcquired
+                              ? 'bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.8)]'
+                              : isNext
+                                ? 'bg-cyan-500/50 animate-pulse border border-cyan-400/80'
+                                : 'bg-slate-800 border border-slate-700/50'
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
 
                   <p className="text-xs text-slate-300 leading-relaxed mb-5">
                     {power.description}
@@ -327,7 +354,11 @@ export const ActivePowersBar = () => {
               <PowerIcon id={id} size={10} />
             </span>
             <span className="text-slate-200 hidden sm:inline">{power.shortName}</span>
-            {count > 1 && <span className="font-orbitron font-bold text-white">x{count}</span>}
+            {count > 1 || count >= power.maxStacks ? (
+              <span className={`font-orbitron font-bold ${count >= power.maxStacks ? 'text-amber-300' : 'text-white'}`}>
+                {count >= power.maxStacks ? `MÁX` : `x${count}`}
+              </span>
+            ) : null}
           </div>
         );
       })}

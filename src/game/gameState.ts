@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { GAME_CONFIG } from './config';
-import { getRandomPowerChoices } from './powers';
+import { getRandomPowerChoices, POWERS_CATALOG } from './powers';
 import type { PowerId } from './powers';
 import { SceneState } from './sceneState';
 import { generateMapForLevel, generateRandomMap, getChapterForLevel } from './mapGenerator';
@@ -516,7 +516,9 @@ export const useGameStore = create<GameState>((set) => ({
 
   selectPower: (powerId) => set((state) => {
     const prevCount = state.activePowers[powerId] || 0;
-    const updatedPowers = { ...state.activePowers, [powerId]: prevCount + 1 };
+    const maxAllowed = POWERS_CATALOG[powerId]?.maxStacks ?? 5;
+    const updatedCount = Math.min(maxAllowed, prevCount + 1);
+    const updatedPowers = { ...state.activePowers, [powerId]: updatedCount };
     const extraTime = powerId === 'TIME_SURGE' ? 25 : 0;
     const armorBonus = powerId === 'TITAN_ARMOR' ? 35 : 0;
     const nextMaxShield = state.maxPlayerShield + armorBonus;
@@ -610,7 +612,7 @@ export const useGameStore = create<GameState>((set) => ({
     if (state.roundState !== 'WARP_CINEMATIC') return state;
     return {
       roundState: 'POWER_SELECT',
-      powerChoices: getRandomPowerChoices(3),
+      powerChoices: getRandomPowerChoices(3, state.activePowers),
       portalTransition: null,
     };
   }),
@@ -630,7 +632,7 @@ export const useGameStore = create<GameState>((set) => ({
       currentRound: nextWave,
       targetsDestroyed: 0,
       roundState: 'POWER_SELECT',
-      powerChoices: getRandomPowerChoices(3),
+      powerChoices: getRandomPowerChoices(3, state.activePowers),
       currentMap: newMap,
       bossInfo: null,
       playerShield: state.maxPlayerShield,
@@ -822,7 +824,7 @@ export const useGameStore = create<GameState>((set) => ({
       ptz: { pan: 0, tilt: 0, zoom: 1 },
       cameraShake: 0,
       activePowers: {},
-      powerChoices: isPlayingMode ? getRandomPowerChoices(3) : [],
+      powerChoices: isPlayingMode ? getRandomPowerChoices(3, {}) : [],
       currentMap: newMap,
       maxPlayerShield: 100,
       playerShield: 100,
@@ -867,7 +869,7 @@ export const useGameStore = create<GameState>((set) => ({
       currentRound: nextR,
       highestRound: isTraining ? state.highestRound : Math.max(state.highestRound, nextR),
       roundState: 'POWER_SELECT',
-      powerChoices: getRandomPowerChoices(3),
+      powerChoices: getRandomPowerChoices(3, state.activePowers),
       targetsDestroyed: 0,
       timeRemaining: isTraining ? state.timeRemaining : Math.min(240, state.timeRemaining + bonusTime),
       currentMap: newMap,
@@ -902,7 +904,7 @@ export const useGameStore = create<GameState>((set) => ({
       ptz: { pan: 0, tilt: 0, zoom: 1 },
       cameraShake: 0,
       activePowers: {},
-      powerChoices: getRandomPowerChoices(3),
+      powerChoices: getRandomPowerChoices(3, {}),
       currentMap: newMap,
       maxPlayerShield: 100,
       playerShield: 100,

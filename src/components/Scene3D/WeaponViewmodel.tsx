@@ -31,9 +31,14 @@ export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelPr
   const rootGroupRef = useRef<THREE.Group>(null);
   const rotaryLeftRef = useRef<THREE.Group>(null);
   const rotaryRightRef = useRef<THREE.Group>(null);
+  const rotaryQuad1Ref = useRef<THREE.Group>(null);
+  const rotaryQuad2Ref = useRef<THREE.Group>(null);
   const teslaLeftOrbRef = useRef<THREE.Mesh>(null);
   const teslaRightOrbRef = useRef<THREE.Mesh>(null);
   const haloRingRef = useRef<THREE.Group>(null);
+  const haloRing2Ref = useRef<THREE.Group>(null);
+  const prismGroupRef = useRef<THREE.Group>(null);
+  const smartLaserRef = useRef<THREE.Group>(null);
   const magRef = useRef<THREE.Group>(null);
   const ventMatRef = useRef<THREE.MeshStandardMaterial>(null);
   const railgunCoilRefs = useRef<(THREE.Mesh | null)[]>([]);
@@ -46,20 +51,25 @@ export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelPr
   const heatLevelRef = useRef<number>(0);
 
   const magStacks = activePowers.EXTENDED_MAG || 0;
+  const tripleStacks = activePowers.TRIPLE_SHOT || 0;
+  const rapidStacks = activePowers.RAPID_FIRE || 0;
+  const heavyStacks = activePowers.HEAVY_DAMAGE || 0;
+  const critStacks = activePowers.CRITICAL_OPTICS || 0;
+  const autoLockStacks = activePowers.SMART_AUTOLOCK || 0;
 
-  const hasTriple = (activePowers.TRIPLE_SHOT || 0) > 0;
+  const hasTriple = tripleStacks > 0;
   const hasRailgun = (activePowers.RAILGUN_SPEED || 0) > 0;
-  const hasRapid = (activePowers.RAPID_FIRE || 0) > 0;
-  const hasHeavy = (activePowers.HEAVY_DAMAGE || 0) > 0;
+  const hasRapid = rapidStacks > 0;
+  const hasHeavy = heavyStacks > 0;
   const hasPiercing = (activePowers.PIERCING_SHOT || 0) > 0;
-  const hasCrit = (activePowers.CRITICAL_OPTICS || 0) > 0;
+  const hasCrit = critStacks > 0;
   const hasEmp = (activePowers.EMP_BLAST || 0) > 0;
   const hasRicochet = (activePowers.RICOCHET_ROUNDS || 0) > 0;
   const hasBigHitbox = (activePowers.BIG_HITBOX || 0) > 0;
   const hasShield = (activePowers.VAMPIRIC_SHIELD || 0) > 0 || (activePowers.TITAN_ARMOR || 0) > 0;
   const hasCryo = (activePowers.SLOW_MO_DRONES || 0) > 0;
   const hasAlly = (activePowers.ALLY_DRONE || 0) > 0;
-  const hasAutoLock = (activePowers.SMART_AUTOLOCK || 0) > 0;
+  const hasAutoLock = autoLockStacks > 0;
   const hasUtility =
     (activePowers.SCORE_BOOST || 0) > 0 ||
     (activePowers.TIME_SURGE || 0) > 0 ||
@@ -71,13 +81,36 @@ export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelPr
     totalStacks += val || 0;
   }
 
-  const isMk2 = totalStacks >= 2;
-  const isMk3 = totalStacks >= 5;
-  const isMk4 = totalStacks >= 8;
+  // Multi-tier Weapon Evolution (Mk-I to Apex Mk-VI)
+  const isMk2 = totalStacks >= 2;   // Nivel Táctico Avanzado
+  const isMk3 = totalStacks >= 5;   // Vanguardia Sobrecargada
+  const isMk4 = totalStacks >= 8;   // Prototipo Cuántico
+  const isMkV = totalStacks >= 12;  // Titán Hiper-Energizado
+  const isApex = totalStacks >= 16; // Ascensión Celestial / Singularity Apex
 
   const accentHex = getWeaponAccentHex(activePowers);
-  const chassisTint = isMk3 ? '#1e293b' : isMk2 ? '#162032' : '#111827';
-  const railMetal = isMk4 ? '#94a3b8' : isMk2 ? '#64748b' : '#374151';
+  const chassisTint = isApex
+    ? '#090d16'
+    : isMkV
+      ? '#0f172a'
+      : isMk4
+        ? '#111e38'
+        : isMk3
+          ? '#1e293b'
+          : isMk2
+            ? '#162032'
+            : '#111827';
+
+  const railMetal = isApex
+    ? '#e2e8f0'
+    : isMkV
+      ? '#cbd5e1'
+      : isMk4
+        ? '#94a3b8'
+        : isMk2
+          ? '#64748b'
+          : '#374151';
+
   const shieldColor = (activePowers.VAMPIRIC_SHIELD || 0) > 0 ? '#34d399' : '#38bdf8';
 
   useFrame((state, delta) => {
@@ -139,11 +172,18 @@ export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelPr
         displayedWeapon === 'HEAVY_RAILGUN' ? -0.7 : displayedWeapon === 'SCATTER_SHOTGUN' ? -0.52 : -0.62;
     }
 
+    const rotarySpeed = (4.5 + rapidStacks * 2.2) * firingBoost;
     if (rotaryLeftRef.current) {
-      rotaryLeftRef.current.rotation.z += dt * 4.5 * firingBoost;
+      rotaryLeftRef.current.rotation.z += dt * rotarySpeed;
     }
     if (rotaryRightRef.current) {
-      rotaryRightRef.current.rotation.z -= dt * 4.5 * firingBoost;
+      rotaryRightRef.current.rotation.z -= dt * rotarySpeed;
+    }
+    if (rotaryQuad1Ref.current) {
+      rotaryQuad1Ref.current.rotation.z += dt * rotarySpeed * 1.15;
+    }
+    if (rotaryQuad2Ref.current) {
+      rotaryQuad2Ref.current.rotation.z -= dt * rotarySpeed * 1.15;
     }
 
     if (teslaLeftOrbRef.current && teslaRightOrbRef.current) {
@@ -153,8 +193,22 @@ export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelPr
     }
 
     if (haloRingRef.current) {
-      haloRingRef.current.rotation.z += dt * 1.8;
+      haloRingRef.current.rotation.z += dt * (1.8 + totalStacks * 0.12);
       haloRingRef.current.rotation.y = Math.sin(t * 1.5) * 0.14;
+    }
+    if (haloRing2Ref.current) {
+      haloRing2Ref.current.rotation.z -= dt * (2.4 + totalStacks * 0.16);
+      haloRing2Ref.current.rotation.x = Math.cos(t * 1.8) * 0.16;
+    }
+
+    if (prismGroupRef.current) {
+      prismGroupRef.current.rotation.z += dt * 1.4;
+      prismGroupRef.current.position.z = -0.52 + Math.sin(t * 2.8) * 0.015;
+    }
+
+    if (smartLaserRef.current) {
+      smartLaserRef.current.rotation.y = Math.sin(t * 6.0) * 0.035;
+      smartLaserRef.current.rotation.x = Math.cos(t * 5.0) * 0.025;
     }
 
     // Railgun pulse induction coils
@@ -421,10 +475,18 @@ export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelPr
           />
         </mesh>
         {hasCrit && (
-          <mesh position={[0, 0.002, 0.001]}>
-            <ringGeometry args={[0.008, 0.012, 16]} />
-            <meshBasicMaterial color="#facc15" toneMapped={false} />
-          </mesh>
+          <group position={[0, 0.002, 0.001]}>
+            <mesh>
+              <ringGeometry args={[0.008, 0.012, 16]} />
+              <meshBasicMaterial color="#facc15" toneMapped={false} />
+            </mesh>
+            {critStacks >= 2 && (
+              <mesh position={[0, 0, 0.001]} rotation={[0, 0, Math.PI / 4]}>
+                <ringGeometry args={[0.015, 0.017, 4]} />
+                <meshBasicMaterial color="#fef08a" toneMapped={false} />
+              </mesh>
+            )}
+          </group>
         )}
       </group>
 
@@ -444,6 +506,19 @@ export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelPr
               </mesh>
             </group>
           ))}
+          {tripleStacks >= 2 &&
+            [-0.102, 0.102].map((sideX, idx) => (
+              <group key={`triple-ext-${idx}`} position={[sideX, 0.038, -0.24]} rotation={[0, 0, idx === 0 ? 0.25 : -0.25]}>
+                <mesh rotation={[Math.PI / 2, 0, 0]}>
+                  <cylinderGeometry args={[0.011, 0.011, 0.18, 10]} />
+                  <meshStandardMaterial color={railMetal} metalness={0.85} roughness={0.22} />
+                </mesh>
+                <mesh position={[0, 0, -0.09]} rotation={[Math.PI / 2, 0, 0]}>
+                  <cylinderGeometry args={[0.013, 0.013, 0.02, 10]} />
+                  <meshStandardMaterial color={accentHex} emissive={accentHex} emissiveIntensity={3.2} />
+                </mesh>
+              </group>
+            ))}
         </group>
       )}
 
@@ -476,15 +551,39 @@ export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelPr
               <meshStandardMaterial color="#334155" metalness={0.8} roughness={0.25} />
             </mesh>
           </group>
+          {rapidStacks >= 3 && (
+            <>
+              <group ref={rotaryQuad1Ref} position={[-0.048, 0.042, 0]}>
+                <mesh rotation={[Math.PI / 2, 0, 0]}>
+                  <cylinderGeometry args={[0.014, 0.014, 0.16, 6]} />
+                  <meshStandardMaterial color="#475569" metalness={0.85} roughness={0.2} />
+                </mesh>
+              </group>
+              <group ref={rotaryQuad2Ref} position={[0.048, 0.042, 0]}>
+                <mesh rotation={[Math.PI / 2, 0, 0]}>
+                  <cylinderGeometry args={[0.014, 0.014, 0.16, 6]} />
+                  <meshStandardMaterial color="#475569" metalness={0.85} roughness={0.2} />
+                </mesh>
+              </group>
+            </>
+          )}
         </group>
       )}
 
       {/* HEAVY_DAMAGE: Massive Reinforced Underbarrel Shroud */}
       {hasHeavy && (
-        <mesh position={[0, -0.042, -0.26]}>
-          <boxGeometry args={[0.082, 0.045, 0.28]} />
-          <meshStandardMaterial color="#7f1d1d" metalness={0.7} roughness={0.3} />
-        </mesh>
+        <group>
+          <mesh position={[0, -0.042, -0.26]}>
+            <boxGeometry args={[0.082, 0.045, 0.28]} />
+            <meshStandardMaterial color="#7f1d1d" metalness={0.7} roughness={0.3} />
+          </mesh>
+          {heavyStacks >= 2 && (
+            <mesh position={[0, -0.065, -0.24]}>
+              <boxGeometry args={[0.094, 0.02, 0.22]} />
+              <meshStandardMaterial color="#991b1b" emissive="#7f1d1d" emissiveIntensity={1.5} metalness={0.8} />
+            </mesh>
+          )}
+        </group>
       )}
 
       {/* PIERCING_SHOT: Sharp Lance-Like Prongs on Left & Right Barrel Sides */}
@@ -586,10 +685,17 @@ export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelPr
             <boxGeometry args={[0.014, 0.008, 0.05]} />
             <meshBasicMaterial color="#06b6d4" toneMapped={false} />
           </mesh>
-          <mesh position={[0, 0, -0.042]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.006, 0.008, 0.012, 10]} />
-            <meshStandardMaterial color="#22d3ee" emissive="#06b6d4" emissiveIntensity={3.2} />
-          </mesh>
+          <group ref={smartLaserRef}>
+            <mesh position={[0, 0, -0.042]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.006, 0.008, 0.012, 10]} />
+              <meshStandardMaterial color="#22d3ee" emissive="#06b6d4" emissiveIntensity={3.2} />
+            </mesh>
+            {/* Forward Autonomous Scanning Guide Beam */}
+            <mesh position={[0, 0, -0.65]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.0012, 0.0012, 1.2, 6]} />
+              <meshBasicMaterial color="#06b6d4" transparent opacity={0.45} toneMapped={false} />
+            </mesh>
+          </group>
         </group>
       )}
 
@@ -649,6 +755,76 @@ export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelPr
               toneMapped={false}
             />
           </mesh>
+        </group>
+      )}
+
+      {/* MK-V Tier Upgrade (12+ total stacks): Dual Counter-Rotating Rings & Heavy Heat Sinks */}
+      {isMkV && (
+        <group>
+          {/* Secondary Concentric Counter-Rotating Halo Ring */}
+          <group ref={haloRing2Ref} position={[0, 0.028, -0.44]}>
+            <mesh>
+              <torusGeometry args={[0.084, 0.0035, 8, 32]} />
+              <meshBasicMaterial
+                color={accentHex}
+                transparent
+                opacity={0.7}
+                blending={THREE.AdditiveBlending}
+                depthWrite={false}
+                toneMapped={false}
+              />
+            </mesh>
+          </group>
+          {/* High-Yield Lateral Capacitor Banks */}
+          {[-0.054, 0.054].map((hx, idx) => (
+            <mesh key={`mkv-cap-${idx}`} position={[hx, 0.055, -0.12]}>
+              <boxGeometry args={[0.014, 0.022, 0.16]} />
+              <meshStandardMaterial color="#f59e0b" emissive="#d97706" emissiveIntensity={2.5} metalness={0.9} />
+            </mesh>
+          ))}
+          {/* Underbarrel Reinforced Harmonic Stabilizer Fin */}
+          <mesh position={[0, -0.062, -0.32]} rotation={[0.15, 0, 0]}>
+            <boxGeometry args={[0.018, 0.045, 0.16]} />
+            <meshStandardMaterial color="#0284c7" emissive="#0ea5e9" emissiveIntensity={2.2} metalness={0.8} />
+          </mesh>
+        </group>
+      )}
+
+      {/* APEX MK-VI Tier Upgrade (16+ total stacks): Celestial Zero-Gravity Orbiting Focusing Prisms */}
+      {isApex && (
+        <group>
+          {/* Floating Zero-G Prisms Orbiting Muzzle */}
+          <group ref={prismGroupRef} position={[0, 0.028, -0.52]}>
+            {[0, (2 * Math.PI) / 3, (4 * Math.PI) / 3].map((angle, idx) => (
+              <group
+                key={`apex-prism-${idx}`}
+                position={[Math.cos(angle) * 0.095, Math.sin(angle) * 0.095, 0]}
+                rotation={[0, 0, angle]}
+              >
+                <mesh>
+                  <octahedronGeometry args={[0.016, 0]} />
+                  <meshStandardMaterial
+                    color="#ffffff"
+                    emissive={accentHex}
+                    emissiveIntensity={4.2}
+                    roughness={0.1}
+                    metalness={0.9}
+                  />
+                </mesh>
+                <mesh position={[0, 0, -0.02]}>
+                  <cylinderGeometry args={[0.002, 0.002, 0.05, 6]} />
+                  <meshBasicMaterial color={accentHex} transparent opacity={0.65} toneMapped={false} />
+                </mesh>
+              </group>
+            ))}
+          </group>
+          {/* Longitudinal Radiant Power Conduits Running Flank */}
+          {[-0.045, 0.045].map((cx, idx) => (
+            <mesh key={`apex-conduit-${idx}`} position={[cx, 0.012, -0.14]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.004, 0.004, 0.46, 8]} />
+              <meshStandardMaterial color="#ffffff" emissive={accentHex} emissiveIntensity={3.8} />
+            </mesh>
+          ))}
         </group>
       )}
 

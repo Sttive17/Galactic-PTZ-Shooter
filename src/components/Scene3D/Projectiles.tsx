@@ -14,6 +14,7 @@ import { unlockAchievement } from '../../game/achievements';
 import { speakTacticalCue } from '../../game/tacticalVoice';
 
 function getPlayerBoltPalette(activePowers: Partial<Record<PowerId, number>>): { bolt: string; tracer: string } {
+  if ((activePowers.SMART_AUTOLOCK || 0) > 0) return { bolt: '#06b6d4', tracer: '#67e8f9' };
   if ((activePowers.HEAVY_DAMAGE || 0) > 0) return { bolt: '#fb7185', tracer: '#fda4af' };
   if ((activePowers.CRITICAL_OPTICS || 0) > 0) return { bolt: '#facc15', tracer: '#fde047' };
   if ((activePowers.RICOCHET_ROUNDS || 0) > 0) return { bolt: '#c084fc', tracer: '#e879f9' };
@@ -22,11 +23,11 @@ function getPlayerBoltPalette(activePowers: Partial<Record<PowerId, number>>): {
   return { bolt: '#38bdf8', tracer: '#7dd3fc' };
 }
 
-const MAX_PARTICLES = 500;
-const MAX_SHOCKWAVES = 16;
+const MAX_PARTICLES = 800;
+const MAX_SHOCKWAVES = 32;
 const MAX_BOSS_PROJ = 80;
-const MAX_PLAYER_PROJ = 64;
-const MAX_TRACERS = 24;
+const MAX_PLAYER_PROJ = 256;
+const MAX_TRACERS = 64;
 
 // Stable module-level args/indices so R3F never recreates InstancedMeshes on re-render
 const PARTICLES_ARGS: [THREE.BufferGeometry | undefined, THREE.Material | undefined, number] = [undefined, undefined, MAX_PARTICLES];
@@ -372,7 +373,13 @@ export const Projectiles = () => {
         _spreadQuat.setFromAxisAngle(_camUp, angleRad);
         _boltDir.copy(baseDir).applyQuaternion(_spreadQuat).normalize();
 
-        const idx = playerProjCursor.current;
+        // Prioritize finding an inactive slot to prevent cutting off in-flight projectiles
+        let idx = playerProjCursor.current;
+        let attempts = 0;
+        while (playerProjSlots.current[idx].active && attempts < MAX_PLAYER_PROJ) {
+          idx = (idx + 1) % MAX_PLAYER_PROJ;
+          attempts++;
+        }
         playerProjCursor.current = (idx + 1) % MAX_PLAYER_PROJ;
 
         const slot = playerProjSlots.current[idx];
