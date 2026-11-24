@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { Target, Projectile } from '../types/game';
+import type { Target, Projectile, CombatDrop } from '../types/game';
 import type { MapBox } from './mapGenerator';
 
 export interface AllyRadarEntry {
@@ -30,6 +30,7 @@ export const PLAYER_START_POS = new THREE.Vector3(0, PLAYER_EYE_HEIGHT, 14);
 export const SceneState = {
   targets: [] as Target[],
   projectiles: [] as Projectile[],
+  drops: [] as CombatDrop[],
   colliders: [] as MapBox[],
   touchControls: {
     moveX: 0,
@@ -52,6 +53,9 @@ export const SceneState = {
   stamina: 100,
   isExhausted: false,
   isSprintingNow: false,
+  dashCooldownTimer: 0,
+  dashDurationTimer: 0,
+  isDashing: false,
   ammo: 50,
   maxAmmo: 50,
   isReloading: false,
@@ -99,6 +103,10 @@ export const SceneState = {
     SceneState.stamina = 100;
     SceneState.isExhausted = false;
     SceneState.isSprintingNow = false;
+    SceneState.dashCooldownTimer = 0;
+    SceneState.dashDurationTimer = 0;
+    SceneState.isDashing = false;
+    SceneState.drops = [];
     SceneState.ammo = SceneState.maxAmmo;
     SceneState.isReloading = false;
     SceneState.reloadProgress = 0;

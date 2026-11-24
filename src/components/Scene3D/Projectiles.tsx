@@ -7,6 +7,8 @@ import type { MapBox } from '../../game/mapGenerator';
 import type { PowerId } from '../../game/powers';
 import * as THREE from 'three';
 import { playSound } from '../../game/AudioSystem';
+import { triggerHaptic } from '../../game/haptics';
+import { spawnCombatDrop } from '../../game/combatDrops';
 
 function getPlayerBoltPalette(activePowers: Partial<Record<PowerId, number>>): { bolt: string; tracer: string } {
   if ((activePowers.HEAVY_DAMAGE || 0) > 0) return { bolt: '#fb7185', tracer: '#fda4af' };
@@ -769,6 +771,16 @@ export const Projectiles = () => {
 
             storeState.registerHit(finalPoints);
             SceneState.onTargetDestroyed(closestTarget.id);
+
+            // Spawn Drops on Target Death
+            if (closestTarget.isBoss) {
+              triggerHaptic('bossDeath');
+              spawnCombatDrop(_targetCenter, 'SHIELD');
+              spawnCombatDrop(_targetCenter, 'AMMO');
+              spawnCombatDrop(_targetCenter, 'NANITE');
+            } else if (Math.random() < 0.65) {
+              spawnCombatDrop(_targetCenter);
+            }
 
             let generatorDestroyed = Boolean(closestTarget.isGenerator);
 

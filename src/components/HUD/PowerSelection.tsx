@@ -1,6 +1,8 @@
 import { useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useGameStore } from '../../game/gameState';
+import { useGamepad } from '../../hooks/useGamepad';
+import { useGamepadMenu } from '../../hooks/useGamepadMenu';
 import { getDeviceProfile } from '../../game/deviceProfile';
 import { POWERS_CATALOG } from '../../game/powers';
 import type { PowerId, PowerDefinition } from '../../game/powers';
@@ -110,6 +112,7 @@ export const PowerSelection = () => {
   const activePowers = useGameStore((state) => state.activePowers);
   const selectPower = useGameStore((state) => state.selectPower);
   const isWaveMode = mode === 'TRAINING';
+  const { gamepadState } = useGamepad();
 
   const handleChoose = useCallback((id: PowerId) => {
     initAudio();
@@ -120,6 +123,49 @@ export const PowerSelection = () => {
     }
     selectPower(id);
   }, [selectPower]);
+
+  const { selectedIndex } = useGamepadMenu({
+    enabled: roundState === 'POWER_SELECT',
+    itemCount: powerChoices.length,
+    onSelect: (index) => {
+      const choice = powerChoices[index];
+      if (choice) handleChoose(choice);
+    },
+    axis: 'horizontal',
+  });
+
+  // Gamepad face buttons X, Y, B instant selection
+  useEffect(() => {
+    if (roundState !== 'POWER_SELECT' || powerChoices.length === 0) return;
+    let raf = 0;
+    let wasPressed = false;
+    const pollButtons = () => {
+      const gamepads = typeof navigator !== 'undefined' && navigator.getGamepads ? navigator.getGamepads() : [];
+      let gp = null;
+      for (let i = 0; i < gamepads.length; i++) {
+        if (gamepads[i]) {
+          gp = gamepads[i];
+          break;
+        }
+      }
+      if (gp) {
+        const x = gp.buttons[2]?.pressed || false;
+        const y = gp.buttons[3]?.pressed || false;
+        const b = gp.buttons[1]?.pressed || false;
+        if ((x || y || b) && !wasPressed) {
+          wasPressed = true;
+          if (x && powerChoices[0]) handleChoose(powerChoices[0]);
+          else if (y && powerChoices[1]) handleChoose(powerChoices[1]);
+          else if (b && powerChoices[2]) handleChoose(powerChoices[2]);
+        } else if (!x && !y && !b) {
+          wasPressed = false;
+        }
+      }
+      raf = requestAnimationFrame(pollButtons);
+    };
+    raf = requestAnimationFrame(pollButtons);
+    return () => cancelAnimationFrame(raf);
+  }, [roundState, powerChoices, handleChoose]);
 
   // Allow instant selection with keys 1, 2, 3
   useEffect(() => {
@@ -177,7 +223,11 @@ export const PowerSelection = () => {
                 whileHover={{ scale: 1.04, y: -6 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => handleChoose(powerId)}
-                className={`group glass-panel tech-border border-2 p-6 text-left flex flex-col justify-between min-h-[280px] transition-all cursor-pointer ${style.border} ${style.bg} ${style.glow}`}
+                className={`group glass-panel tech-border border-2 p-6 text-left flex flex-col justify-between min-h-[280px] transition-all cursor-pointer ${style.border} ${style.bg} ${style.glow} ${
+                  gamepadState.connected && selectedIndex === index
+                    ? 'ring-2 ring-emerald-400 scale-[1.04] shadow-[0_0_30px_rgba(52,211,153,0.7)]'
+                    : ''
+                }`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
@@ -185,7 +235,13 @@ export const PowerSelection = () => {
                       {power.rarity}
                     </span>
                     <span className="text-xs font-orbitron font-bold text-slate-400 bg-slate-900/80 border border-slate-700 px-2 py-0.5">
-                      [{index + 1}]
+                      {gamepadState.connected
+                        ? index === 0
+                          ? '(X)'
+                          : index === 1
+                            ? '(Y)'
+                            : '(B)'
+                        : `[${index + 1}]`}
                     </span>
                   </div>
 
@@ -229,8 +285,15 @@ export const PowerSelection = () => {
                   </p>
                 </div>
 
-                <div className={`text-[11px] font-bold tracking-wider px-3 py-2 bg-slate-950/80 border border-slate-800 ${style.text}`}>
-                  {power.effectText}
+                <div className="flex items-center justify-between gap-2">
+                  <div className={`text-[11px] font-bold tracking-wider px-3 py-2 bg-slate-950/80 border border-slate-800 flex-1 ${style.text}`}>
+                    {power.effectText}
+                  </div>
+                  {gamepadState.connected && selectedIndex === index && (
+                    <span className="px-2 py-1 rounded bg-emerald-400 text-slate-950 font-bold text-[10px]">
+                      (A)
+                    </span>
+                  )}
                 </div>
               </motion.button>
             );

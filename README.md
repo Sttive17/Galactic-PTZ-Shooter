@@ -120,6 +120,8 @@ La interfaz muestra información de partida como salud, escudo, munición, puntu
 | Ajustar zoom base | `Q` / `E` o rueda del ratón |
 | Saltar | `Espacio` |
 | Correr | Mantener `Shift` mientras te mueves |
+| Esquivar / Dash con propulsor | `C` |
+| Modo óptico PTZ (Normal / Térmico / Nocturno) | `V` |
 | Recargar | `R` |
 | Entrar al portal activo | `E` |
 | Pausar / reanudar | `P` o `Escape` |
@@ -147,15 +149,18 @@ Al abrir la página, el juego detecta si el dispositivo ofrece entrada táctil o
 | Acción | Control |
 |---|---|
 | Moverse y desplazarse | Joystick izquierdo |
-| Mirar | Joystick derecho |
-| Disparar | Gatillo derecho (`RT`) |
+| Mirar y apuntar (con asistencia y fricción) | Joystick derecho |
+| Disparar (con vibración háptica) | Gatillo derecho (`RT`) |
 | Zoom táctico | Gatillo izquierdo (`LT`) |
 | Saltar | Botón `A` |
+| Esquivar / Dash con propulsor | Botón `B` o botón `LB` |
+| Alternar modo óptico PTZ | Botón `Y` o cruceta arriba (`D-Pad Up`) |
 | Recargar | Botón `X` |
 | Correr | Pulsar joystick izquierdo (`L3`) |
+| Navegación de menús y poderes | Cruceta / sticks y botón `A` para confirmar |
 | Pausar / reanudar | `Start` |
 
-Los nombres y la disponibilidad de los botones pueden variar con mandos no estándar o configuraciones particulares del navegador.
+Los nombres y la disponibilidad de los botones pueden variar con mandos no estándar o configuraciones particulares del navegador. El juego cuenta con soporte para el actuador de vibración háptica dual del mando Xbox en disparos, impactos recibidos, recarga y explosiones de jefes.
 
 ## Ajustes y compatibilidad
 

@@ -50,3 +50,18 @@ export interface Projectile {
   createdAt: number;
   active: boolean;
 }
+
+export type PTZOpticalMode = 'NORMAL' | 'THERMAL' | 'NIGHT_VISION';
+
+export type CombatDropKind = 'SHIELD' | 'AMMO' | 'NANITE';
+
+export interface CombatDrop {
+  id: string;
+  kind: CombatDropKind;
+  position: Vector3;
+  velocity: Vector3;
+  age: number;
+  maxAge: number;
+  value: number;
+  active: boolean;
+}

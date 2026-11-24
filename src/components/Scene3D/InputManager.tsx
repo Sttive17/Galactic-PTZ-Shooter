@@ -7,7 +7,10 @@ import { SceneState, PLAYER_EYE_HEIGHT } from '../../game/sceneState';
 import { GAME_CONFIG } from '../../game/config';
 import { audioSystem, initAudio, playSound, playReload, playPortalWarp } from '../../game/AudioSystem';
 import { getDeviceProfile } from '../../game/deviceProfile';
+import { triggerHaptic } from '../../game/haptics';
 import * as THREE from 'three';
+
+const _aimAssistVec = new THREE.Vector3();
 
 const tryStartReload = (state: GameState) => {
   if (SceneState.isReloading || SceneState.ammo >= SceneState.maxAmmo) return;
@@ -16,6 +19,7 @@ const tryStartReload = (state: GameState) => {
   SceneState.reloadDuration = Math.max(0.75, 1.35 - rapidStacks * 0.1 - magStacks * 0.1);
   SceneState.isReloading = true;
   SceneState.reloadProgress = 0;
+  triggerHaptic('reload');
   playReload();
 };
 
@@ -27,12 +31,36 @@ const tryJump = (state: GameState, airJumpsUsed: { current: number }) => {
     SceneState.playerVelocity.y = jumpVelocity;
     SceneState.isGrounded = false;
     airJumpsUsed.current = 0;
+    triggerHaptic('jump');
     playSound('zoom');
   } else if (airJumpsUsed.current < jetStacks) {
     SceneState.playerVelocity.y = jumpVelocity;
     airJumpsUsed.current += 1;
+    triggerHaptic('jump');
     playSound('zoom');
   }
+};
+
+const DASH_IMPULSE = 26;
+const tryDash = (state: GameState) => {
+  if (SceneState.dashCooldownTimer > 0) return;
+  const turboStacks = state.activePowers.TURBO_SPRINT || 0;
+  const cooldown = Math.max(0.7, 1.8 - turboStacks * 0.25);
+  SceneState.dashCooldownTimer = cooldown;
+  SceneState.dashDurationTimer = 0.22;
+  SceneState.isDashing = true;
+
+  const forward = SceneState.playerForward.clone();
+  forward.y = 0;
+  if (forward.lengthSq() < 0.001) forward.set(0, 0, -1);
+  forward.normalize();
+
+  SceneState.playerVelocity.x = forward.x * DASH_IMPULSE;
+  SceneState.playerVelocity.z = forward.z * DASH_IMPULSE;
+
+  playSound('zoom');
+  triggerHaptic('dash');
+  state.addCameraShake(0.35);
 };
 
 const WALK_SPEED = 14;
@@ -109,6 +137,8 @@ export const InputManager = () => {
   const wasStartPressed = useRef<boolean>(false);
   const wasJumpPressed = useRef<boolean>(false);
   const wasReloadPressed = useRef<boolean>(false);
+  const wasDashPressed = useRef<boolean>(false);
+  const wasOpticsPressed = useRef<boolean>(false);
   const airJumpsUsedRef = useRef<number>(0);
   const jumpPadCooldownRef = useRef<number>(0);
   const keys = useRef({
@@ -191,6 +221,14 @@ export const InputManager = () => {
       }
       if (e.code === 'KeyR' && !e.repeat && canPlayFPS(state)) {
         tryStartReload(state);
+      }
+      if (e.code === 'KeyC' && !e.repeat && canPlayFPS(state)) {
+        tryDash(state);
+      }
+      if (e.code === 'KeyV' && !e.repeat) {
+        playSound('zoom');
+        triggerHaptic('alarm');
+        state.toggleOpticalMode();
       }
       if (
         e.code === 'KeyE' &&
@@ -442,8 +480,81 @@ export const InputManager = () => {
       }
       wasReloadPressed.current = xPressed;
 
+      // B button (1) or LB (4) -> Tactical Dash / Dodge!
+      const bPressed = gp.buttons[1]?.pressed || gp.buttons[4]?.pressed || false;
+      if (bPressed && !wasDashPressed.current) {
+        tryDash(state);
+      }
+      wasDashPressed.current = bPressed;
+
+      // Y button (3) or D-Pad Up (12) -> Toggle PTZ Optical Mode (NORMAL / THERMAL / NIGHT_VISION)
+      const yPressed = gp.buttons[3]?.pressed || gp.buttons[12]?.pressed || false;
+      if (yPressed && !wasOpticsPressed.current) {
+        playSound('zoom');
+        triggerHaptic('alarm');
+        state.toggleOpticalMode();
+      }
+      wasOpticsPressed.current = yPressed;
+
+      // Gamepad Aim Assist: Target friction and magnetic pull
+      if (state.preferences.aimAssist !== false) {
+        const pPos = SceneState.playerPosition;
+        const pForward = SceneState.playerForward;
+        let closestTarget: (typeof SceneState.targets)[0] | null = null;
+        let minAngle = 0.14; // ~8 degrees cone of assist
+
+        for (let i = 0; i < SceneState.targets.length; i++) {
+          const t = SceneState.targets[i];
+          if (!t.active) continue;
+          _aimAssistVec.set(t.position[0] - pPos.x, t.position[1] - pPos.y, t.position[2] - pPos.z);
+          const dist = _aimAssistVec.length();
+          if (dist < 1.5 || dist > 55) continue;
+          _aimAssistVec.normalize();
+          const dot = pForward.dot(_aimAssistVec);
+          const angle = Math.acos(Math.min(1, Math.max(-1, dot)));
+          if (angle < minAngle) {
+            minAngle = angle;
+            closestTarget = t;
+          }
+        }
+
+        if (closestTarget) {
+          // 1. Friction: slow down camera stick movement when tracking a target
+          if (Math.abs(rsX) > deadzone || Math.abs(rsY) > deadzone) {
+            panDelta *= 0.65;
+            tiltDelta *= 0.65;
+          }
+          // 2. Subtle magnetic pull towards target center
+          _aimAssistVec.set(closestTarget.position[0] - pPos.x, closestTarget.position[1] - pPos.y, closestTarget.position[2] - pPos.z);
+          _aimAssistVec.normalize();
+          const targetPan = -THREE.MathUtils.radToDeg(Math.atan2(_aimAssistVec.x, -_aimAssistVec.z));
+          const targetTilt = THREE.MathUtils.radToDeg(Math.asin(_aimAssistVec.y));
+          const panDiff = THREE.MathUtils.euclideanModulo(targetPan - state.ptz.pan + 180, 360) - 180;
+          const tiltDiff = targetTilt - state.ptz.tilt;
+          
+          panDelta += panDiff * clampedDelta * 1.5;
+          tiltDelta += tiltDiff * clampedDelta * 1.5;
+        }
+      }
+
       // L3 (10) -> Sprint
       if (gp.buttons[10]?.pressed) isSprinting = true;
+    }
+
+    // Advance Dash timers
+    if (SceneState.dashDurationTimer > 0) {
+      SceneState.dashDurationTimer -= clampedDelta;
+      if (SceneState.dashDurationTimer <= 0) {
+        SceneState.isDashing = false;
+      }
+    }
+    if (SceneState.dashCooldownTimer > 0) {
+      SceneState.dashCooldownTimer = Math.max(0, SceneState.dashCooldownTimer - clampedDelta);
+      const turboStacks = state.activePowers.TURBO_SPRINT || 0;
+      const totalCooldown = Math.max(0.7, 1.8 - turboStacks * 0.25);
+      state.setDashCooldown(SceneState.dashCooldownTimer / totalCooldown);
+    } else if (state.dashCooldown > 0) {
+      state.setDashCooldown(0);
     }
 
     moveRight += touchControls.moveX;

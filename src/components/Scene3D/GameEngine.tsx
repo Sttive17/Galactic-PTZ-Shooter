@@ -11,13 +11,23 @@ import { InputManager } from './InputManager';
 import { RaycasterSystem } from './RaycasterSystem';
 import { GameManager } from './GameManager';
 import { BiomePortal } from './BiomePortal';
+import { CombatDrops } from './CombatDrops';
 
 export const GameEngine = () => {
   const graphics = useGameStore((state) => state.settings.graphics);
+  const opticalMode = useGameStore((state) => state.opticalMode);
   const brightness = graphics.brightness ?? 1.0;
 
   return (
-    <div className="absolute inset-0 bg-slate-950">
+    <div
+      className={`absolute inset-0 bg-slate-950 transition-[filter] duration-300 ${
+        opticalMode === 'THERMAL'
+          ? 'brightness-125 contrast-150 saturate-200 hue-rotate-180 invert-[0.85]'
+          : opticalMode === 'NIGHT_VISION'
+            ? 'brightness-125 contrast-150 sepia hue-rotate-[75deg] saturate-[300%]'
+            : ''
+      }`}
+    >
       <Canvas
         dpr={graphics.dpr || 1.0}
         shadows={graphics.shadows}
@@ -70,6 +80,7 @@ export const GameEngine = () => {
         <Targets />
         <AllyDrones />
         <Projectiles />
+        <CombatDrops />
         <RaycasterSystem />
       </Canvas>
     </div>

@@ -15,6 +15,7 @@ import { FpsCounter } from './FpsCounter';
 import { WaveBanner } from './WaveBanner';
 import { PortalCinematic } from './PortalCinematic';
 import { TouchControls } from './TouchControls';
+import { PTZOpticsOverlay } from './PTZOpticsOverlay';
 import { AnimatePresence } from 'framer-motion';
 
 interface GameHUDProps {
@@ -47,6 +48,7 @@ export const GameHUD = ({ touchControlsEnabled }: GameHUDProps) => {
 
         {(mode === 'CHALLENGE' || mode === 'TRAINING') && (
           <div key="game" className="absolute inset-0 z-20">
+            <PTZOpticsOverlay />
             <TopBar />
             <ActivePowersBar />
             <BossBar />

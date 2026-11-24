@@ -12,8 +12,9 @@ import {
   GRAPHICS_PRESETS,
 } from './graphicsSettings';
 import type { GraphicsConfig, GraphicsPreset, HardwareInfo } from './graphicsSettings';
-import type { BossStyle } from '../types/game';
+import type { BossStyle, PTZOpticalMode } from '../types/game';
 import { audioSystem } from './AudioSystem';
+import { triggerHaptic } from './haptics';
 
 const initialMap = generateRandomMap();
 SceneState.colliders = initialMap.obstacles;
@@ -107,6 +108,8 @@ export interface UserPreferences {
   fov: number;
   showFps: boolean;
   hudEffects: boolean;
+  vibration: boolean;
+  aimAssist: boolean;
   masterVolume: number;
   musicVolume: number;
   sfxVolume: number;
@@ -122,6 +125,8 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
   fov: 68,
   showFps: true,
   hudEffects: true,
+  vibration: true,
+  aimAssist: true,
   masterVolume: 0.7,
   musicVolume: 0.7,
   sfxVolume: 0.85,
@@ -141,6 +146,8 @@ function sanitizePreferences(partial: Partial<UserPreferences>, base: UserPrefer
     fov: Math.round(clampNumber(partial.fov, 55, 90, base.fov)),
     showFps: typeof partial.showFps === 'boolean' ? partial.showFps : base.showFps,
     hudEffects: typeof partial.hudEffects === 'boolean' ? partial.hudEffects : base.hudEffects,
+    vibration: typeof partial.vibration === 'boolean' ? partial.vibration : base.vibration,
+    aimAssist: typeof partial.aimAssist === 'boolean' ? partial.aimAssist : base.aimAssist,
     masterVolume: clampNumber(partial.masterVolume, 0, 1, base.masterVolume),
     musicVolume: clampNumber(partial.musicVolume, 0, 1, base.musicVolume),
     sfxVolume: clampNumber(partial.sfxVolume, 0, 1, base.sfxVolume),
@@ -215,10 +222,17 @@ export interface GameState {
   bossInfo: BossInfo | null;
   waveBanner: WaveBannerInfo | null;
   portalTransition: PortalTransitionInfo | null;
+  opticalMode: PTZOpticalMode;
+  nanites: number;
+  dashCooldown: number;
   
   // Actions
   setMode: (mode: GameMode) => void;
   setRoundState: (state: RoundState) => void;
+  setOpticalMode: (mode: PTZOpticalMode) => void;
+  toggleOpticalMode: () => void;
+  addNanites: (amount: number) => void;
+  setDashCooldown: (cd: number) => void;
   selectPower: (powerId: PowerId) => void;
   clearWaveBanner: () => void;
   advanceTrainingWave: () => void;
@@ -287,6 +301,22 @@ export const useGameStore = create<GameState>((set) => ({
   bossInfo: null,
   waveBanner: null,
   portalTransition: null,
+  opticalMode: 'NORMAL',
+  nanites: 0,
+  dashCooldown: 0,
+
+  setOpticalMode: (opticalMode) => set({ opticalMode }),
+  toggleOpticalMode: () => set((state) => {
+    const next: PTZOpticalMode =
+      state.opticalMode === 'NORMAL'
+        ? 'THERMAL'
+        : state.opticalMode === 'THERMAL'
+          ? 'NIGHT_VISION'
+          : 'NORMAL';
+    return { opticalMode: next };
+  }),
+  addNanites: (amount) => set((state) => ({ nanites: state.nanites + Math.max(0, amount) })),
+  setDashCooldown: (dashCooldown) => set({ dashCooldown }),
 
   setMode: (mode) => {
     if (mode === 'MENU' || mode === 'LEVEL_MAP') {
@@ -309,6 +339,7 @@ export const useGameStore = create<GameState>((set) => ({
     if (state.isPaused || state.roundState !== 'PLAYING' || (state.mode !== 'CHALLENGE' && state.mode !== 'TRAINING')) {
       return state;
     }
+    triggerHaptic('damage');
     const armorStacks = state.activePowers.TITAN_ARMOR || 0;
     const reduction = Math.min(0.6, armorStacks * 0.15);
     const finalDmg = Math.max(1, Math.round(amount * (1 - reduction)));
@@ -568,10 +599,12 @@ export const useGameStore = create<GameState>((set) => ({
 
   registerShot: () => set((state) => {
     if (state.isPaused) return state;
+    triggerHaptic('fire');
     return { shots: state.shots + 1 }
   }),
 
   registerHit: (points) => set((state) => {
+    triggerHaptic('hit');
     const newCombo = state.combo + 1;
     const scoreBoostMult = 1 + (state.activePowers.SCORE_BOOST || 0) * 0.5;
     const addedScore = Math.round(points * state.combo * scoreBoostMult);

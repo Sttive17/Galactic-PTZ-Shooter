@@ -1,4 +1,6 @@
 import { useGameStore } from '../../game/gameState';
+import { useGamepad } from '../../hooks/useGamepad';
+import { useGamepadMenu } from '../../hooks/useGamepadMenu';
 import { Target, Crosshair, AlertTriangle, RotateCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { playSound } from '../../game/AudioSystem';
@@ -14,6 +16,27 @@ export const GameOver = () => {
   const startRound = useGameStore((state) => state.startRound);
   const accuracy = shots > 0 ? Math.min(100, (hits / shots) * 100).toFixed(1) : '0.0';
   const isWaveMode = lastPlayedMode === 'TRAINING';
+  const { gamepadState } = useGamepad();
+
+  const handleSelect = (idx: number) => {
+    playSound('ui');
+    if (idx === 0) {
+      if (isWaveMode) {
+        resetGame('TRAINING');
+      } else {
+        startRound(currentRound);
+      }
+    } else {
+      resetGame('MENU');
+    }
+  };
+
+  const { selectedIndex } = useGamepadMenu({
+    enabled: true,
+    itemCount: 2,
+    onSelect: handleSelect,
+    axis: 'vertical',
+  });
 
   return (
     <motion.div 
@@ -74,25 +97,32 @@ export const GameOver = () => {
           <motion.button 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => {
-              playSound('ui');
-              if (isWaveMode) {
-                resetGame('TRAINING');
-              } else {
-                startRound(currentRound);
-              }
-            }}
-            className="w-full py-4 bg-cyan-950/60 hover:bg-cyan-900/70 text-cyan-300 font-bold text-xs tracking-[0.35em] tech-border transition-colors border border-cyan-600/70 flex items-center justify-center gap-2"
+            onClick={() => handleSelect(0)}
+            className={`w-full py-4 bg-cyan-950/60 hover:bg-cyan-900/70 text-cyan-300 font-bold text-xs tracking-[0.35em] tech-border transition-all border border-cyan-600/70 flex items-center justify-center gap-2 ${
+              gamepadState.connected && selectedIndex === 0 ? 'ring-2 ring-emerald-400 scale-[1.03] shadow-[0_0_20px_rgba(52,211,153,0.7)]' : ''
+            }`}
           >
             <RotateCcw size={15} /> {isWaveMode ? 'REINTENTAR OLEADAS' : `REINTENTAR NIVEL ${currentRound}`}
+            {gamepadState.connected && selectedIndex === 0 && (
+              <span className="px-1.5 py-0.5 rounded bg-emerald-400 text-slate-950 font-bold text-[10px]">
+                (A)
+              </span>
+            )}
           </motion.button>
           <motion.button 
             whileHover={{ scale: 1.02, backgroundColor: "rgba(30, 41, 59, 0.8)" }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => { playSound('ui'); resetGame('MENU'); }}
-            className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs tracking-[0.4em] tech-border transition-colors border border-slate-700"
+            onClick={() => handleSelect(1)}
+            className={`w-full py-4 bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs tracking-[0.4em] tech-border transition-all border border-slate-700 flex items-center justify-center gap-2 ${
+              gamepadState.connected && selectedIndex === 1 ? 'ring-2 ring-emerald-400 scale-[1.03] shadow-[0_0_20px_rgba(52,211,153,0.7)]' : ''
+            }`}
           >
-            MENÚ PRINCIPAL
+            <span>MENÚ PRINCIPAL</span>
+            {gamepadState.connected && selectedIndex === 1 && (
+              <span className="px-1.5 py-0.5 rounded bg-emerald-400 text-slate-950 font-bold text-[10px]">
+                (A)
+              </span>
+            )}
           </motion.button>
         </div>
       </motion.div>

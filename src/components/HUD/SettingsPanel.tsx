@@ -813,6 +813,52 @@ export const SettingsPanel = ({
                   {preferences.cameraShake ? 'ACTIVADA' : 'DESACTIVADA'}
                 </button>
               </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-800">
+                <div>
+                  <span className="text-white font-medium">Vibración del Mando (Xbox)</span>
+                  <p className="text-[10px] text-slate-400">
+                    Respuesta háptica al disparar, recargar, recibir daño y en jefes.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    playSound('ui');
+                    updatePreferences({ vibration: !preferences.vibration });
+                  }}
+                  className={`px-3 py-1 text-[11px] font-bold rounded border cursor-pointer ${
+                    preferences.vibration !== false
+                      ? 'border-emerald-500 bg-emerald-950/60 text-emerald-300'
+                      : 'border-slate-700 bg-slate-800/50 text-slate-400'
+                  }`}
+                >
+                  {preferences.vibration !== false ? 'ACTIVADA' : 'DESACTIVADA'}
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-800">
+                <div>
+                  <span className="text-white font-medium">Asistencia de Apuntado (Mando)</span>
+                  <p className="text-[10px] text-slate-400">
+                    Fricción de mira y micro-magnetismo hacia drones enemigos en stick derecho.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    playSound('ui');
+                    updatePreferences({ aimAssist: !preferences.aimAssist });
+                  }}
+                  className={`px-3 py-1 text-[11px] font-bold rounded border cursor-pointer ${
+                    preferences.aimAssist !== false
+                      ? 'border-emerald-500 bg-emerald-950/60 text-emerald-300'
+                      : 'border-slate-700 bg-slate-800/50 text-slate-400'
+                  }`}
+                >
+                  {preferences.aimAssist !== false ? 'ACTIVADA' : 'DESACTIVADA'}
+                </button>
+              </div>
             </div>
           </div>
         )}
