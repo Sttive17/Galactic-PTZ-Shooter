@@ -9,7 +9,9 @@ export type EnemyArchetype =
   | 'SWARMER'
   | 'ARTILLERY'
   | 'PHANTOM_SNIPER'
-  | 'JUGGERNAUT';
+  | 'JUGGERNAUT'
+  | 'KAMIKAZE'
+  | 'HEALER';
 
 export type BossStyle =
   | 'STRIKER'
@@ -52,6 +54,8 @@ export interface Projectile {
 }
 
 export type PTZOpticalMode = 'NORMAL' | 'THERMAL' | 'NIGHT_VISION';
+
+export type WeaponArchetype = 'PLASMA_RIFLE' | 'SCATTER_SHOTGUN' | 'HEAVY_RAILGUN';
 
 export type CombatDropKind = 'SHIELD' | 'AMMO' | 'NANITE';
 

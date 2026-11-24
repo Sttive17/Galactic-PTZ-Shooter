@@ -25,7 +25,9 @@ const _rightVec = new THREE.Vector3();
 const THREAT_WEIGHTS: Record<EnemyArchetype, number> = {
   JUGGERNAUT: 360,
   TACTICIAN: 320,
+  KAMIKAZE: 300,
   PHANTOM_SNIPER: 290,
+  HEALER: 280,
   ARTILLERY: 260,
   SNIPER: 240,
   FLANKER: 200,

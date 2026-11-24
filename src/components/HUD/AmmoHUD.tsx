@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { SceneState } from '../../game/sceneState';
+import { useGameStore } from '../../game/gameState';
 import { AmmoCellIcon } from './SciFiIcons';
 
 type AmmoVisualStatus = 'RELOADING' | 'EMPTY' | 'LOW' | 'OK';
 
 export const AmmoHUD = () => {
+  const selectedWeapon = useGameStore((state) => state.selectedWeapon);
   const ammoCountRef = useRef<HTMLSpanElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const reloadPctRef = useRef<HTMLSpanElement>(null);
@@ -124,8 +126,28 @@ export const AmmoHUD = () => {
       initial={{ x: 24, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-      className="absolute bottom-4 right-5 pointer-events-none z-10 w-52 max-lg:top-12 max-lg:right-2 max-lg:bottom-auto max-lg:w-40 max-lg:scale-75 max-lg:origin-top-right"
+      className="absolute bottom-4 right-5 pointer-events-none z-10 w-52 max-lg:top-12 max-lg:right-2 max-lg:bottom-auto max-lg:w-40 max-lg:scale-75 max-lg:origin-top-right flex flex-col gap-1.5"
     >
+      {/* Weapon Selector Indicator */}
+      <div className="flex items-center justify-between px-2.5 py-1 rounded bg-slate-950/70 border border-white/10 backdrop-blur-md text-[9px] font-mono tracking-wider">
+        <span className="text-slate-400">ARMA:</span>
+        <span
+          className={`font-orbitron font-bold ${
+            selectedWeapon === 'SCATTER_SHOTGUN'
+              ? 'text-rose-400'
+              : selectedWeapon === 'HEAVY_RAILGUN'
+                ? 'text-amber-400'
+                : 'text-cyan-400'
+          }`}
+        >
+          {selectedWeapon === 'SCATTER_SHOTGUN'
+            ? 'FLAK ESCOPETA [2]'
+            : selectedWeapon === 'HEAVY_RAILGUN'
+              ? 'RAILGUN PESADO [3]'
+              : 'RIFLE PLASMA [1]'}
+        </span>
+      </div>
+
       <div
         className={`bg-slate-950/55 backdrop-blur-md border rounded-lg px-3.5 py-2.5 flex flex-col gap-1.5 transition-colors duration-150 ${borderClass}`}
       >

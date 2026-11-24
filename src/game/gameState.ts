@@ -12,9 +12,13 @@ import {
   GRAPHICS_PRESETS,
 } from './graphicsSettings';
 import type { GraphicsConfig, GraphicsPreset, HardwareInfo } from './graphicsSettings';
-import type { BossStyle, PTZOpticalMode } from '../types/game';
-import { audioSystem } from './AudioSystem';
+import type { BossStyle, PTZOpticalMode, WeaponArchetype } from '../types/game';
+import { audioSystem, playSound } from './AudioSystem';
 import { triggerHaptic } from './haptics';
+import { loadArmoryState, saveArmoryState, UPGRADE_TIERS, SKIN_CATALOG } from './armory';
+import type { ArmoryState, WeaponSkinId } from './armory';
+import { unlockAchievement } from './achievements';
+import { speakTacticalCue } from './tacticalVoice';
 
 const initialMap = generateRandomMap();
 SceneState.colliders = initialMap.obstacles;
@@ -225,6 +229,9 @@ export interface GameState {
   opticalMode: PTZOpticalMode;
   nanites: number;
   dashCooldown: number;
+  selectedWeapon: WeaponArchetype;
+  armory: ArmoryState;
+  isArmoryOpen: boolean;
   
   // Actions
   setMode: (mode: GameMode) => void;
@@ -233,6 +240,11 @@ export interface GameState {
   toggleOpticalMode: () => void;
   addNanites: (amount: number) => void;
   setDashCooldown: (cd: number) => void;
+  switchWeapon: (weapon: WeaponArchetype) => void;
+  cycleWeapon: (dir: 1 | -1) => void;
+  setArmoryOpen: (open: boolean) => void;
+  purchaseArmoryUpgrade: (type: 'shield' | 'health' | 'magnet' | 'dash') => boolean;
+  selectArmorySkin: (skinId: WeaponSkinId) => void;
   selectPower: (powerId: PowerId) => void;
   clearWaveBanner: () => void;
   advanceTrainingWave: () => void;
@@ -304,6 +316,73 @@ export const useGameStore = create<GameState>((set) => ({
   opticalMode: 'NORMAL',
   nanites: 0,
   dashCooldown: 0,
+  selectedWeapon: 'PLASMA_RIFLE',
+  armory: loadArmoryState(),
+  isArmoryOpen: false,
+
+  switchWeapon: (selectedWeapon) => {
+    playSound('ui');
+    set({ selectedWeapon });
+  },
+  cycleWeapon: (dir) => set((state) => {
+    const list: WeaponArchetype[] = ['PLASMA_RIFLE', 'SCATTER_SHOTGUN', 'HEAVY_RAILGUN'];
+    const idx = list.indexOf(state.selectedWeapon);
+    const nextIdx = (idx + dir + list.length) % list.length;
+    playSound('ui');
+    return { selectedWeapon: list[nextIdx] };
+  }),
+  setArmoryOpen: (isArmoryOpen) => set({ isArmoryOpen }),
+  purchaseArmoryUpgrade: (type) => {
+    const state = useGameStore.getState();
+    const currentTier = state.armory[`${type}Level` as keyof ArmoryState] as number;
+    const tierList = UPGRADE_TIERS[type];
+    const nextTier = tierList[currentTier];
+    if (!nextTier || state.nanites < nextTier.cost) return false;
+
+    const newArmory: ArmoryState = {
+      ...state.armory,
+      [`${type}Level`]: currentTier + 1,
+    };
+    saveArmoryState(newArmory);
+    set({
+      nanites: state.nanites - nextTier.cost,
+      armory: newArmory,
+      maxPlayerShield: Math.round(100 * (1 + newArmory.shieldLevel * 0.15)),
+      maxPlayerHealth: Math.round(100 * (1 + newArmory.healthLevel * 0.15)),
+    });
+    playSound('ui');
+    triggerHaptic('crit');
+    return true;
+  },
+  selectArmorySkin: (skinId) => {
+    const state = useGameStore.getState();
+    const skin = SKIN_CATALOG[skinId];
+    if (!skin) return;
+
+    if (!state.armory.unlockedSkins.includes(skinId)) {
+      if (state.nanites < skin.cost) return;
+      const newArmory: ArmoryState = {
+        ...state.armory,
+        unlockedSkins: [...state.armory.unlockedSkins, skinId],
+        activeSkin: skinId,
+      };
+      saveArmoryState(newArmory);
+      set({
+        nanites: state.nanites - skin.cost,
+        armory: newArmory,
+      });
+      playSound('ui');
+      triggerHaptic('crit');
+    } else {
+      const newArmory: ArmoryState = {
+        ...state.armory,
+        activeSkin: skinId,
+      };
+      saveArmoryState(newArmory);
+      set({ armory: newArmory });
+      playSound('ui');
+    }
+  },
 
   setOpticalMode: (opticalMode) => set({ opticalMode }),
   toggleOpticalMode: () => set((state) => {
@@ -313,9 +392,16 @@ export const useGameStore = create<GameState>((set) => ({
         : state.opticalMode === 'THERMAL'
           ? 'NIGHT_VISION'
           : 'NORMAL';
+    unlockAchievement('OPTICS_TACTICIAN');
     return { opticalMode: next };
   }),
-  addNanites: (amount) => set((state) => ({ nanites: state.nanites + Math.max(0, amount) })),
+  addNanites: (amount) => set((state) => {
+    const newCount = state.nanites + Math.max(0, amount);
+    if (newCount >= 50) {
+      unlockAchievement('NANITE_HOARDER');
+    }
+    return { nanites: newCount };
+  }),
   setDashCooldown: (dashCooldown) => set({ dashCooldown }),
 
   setMode: (mode) => {
@@ -333,7 +419,10 @@ export const useGameStore = create<GameState>((set) => ({
   
   setRoundState: (roundState) => set({ roundState }),
 
-  setBossInfo: (bossInfo) => set({ bossInfo }),
+  setBossInfo: (bossInfo) => {
+    if (bossInfo) speakTacticalCue('boss_detected');
+    set({ bossInfo });
+  },
 
   damagePlayer: (amount) => set((state) => {
     if (state.isPaused || state.roundState !== 'PLAYING' || (state.mode !== 'CHALLENGE' && state.mode !== 'TRAINING')) {
@@ -345,6 +434,9 @@ export const useGameStore = create<GameState>((set) => ({
     const finalDmg = Math.max(1, Math.round(amount * (1 - reduction)));
     const shieldAbsorbed = Math.min(state.playerShield, finalDmg);
     const newShield = state.playerShield - shieldAbsorbed;
+    if (state.playerShield > 0 && newShield <= 0) {
+      speakTacticalCue('shield_critical');
+    }
     const remainingDmg = finalDmg - shieldAbsorbed;
     const newHealth = Math.max(0, state.playerHealth - remainingDmg);
     const now = performance.now();
@@ -605,7 +697,11 @@ export const useGameStore = create<GameState>((set) => ({
 
   registerHit: (points) => set((state) => {
     triggerHaptic('hit');
+    unlockAchievement('FIRST_BLOOD');
     const newCombo = state.combo + 1;
+    if (newCombo >= 12) {
+      unlockAchievement('SHARPSHOOTER');
+    }
     const scoreBoostMult = 1 + (state.activePowers.SCORE_BOOST || 0) * 0.5;
     const addedScore = Math.round(points * state.combo * scoreBoostMult);
     const vampStacks = state.activePowers.VAMPIRIC_SHIELD || 0;

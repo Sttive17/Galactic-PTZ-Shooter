@@ -16,6 +16,7 @@ import { WaveBanner } from './WaveBanner';
 import { PortalCinematic } from './PortalCinematic';
 import { TouchControls } from './TouchControls';
 import { PTZOpticsOverlay } from './PTZOpticsOverlay';
+import { AchievementToast } from './AchievementToast';
 import { AnimatePresence } from 'framer-motion';
 
 interface GameHUDProps {
@@ -30,6 +31,7 @@ export const GameHUD = ({ touchControlsEnabled }: GameHUDProps) => {
   return (
     <div className="absolute inset-0 pointer-events-none select-none overflow-hidden text-white font-mono z-10">
       {showFps && <FpsCounter />}
+      <AchievementToast />
 
       {/* Subtle Global AAA Effects */}
       {hudEffects && (

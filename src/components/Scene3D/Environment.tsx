@@ -511,6 +511,13 @@ const LAUNCH_SKY_FRAGMENT = `
 /* ========================= CHAPTER 1: UNDERGROUND LAB (Levels 1-10) ========================= */
 const LAB_TUBE_ANGLES = Array.from({ length: 8 }, (_, i) => (i / 8) * Math.PI * 2 + Math.PI / 8);
 const LAB_BEAM_ZS = [-46, -28, -10, 8, 26];
+const LAB_STEAM_VENTS = [
+  [-22, 0, -26],
+  [22, 0, -26],
+  [-24, 0, 6],
+  [24, 0, 6],
+];
+const LAB_SERVER_ANGLES = Array.from({ length: 8 }, (_, i) => (i / 8) * Math.PI * 2);
 
 const UndergroundLabWorld = ({
   theme,
@@ -520,6 +527,8 @@ const UndergroundLabWorld = ({
   secondaryGlowMat,
 }: BiomeLandmarksProps) => {
   const coreRefs = useRef<(THREE.Mesh | null)[]>([]);
+  const steamVentRefs = useRef<(THREE.Mesh | null)[]>([]);
+  const serverBlinkRefs = useRef<(THREE.MeshBasicMaterial | null)[]>([]);
 
   useFrame(({ clock }, delta) => {
     const dt = Math.min(delta, 0.05);
@@ -529,6 +538,22 @@ const UndergroundLabWorld = ({
       if (!m) continue;
       m.rotation.y += dt * (i % 2 === 0 ? 1.1 : -1.1);
       m.position.y = 6.2 + Math.sin(t * 2.2 + i) * 0.45;
+    }
+    // Animated Floor Steam Vents
+    for (let i = 0; i < steamVentRefs.current.length; i++) {
+      const vent = steamVentRefs.current[i];
+      if (!vent) continue;
+      const cycle = (t * 0.7 + i * 0.28) % 1;
+      vent.position.y = 0.6 + cycle * 4.2;
+      vent.scale.setScalar(0.8 + cycle * 2.2);
+      const mat = vent.material as THREE.MeshBasicMaterial;
+      mat.opacity = Math.sin(cycle * Math.PI) * 0.26;
+    }
+    // Server Rack LED Pulsing
+    for (let i = 0; i < serverBlinkRefs.current.length; i++) {
+      const mat = serverBlinkRefs.current[i];
+      if (!mat) continue;
+      mat.opacity = Math.sin(t * 7.5 + i * 1.5) > 0.2 ? 1.0 : 0.2;
     }
   });
 
@@ -550,6 +575,68 @@ const UndergroundLabWorld = ({
           metalness={0.5}
         />
       </mesh>
+
+      {/* Floor Conduit Neon Current Ring */}
+      <mesh position={[0, 0.05, -10]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[32, 32.4, 48]} />
+        <meshBasicMaterial color={theme.primaryGlow} transparent opacity={0.65} toneMapped={false} />
+      </mesh>
+      <mesh position={[0, 0.05, -10]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[48, 48.4, 48]} />
+        <meshBasicMaterial color={theme.secondaryGlow} transparent opacity={0.5} toneMapped={false} />
+      </mesh>
+
+      {/* 4 Active Floor Steam Vent Grates with Rising Vapor */}
+      {LAB_STEAM_VENTS.map(([vx, vy, vz], i) => (
+        <group key={`steam-vent-${i}`} position={[vx, vy, vz]}>
+          <mesh position={[0, 0.08, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <circleGeometry args={[1.5, 12]} />
+            <meshStandardMaterial color="#0f172a" metalness={0.9} roughness={0.3} />
+          </mesh>
+          <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[1.3, 1.5, 12]} />
+            <meshBasicMaterial color="#f59e0b" toneMapped={false} />
+          </mesh>
+          <mesh
+            ref={(el) => {
+              steamVentRefs.current[i] = el;
+            }}
+            position={[0, 1.2, 0]}
+          >
+            <cylinderGeometry args={[1.4, 0.6, 2.5, 10, 1, true]} />
+            <meshBasicMaterial color="#e2e8f0" transparent opacity={0.25} depthWrite={false} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* 8 Perimeter Computer Mainframe Server Racks */}
+      {LAB_SERVER_ANGLES.map((ang, i) => {
+        const x = Math.cos(ang) * 58;
+        const z = Math.sin(ang) * 58 - 10;
+        const rotY = -ang + Math.PI / 2;
+        return (
+          <group key={`server-${i}`} position={[x, 0, z]} rotation={[0, rotY, 0]}>
+            <mesh position={[0, 4.5, 0]}>
+              <boxGeometry args={[3.2, 9, 1.8]} />
+              <meshStandardMaterial color="#090d16" metalness={0.85} roughness={0.25} />
+            </mesh>
+            {/* Blinking Data Activity LED Arrays */}
+            {[-2.5, 0, 2.5].map((ly, lIdx) => (
+              <mesh key={lIdx} position={[0, 4.5 + ly, 0.92]}>
+                <boxGeometry args={[2.4, 0.18, 0.04]} />
+                <meshBasicMaterial
+                  ref={(el) => {
+                    serverBlinkRefs.current[i * 3 + lIdx] = el;
+                  }}
+                  color={lIdx % 2 === 0 ? theme.primaryGlow : theme.secondaryGlow}
+                  transparent
+                  toneMapped={false}
+                />
+              </mesh>
+            ))}
+          </group>
+        );
+      })}
 
       {/* Perimeter Hazard Base Stripe Ring */}
       <mesh position={[0, 1.6, -10]}>
@@ -665,6 +752,18 @@ const EARTH_TURBINES = [
   { x: -64, z: 18, rotY: 0.9 },
   { x: 64, z: 18, rotY: -0.9 },
 ];
+const EARTH_CRYSTALS = [
+  { x: -32, z: -24, rotY: 0.3 },
+  { x: 34, z: -22, rotY: 1.1 },
+  { x: -28, z: 12, rotY: 2.2 },
+  { x: 30, z: 14, rotY: 0.7 },
+  { x: 0, z: -38, rotY: 1.8 },
+  { x: -44, z: -8, rotY: 2.9 },
+];
+const EARTH_DISHES = [
+  { x: -62, z: -15, rotY: 0.6 },
+  { x: 62, z: -15, rotY: -0.6 },
+];
 
 const EarthOpenFieldWorld = ({ theme }: { theme: MapTheme }) => {
   const skyMat = useMemo(() => {
@@ -692,6 +791,7 @@ const EarthOpenFieldWorld = ({ theme }: { theme: MapTheme }) => {
 
   const rotorRefs = useRef<(THREE.Group | null)[]>([]);
   const cloudRefs = useRef<(THREE.Group | null)[]>([]);
+  const dishRefs = useRef<(THREE.Group | null)[]>([]);
 
   useFrame(({ clock }, delta) => {
     const dt = Math.min(delta, 0.05);
@@ -707,6 +807,10 @@ const EarthOpenFieldWorld = ({ theme }: { theme: MapTheme }) => {
       const a = cfg.phase + t * cfg.speed;
       c.position.x = Math.cos(a) * cfg.dist;
       c.position.z = Math.sin(a) * cfg.dist - 10;
+    }
+    for (let i = 0; i < dishRefs.current.length; i++) {
+      const d = dishRefs.current[i];
+      if (d) d.rotation.y = (EARTH_DISHES[i]?.rotY ?? 0) + Math.sin(t * 0.35 + i) * 0.35;
     }
   });
 
@@ -816,6 +920,68 @@ const EarthOpenFieldWorld = ({ theme }: { theme: MapTheme }) => {
                 </mesh>
               </group>
             ))}
+          </group>
+        </group>
+      ))}
+
+      {/* 6 Bioluminescent Alien Quartz Crystal Formations */}
+      {EARTH_CRYSTALS.map((cry, i) => (
+        <group key={`crystal-${i}`} position={[cry.x, 0, cry.z]} rotation={[0, cry.rotY, 0]}>
+          <mesh position={[0, 1.4, 0]}>
+            <coneGeometry args={[0.55, 2.8, 5]} />
+            <meshPhysicalMaterial
+              color={theme.primaryGlow}
+              emissive={theme.primaryGlow}
+              emissiveIntensity={1.8}
+              roughness={0.15}
+              metalness={0.2}
+              toneMapped={false}
+            />
+          </mesh>
+          <mesh position={[0.4, 0.9, 0.2]} rotation={[0.2, 0.4, -0.2]}>
+            <coneGeometry args={[0.38, 1.9, 5]} />
+            <meshPhysicalMaterial
+              color={theme.secondaryGlow}
+              emissive={theme.secondaryGlow}
+              emissiveIntensity={1.6}
+              roughness={0.15}
+              metalness={0.2}
+              toneMapped={false}
+            />
+          </mesh>
+          <mesh position={[-0.3, 0.7, -0.2]} rotation={[-0.15, -0.3, 0.25]}>
+            <coneGeometry args={[0.32, 1.5, 5]} />
+            <meshBasicMaterial color={theme.primaryGlow} toneMapped={false} />
+          </mesh>
+          <mesh position={[0, 0.25, 0]}>
+            <sphereGeometry args={[0.9, 8, 6]} />
+            <meshStandardMaterial color="#1e293b" roughness={0.9} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* 2 Tracking Satellite Radar Comms Dishes */}
+      {EARTH_DISHES.map((dish, i) => (
+        <group
+          key={`dish-${i}`}
+          ref={(el) => {
+            dishRefs.current[i] = el;
+          }}
+          position={[dish.x, 0, dish.z]}
+        >
+          <mesh position={[0, 6, 0]}>
+            <cylinderGeometry args={[1.2, 1.8, 12, 8]} />
+            <meshStandardMaterial color="#334155" metalness={0.8} roughness={0.3} />
+          </mesh>
+          <group position={[0, 12.5, 0]} rotation={[0.45, 0, 0]}>
+            <mesh>
+              <sphereGeometry args={[4.2, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+              <meshStandardMaterial color="#f8fafc" metalness={0.6} roughness={0.35} side={THREE.DoubleSide} />
+            </mesh>
+            <mesh position={[0, 0, 2.5]}>
+              <cylinderGeometry args={[0.15, 0.25, 2.2, 8]} />
+              <meshBasicMaterial color={theme.primaryGlow} toneMapped={false} />
+            </mesh>
           </group>
         </group>
       ))}
@@ -971,6 +1137,56 @@ const RocketLaunchWorld = ({ theme, wallMat, crateMat }: { theme: MapTheme; wall
           </group>
         </group>
       ))}
+
+      {/* 2 Spherical Cryogenic LOX Storage Tanks & Industrial Pipeline Conduits */}
+      {[-52, 52].map((tx, idx) => (
+        <group key={`fuel-tank-${idx}`} position={[tx, 0, 18]}>
+          {/* Support Cradle */}
+          <mesh position={[0, 3, 0]}>
+            <cylinderGeometry args={[5, 6, 6, 8]} />
+            <meshStandardMaterial color="#334155" metalness={0.8} roughness={0.3} />
+          </mesh>
+          {/* Giant Insulated Spherical Tank */}
+          <mesh position={[0, 9.5, 0]}>
+            <sphereGeometry args={[6.8, 20, 20]} />
+            <meshStandardMaterial color="#f1f5f9" metalness={0.7} roughness={0.25} />
+          </mesh>
+          {/* Tank Equatorial Hazard Band */}
+          <mesh position={[0, 9.5, 0]}>
+            <torusGeometry args={[7.0, 0.25, 8, 32]} />
+            <meshBasicMaterial color="#f59e0b" toneMapped={false} />
+          </mesh>
+          {/* Ground Pipeline running to pads */}
+          <mesh position={[idx === 0 ? 15 : -15, 1.2, -18]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.65, 0.65, 34, 10]} />
+            <meshStandardMaterial color="#475569" metalness={0.85} roughness={0.2} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* 4 Launch Complex Perimeter Floodlight Towers */}
+      {[
+        { x: -38, z: -20, rotY: 0.8 },
+        { x: 38, z: -20, rotY: -0.8 },
+        { x: -44, z: 22, rotY: 1.8 },
+        { x: 44, z: 22, rotY: -1.8 },
+      ].map((fl, i) => (
+        <group key={`floodlight-${i}`} position={[fl.x, 0, fl.z]} rotation={[0, fl.rotY, 0]}>
+          <mesh position={[0, 10, 0]}>
+            <cylinderGeometry args={[0.5, 0.9, 20, 8]} />
+            <meshStandardMaterial color="#1e293b" metalness={0.85} roughness={0.3} />
+          </mesh>
+          {/* Lamp Bank */}
+          <mesh position={[0, 20.2, 0.4]} rotation={[0.4, 0, 0]}>
+            <boxGeometry args={[3.2, 1.4, 0.8]} />
+            <meshStandardMaterial color="#0f172a" metalness={0.8} roughness={0.3} />
+          </mesh>
+          <mesh position={[0, 20.2, 0.8]} rotation={[0.4, 0, 0]}>
+            <boxGeometry args={[2.8, 1.1, 0.1]} />
+            <meshBasicMaterial color="#fef08a" toneMapped={false} />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 };
@@ -982,6 +1198,13 @@ const SOLAR_WING_SPOTS = [
   { x: 66, y: 12, z: -12, rotY: -0.25 },
   { x: -58, y: 19, z: -48, rotY: 0.65 },
   { x: 58, y: 19, z: -48, rotY: -0.65 },
+];
+
+const ORBITAL_BUOYS = [
+  { x: -42, y: 22, z: -25 },
+  { x: 42, y: 22, z: -25 },
+  { x: -38, y: 16, z: 12 },
+  { x: 38, y: 16, z: 12 },
 ];
 
 const OrbitalStratosphereWorld = ({
@@ -1016,11 +1239,20 @@ const OrbitalStratosphereWorld = ({
 
   const earthRef = useRef<THREE.Mesh>(null);
   const cloudsRef = useRef<THREE.Mesh>(null);
+  const buoyRefs = useRef<(THREE.Group | null)[]>([]);
 
-  useFrame((_, delta) => {
+  useFrame(({ clock }, delta) => {
     const dt = Math.min(delta, 0.05);
+    const t = clock.elapsedTime;
     if (earthRef.current) earthRef.current.rotation.y += dt * 0.008;
     if (cloudsRef.current) cloudsRef.current.rotation.y += dt * 0.014;
+    for (let i = 0; i < buoyRefs.current.length; i++) {
+      const b = buoyRefs.current[i];
+      if (!b) continue;
+      b.rotation.x += dt * 0.8;
+      b.rotation.y += dt * 1.2;
+      b.position.y = ORBITAL_BUOYS[i].y + Math.sin(t * 1.6 + i) * 1.2;
+    }
   });
 
   return (
@@ -1120,6 +1352,26 @@ const OrbitalStratosphereWorld = ({
           </group>
         );
       })}
+
+      {/* 4 Floating Holographic Telemetry Navigation Buoys */}
+      {ORBITAL_BUOYS.map((buoy, i) => (
+        <group
+          key={`buoy-${i}`}
+          ref={(el) => {
+            buoyRefs.current[i] = el;
+          }}
+          position={[buoy.x, buoy.y, buoy.z]}
+        >
+          <mesh>
+            <octahedronGeometry args={[1.5, 0]} />
+            <meshBasicMaterial color={i % 2 === 0 ? theme.primaryGlow : theme.secondaryGlow} toneMapped={false} />
+          </mesh>
+          <mesh>
+            <torusGeometry args={[2.6, 0.07, 8, 24]} />
+            <meshBasicMaterial color={theme.secondaryGlow} transparent opacity={0.6} toneMapped={false} />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 };
@@ -1494,6 +1746,30 @@ export const Environment = () => {
               </mesh>
             </group>
           ))}
+
+          {/* 6 Floating Antigravity Monoliths with Pulsing Alien Runes */}
+          {LANDMARK_ANGLES_6.map((ang, idx) => {
+            const mx = Math.cos(ang + 0.3) * 51;
+            const mz = Math.sin(ang + 0.3) * 51 - 10;
+            return (
+              <group key={`monolith-${idx}`} position={[mx, 11, mz]} rotation={[0.08, ang, 0.05]}>
+                <mesh castShadow>
+                  <boxGeometry args={[2.2, 12, 1.8]} />
+                  <meshStandardMaterial color="#090d16" metalness={0.92} roughness={0.15} />
+                </mesh>
+                {/* Glowing Vertical Power Inscription */}
+                <mesh position={[0, 0, 0.95]}>
+                  <boxGeometry args={[0.3, 10, 0.05]} />
+                  <meshBasicMaterial color={idx % 2 === 0 ? theme.primaryGlow : theme.secondaryGlow} toneMapped={false} />
+                </mesh>
+                {/* Floating Orbiting Energy Ring */}
+                <mesh rotation={[Math.PI / 3, 0, 0]}>
+                  <torusGeometry args={[2.6, 0.06, 8, 24]} />
+                  <meshBasicMaterial color={theme.primaryGlow} transparent opacity={0.65} toneMapped={false} />
+                </mesh>
+              </group>
+            );
+          })}
 
           {/* 4 Tall Perimeter Energy Conduit Towers with Rising Pulse Rings */}
           {CONDUIT_TOWER_ANGLES.map((angle, idx) => {

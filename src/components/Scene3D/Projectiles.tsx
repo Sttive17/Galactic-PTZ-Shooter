@@ -5,10 +5,13 @@ import { useGameStore } from '../../game/gameState';
 import { GAME_CONFIG } from '../../game/config';
 import type { MapBox } from '../../game/mapGenerator';
 import type { PowerId } from '../../game/powers';
+import type { WeaponArchetype } from '../../types/game';
 import * as THREE from 'three';
 import { playSound } from '../../game/AudioSystem';
 import { triggerHaptic } from '../../game/haptics';
 import { spawnCombatDrop } from '../../game/combatDrops';
+import { unlockAchievement } from '../../game/achievements';
+import { speakTacticalCue } from '../../game/tacticalVoice';
 
 function getPlayerBoltPalette(activePowers: Partial<Record<PowerId, number>>): { bolt: string; tracer: string } {
   if ((activePowers.HEAVY_DAMAGE || 0) > 0) return { bolt: '#fb7185', tracer: '#fda4af' };
@@ -290,8 +293,9 @@ export const Projectiles = () => {
   };
 
   useEffect(() => {
-    const handleFire = () => {
-      const { activePowers } = useGameStore.getState();
+    const handleFire = (e?: Event) => {
+      const storeState = useGameStore.getState();
+      const { activePowers } = storeState;
 
       const tripleStacks = activePowers.TRIPLE_SHOT || 0;
       const railgunStacks = activePowers.RAILGUN_SPEED || 0;
@@ -341,14 +345,21 @@ export const Projectiles = () => {
         }
       }
 
-      const totalBolts = 1 + tripleStacks * 2;
+      const customEvt = e as CustomEvent<{ ptz?: { pan: number; tilt: number; zoom: number }; weapon?: WeaponArchetype }>;
+      const weapon = customEvt.detail?.weapon || storeState.selectedWeapon || 'PLASMA_RIFLE';
+      const isShotgun = weapon === 'SCATTER_SHOTGUN';
+      const isRailgun = weapon === 'HEAVY_RAILGUN';
+
+      const totalBolts = isShotgun ? (5 + tripleStacks * 2) : isRailgun ? 1 : (1 + tripleStacks * 2);
+      const effectiveSpeed = isRailgun ? speed * 1.8 : isShotgun ? speed * 0.95 : speed;
+      const effectivePierce = isRailgun ? 99 : pierceStacks;
       const { bolt: boltColor, tracer: tracerColor } = getPlayerBoltPalette(activePowers);
       if (playerProjMatRef.current && lastBoltColorRef.current !== boltColor) {
         playerProjMatRef.current.color.set(boltColor);
         lastBoltColorRef.current = boltColor;
       }
 
-      const spreadStepRad = THREE.MathUtils.degToRad(2.8);
+      const spreadStepRad = isShotgun ? THREE.MathUtils.degToRad(5.2) : THREE.MathUtils.degToRad(2.8);
       const halfSpread = (totalBolts - 1) / 2;
 
       const baseDir = _aimPoint.clone().sub(_startPos).normalize();
@@ -368,10 +379,10 @@ export const Projectiles = () => {
         slot.active = true;
         slot.hiddenSynced = false;
         slot.position.copy(_startPos);
-        slot.velocity.copy(_boltDir).multiplyScalar(speed);
+        slot.velocity.copy(_boltDir).multiplyScalar(effectiveSpeed);
         slot.age = 0;
-        slot.pierceLeft = pierceStacks;
-        slot.bouncesLeft = ricochetStacks;
+        slot.pierceLeft = effectivePierce;
+        slot.bouncesLeft = isRailgun ? 0 : ricochetStacks;
         slot.lastHitTargetId = null;
 
         // Immediately sync matrix at muzzle on frame 0 so there's zero spawn lag
@@ -741,15 +752,20 @@ export const Projectiles = () => {
           spawnExplosion(_hitPos, 10);
         } else {
           const baseDmg = GAME_CONFIG.projectile.damage + currentHeavyDamage;
+          const impactDistToCenter = _hitPos.distanceTo(_targetCenter);
+          const isWeakpointHit = impactDistToCenter < closestTarget.scale * 0.42;
           const critChance = Math.min(1, currentCritStacks * 0.25);
-          const isCrit = critChance > 0 && Math.random() < critChance;
+          const isCrit = isWeakpointHit || (critChance > 0 && Math.random() < critChance);
           const finalDmg = isCrit ? Math.ceil(baseDmg * 2.5) : baseDmg;
 
           closestTarget.health -= finalDmg;
           playSound('hit');
           spawnExplosion(_hitPos);
           if (isCrit) {
-            spawnShockwave(_hitPos, 2.2, '#facc15', 0.28);
+            triggerHaptic('crit');
+            unlockAchievement('CRITICAL_STRIKE');
+            spawnShockwave(_hitPos, 2.6, '#facc15', 0.25);
+            speakTacticalCue('critical_hit');
           }
 
           if (closestTarget.health <= 0) {
@@ -899,6 +915,7 @@ export const Projectiles = () => {
           proj.hiddenSynced = true;
           playerProjUpdated = true;
           spawnExplosion(_worldHitPos);
+          spawnShockwave(_worldHitPos, 1.1, '#38bdf8', 0.4);
           playSound('hit');
           if (currentTripleStacks === 0) {
             storeState.resetCombo();

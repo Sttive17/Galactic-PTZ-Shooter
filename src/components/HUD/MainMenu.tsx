@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { initAudio, playSound } from '../../game/AudioSystem';
 import { SettingsPanel } from './SettingsPanel';
-import { Sliders } from 'lucide-react';
+import { ArmoryModal } from './ArmoryModal';
+import { Sliders, Shield } from 'lucide-react';
 import {
   IconBadge,
   CampaignIcon,
@@ -21,6 +22,8 @@ import {
 export const MainMenu = () => {
   const isSettingsOpen = useGameStore((state) => state.isSettingsOpen);
   const setSettingsOpen = useGameStore((state) => state.setSettingsOpen);
+  const isArmoryOpen = useGameStore((state) => state.isArmoryOpen);
+  const setArmoryOpen = useGameStore((state) => state.setArmoryOpen);
   const resetGame = useGameStore((state) => state.resetGame);
   const setMode = useGameStore((state) => state.setMode);
   const currentMap = useGameStore((state) => state.currentMap);
@@ -45,13 +48,17 @@ export const MainMenu = () => {
     } else if (index === 3) {
       initAudio();
       playSound('ui');
+      setArmoryOpen(true);
+    } else if (index === 4) {
+      initAudio();
+      playSound('ui');
       setSettingsOpen(true);
     }
   };
 
   const { selectedIndex } = useGamepadMenu({
-    enabled: !isSettingsOpen,
-    itemCount: 4,
+    enabled: !isSettingsOpen && !isArmoryOpen,
+    itemCount: 5,
     onSelect: handleMenuSelect,
     axis: 'horizontal',
   });
@@ -169,17 +176,17 @@ export const MainMenu = () => {
           ))}
         </motion.div>
 
-        {/* 4 Sleek Glassmorphic Action Buttons */}
+        {/* 5 Sleek Glassmorphic Action Buttons */}
         <motion.div
           variants={itemVariants}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full max-w-3xl"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 w-full max-w-4xl"
         >
           <button
             onClick={() => {
               playSound('ui');
               start('CHALLENGE');
             }}
-            className={`group py-3 px-3.5 rounded-xl bg-gradient-to-r from-cyan-500/90 via-sky-500/90 to-blue-600/90 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-orbitron font-black text-xs tracking-[0.14em] border border-cyan-200/60 shadow-[0_0_25px_rgba(34,211,238,0.45)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer ${
+            className={`group py-3 px-3 rounded-xl bg-gradient-to-r from-cyan-500/90 via-sky-500/90 to-blue-600/90 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-orbitron font-black text-xs tracking-[0.14em] border border-cyan-200/60 shadow-[0_0_25px_rgba(34,211,238,0.45)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer ${
               gamepadState.connected && selectedIndex === 0 ? 'ring-2 ring-emerald-400 scale-[1.04] shadow-[0_0_25px_rgba(52,211,153,0.7)]' : ''
             }`}
           >
@@ -200,7 +207,7 @@ export const MainMenu = () => {
               playSound('ui');
               setMode('LEVEL_MAP');
             }}
-            className={`group py-3 px-3.5 rounded-xl bg-slate-950/60 hover:bg-violet-950/70 text-violet-200 hover:text-white font-orbitron font-bold text-xs tracking-[0.14em] border border-violet-400/40 hover:border-cyan-400/70 backdrop-blur-md shadow-[0_0_20px_rgba(139,92,246,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer ${
+            className={`group py-3 px-3 rounded-xl bg-slate-950/60 hover:bg-violet-950/70 text-violet-200 hover:text-white font-orbitron font-bold text-xs tracking-[0.14em] border border-violet-400/40 hover:border-cyan-400/70 backdrop-blur-md shadow-[0_0_20px_rgba(139,92,246,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer ${
               gamepadState.connected && selectedIndex === 1 ? 'ring-2 ring-emerald-400 scale-[1.04] shadow-[0_0_25px_rgba(52,211,153,0.7)]' : ''
             }`}
           >
@@ -220,7 +227,7 @@ export const MainMenu = () => {
               playSound('ui');
               start('TRAINING');
             }}
-            className={`group py-3 px-3.5 rounded-xl bg-slate-950/60 hover:bg-emerald-950/70 text-emerald-200 hover:text-white font-orbitron font-bold text-xs tracking-[0.14em] border border-emerald-400/40 hover:border-emerald-300/80 backdrop-blur-md shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer ${
+            className={`group py-3 px-3 rounded-xl bg-slate-950/60 hover:bg-emerald-950/70 text-emerald-200 hover:text-white font-orbitron font-bold text-xs tracking-[0.14em] border border-emerald-400/40 hover:border-emerald-300/80 backdrop-blur-md shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer ${
               gamepadState.connected && selectedIndex === 2 ? 'ring-2 ring-emerald-400 scale-[1.04] shadow-[0_0_25px_rgba(52,211,153,0.7)]' : ''
             }`}
           >
@@ -239,17 +246,38 @@ export const MainMenu = () => {
             onClick={() => {
               initAudio();
               playSound('ui');
+              setArmoryOpen(true);
+            }}
+            className={`group py-3 px-3 rounded-xl bg-slate-950/60 hover:bg-amber-950/70 text-amber-300 hover:text-white font-orbitron font-bold text-xs tracking-[0.14em] border border-amber-500/40 hover:border-amber-400 backdrop-blur-md shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer ${
+              gamepadState.connected && selectedIndex === 3 ? 'ring-2 ring-emerald-400 scale-[1.04] shadow-[0_0_25px_rgba(52,211,153,0.7)]' : ''
+            }`}
+          >
+            <IconBadge accent="amber" size="md" shape="hex" className="group-hover:scale-110 transition-transform">
+              <Shield size={18} />
+            </IconBadge>
+            <span>ARMERÍA</span>
+            {gamepadState.connected && selectedIndex === 3 && (
+              <span className="ml-1 px-1.5 py-0.5 rounded-full bg-emerald-400 text-slate-950 text-[10px] font-mono font-bold">
+                (A)
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => {
+              initAudio();
+              playSound('ui');
               setSettingsOpen(true);
             }}
-            className={`group py-3 px-3.5 rounded-xl bg-slate-950/60 hover:bg-slate-800/80 text-cyan-300 hover:text-white font-orbitron font-bold text-xs tracking-[0.14em] border border-cyan-500/40 hover:border-cyan-400 backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.25)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer ${
-              gamepadState.connected && selectedIndex === 3 ? 'ring-2 ring-emerald-400 scale-[1.04] shadow-[0_0_25px_rgba(52,211,153,0.7)]' : ''
+            className={`group py-3 px-3 rounded-xl bg-slate-950/60 hover:bg-slate-800/80 text-cyan-300 hover:text-white font-orbitron font-bold text-xs tracking-[0.14em] border border-cyan-500/40 hover:border-cyan-400 backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.25)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer ${
+              gamepadState.connected && selectedIndex === 4 ? 'ring-2 ring-emerald-400 scale-[1.04] shadow-[0_0_25px_rgba(52,211,153,0.7)]' : ''
             }`}
           >
             <IconBadge accent="cyan" size="md" shape="hex" className="group-hover:scale-110 transition-transform">
               <Sliders size={18} />
             </IconBadge>
             <span>AJUSTES</span>
-            {gamepadState.connected && selectedIndex === 3 && (
+            {gamepadState.connected && selectedIndex === 4 && (
               <span className="ml-1 px-1.5 py-0.5 rounded-full bg-emerald-400 text-slate-950 text-[10px] font-mono font-bold">
                 (A)
               </span>
@@ -257,6 +285,13 @@ export const MainMenu = () => {
           </button>
         </motion.div>
       </motion.div>
+
+      {/* Armory Modal */}
+      <AnimatePresence>
+        {isArmoryOpen && (
+          <ArmoryModal isOpen={isArmoryOpen} onClose={() => setArmoryOpen(false)} />
+        )}
+      </AnimatePresence>
 
       {/* Settings Modal */}
       <AnimatePresence>

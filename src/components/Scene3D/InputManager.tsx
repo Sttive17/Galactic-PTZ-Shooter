@@ -96,7 +96,14 @@ const canPlayFPS = (state: GameState) => {
 
 const getFireCooldown = (state: GameState) => {
   const rapidStacks = state.activePowers.RAPID_FIRE || 0;
-  return Math.max(55, Math.round(160 * Math.pow(0.7, rapidStacks)));
+  const mult = Math.pow(0.7, rapidStacks);
+  if (state.selectedWeapon === 'SCATTER_SHOTGUN') {
+    return Math.max(160, Math.round(420 * mult));
+  }
+  if (state.selectedWeapon === 'HEAVY_RAILGUN') {
+    return Math.max(280, Math.round(750 * mult));
+  }
+  return Math.max(55, Math.round(160 * mult));
 };
 
 const attemptFire = (
@@ -109,13 +116,24 @@ const attemptFire = (
     tryStartReload(state);
     return;
   }
+  const weapon = state.selectedWeapon;
+  const ammoCost = weapon === 'SCATTER_SHOTGUN' ? 3 : weapon === 'HEAVY_RAILGUN' ? 4 : 1;
+  if (SceneState.ammo < ammoCost) {
+    tryStartReload(state);
+    return;
+  }
+
   const now = performance.now();
   if (now - lastFireRef.current > getFireCooldown(state)) {
     initAudio();
-    window.dispatchEvent(new CustomEvent('fire-projectile', { detail: { ptz: state.ptz } }));
+    window.dispatchEvent(
+      new CustomEvent('fire-projectile', {
+        detail: { ptz: state.ptz, weapon },
+      })
+    );
     registerShot();
-    SceneState.ammo = Math.max(0, SceneState.ammo - 1);
-    SceneState.weaponRecoil = 1.0;
+    SceneState.ammo = Math.max(0, SceneState.ammo - ammoCost);
+    SceneState.weaponRecoil = weapon === 'HEAVY_RAILGUN' ? 2.5 : weapon === 'SCATTER_SHOTGUN' ? 1.8 : 1.0;
     lastFireRef.current = now;
     if (SceneState.ammo <= 0) {
       tryStartReload(state);
@@ -139,6 +157,8 @@ export const InputManager = () => {
   const wasReloadPressed = useRef<boolean>(false);
   const wasDashPressed = useRef<boolean>(false);
   const wasOpticsPressed = useRef<boolean>(false);
+  const wasDpadLeftRef = useRef<boolean>(false);
+  const wasDpadRightRef = useRef<boolean>(false);
   const airJumpsUsedRef = useRef<number>(0);
   const jumpPadCooldownRef = useRef<number>(0);
   const keys = useRef({
@@ -219,6 +239,9 @@ export const InputManager = () => {
           }
         }
       }
+      if (e.code === 'Digit1') state.switchWeapon('PLASMA_RIFLE');
+      if (e.code === 'Digit2') state.switchWeapon('SCATTER_SHOTGUN');
+      if (e.code === 'Digit3') state.switchWeapon('HEAVY_RAILGUN');
       if (e.code === 'KeyR' && !e.repeat && canPlayFPS(state)) {
         tryStartReload(state);
       }
@@ -495,6 +518,18 @@ export const InputManager = () => {
         state.toggleOpticalMode();
       }
       wasOpticsPressed.current = yPressed;
+
+      // D-Pad Left (14) / Right (15) -> Cycle weapons
+      const dpadLeft = gp.buttons[14]?.pressed || false;
+      const dpadRight = gp.buttons[15]?.pressed || false;
+      if (dpadLeft && !wasDpadLeftRef.current) {
+        state.cycleWeapon(-1);
+      }
+      if (dpadRight && !wasDpadRightRef.current) {
+        state.cycleWeapon(1);
+      }
+      wasDpadLeftRef.current = dpadLeft;
+      wasDpadRightRef.current = dpadRight;
 
       // Gamepad Aim Assist: Target friction and magnetic pull
       if (state.preferences.aimAssist !== false) {

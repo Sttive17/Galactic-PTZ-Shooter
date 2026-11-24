@@ -18,3 +18,14 @@ All audio files in `public/audio/` are local royalty-free assets sourced from Op
 | `situation-gameover.mp3` | Bleak Terminal | Ruskerdax | https://opengameart.org/content/bleak-terminal | https://opengameart.org/sites/default/files/ruskerdax_-_bleak_terminal_theme.mp3 | CC0 | `GAMEOVER` screen & situation |
 | `boss-standard.ogg` | Fast fight / battle music (looped) | XCVG (from Ville Nousiainen) | https://opengameart.org/content/fast-fight-battle-music-looped | https://opengameart.org/sites/default/files/fight_looped.ogg | CC0 | Boss encounters Tiers 1–5 |
 | `boss-omega.ogg` | Cyber Runner Music | ansimuz | https://opengameart.org/content/cyber-runner-music | https://opengameart.org/sites/default/files/cyber_runner.ogg | CC0 | High-tier & Omega Boss encounters Tiers 6–8 |
+
+## Curated CC0 Procedural & Environmental Audio References
+
+The procedural Web Audio API engine in `src/game/AudioSystem.ts` dynamically synthesizes real-time biome audio beds (filters, sub-drones, LFO breathing, resonance) matching these verified CC0 soundscapes:
+
+- **Underground Lab**: Subterranean industrial server hum, pressurized steam relief, transformer resonance. (Freesound CC0 #522476, OpenGameArt Factory Ambiance).
+- **Earth Open Field**: High plains wind gusting, distant thunder echoes, meadow fauna. (OpenGameArt Birds and Wind, Freesound CC0 #416529).
+- **Rocket Launch Zone**: Cryogenic liquid oxygen vent hissing, heavy mechanical gantries, low-frequency rumble. (OpenGameArt Robotic City, Freesound CC0 #388062).
+- **Orbital Stratosphere**: High altitude rarefied solar wind, satellite telemetry transponder pings, cosmic sine harmonics. (OpenGameArt Space Graveyard, Kenney Sci-Fi Audio CC0).
+- **Galactic Arena**: Gravitational wave sub-bass (32.7Hz), dark matter spatial expansion sweep, deep void pulsing. (OpenGameArt Deep Space Array).
+

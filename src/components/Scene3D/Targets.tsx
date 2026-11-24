@@ -11,6 +11,8 @@ import {
   getBossTierForRound,
 } from '../../game/gameState';
 import { BossVisual, DroneVisual } from './EnemyVisuals';
+import { playSound } from '../../game/AudioSystem';
+import { triggerHaptic } from '../../game/haptics';
 import * as THREE from 'three';
 
 type BossTier = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
@@ -590,29 +592,34 @@ function pickEnemyArchetype(round: number, index: number, mode: string): EnemyAr
       return 'SCOUT';
     }
     if (round <= 3) {
-      const mod = index % 4;
+      const mod = index % 5;
       if (mod === 0) return 'STRIKER';
       if (mod === 1) return 'FLANKER';
       if (mod === 2) return 'SWARMER';
+      if (mod === 3) return 'KAMIKAZE';
       return 'SNIPER';
     }
     if (round <= 6) {
-      const mod = index % 6;
+      const mod = index % 8;
       if (mod === 0) return 'TACTICIAN';
       if (mod === 1) return 'ARTILLERY';
       if (mod === 2) return 'PHANTOM_SNIPER';
       if (mod === 3) return 'SWARMER';
       if (mod === 4) return 'FLANKER';
+      if (mod === 5) return 'KAMIKAZE';
+      if (mod === 6) return 'HEALER';
       return 'SNIPER';
     }
-    // Wave 7+: Elite nightmare squad cycling hardest tactical archetypes
-    const mod = index % 7;
+    // Wave 7+: Elite nightmare squad cycling all hardest tactical archetypes
+    const mod = index % 9;
     if (mod === 0) return 'JUGGERNAUT';
     if (mod === 1) return 'TACTICIAN';
     if (mod === 2) return 'PHANTOM_SNIPER';
-    if (mod === 3) return 'ARTILLERY';
-    if (mod === 4) return 'SWARMER';
-    if (mod === 5) return 'FLANKER';
+    if (mod === 3) return 'KAMIKAZE';
+    if (mod === 4) return 'HEALER';
+    if (mod === 5) return 'ARTILLERY';
+    if (mod === 6) return 'SWARMER';
+    if (mod === 7) return 'FLANKER';
     return 'SNIPER';
   }
   if (mode !== 'CHALLENGE') return 'SCOUT';
@@ -634,36 +641,41 @@ function pickEnemyArchetype(round: number, index: number, mode: string): EnemyAr
     return 'SCOUT';
   }
   if (round <= 5) {
-    const mod = index % 7;
+    const mod = index % 8;
     if (mod === 0) return 'TACTICIAN';
     if (mod === 1) return 'STRIKER';
     if (mod === 2) return 'FLANKER';
     if (mod === 3) return 'SWARMER';
-    if (mod === 4) return 'SNIPER';
-    if (mod === 5) return 'ARTILLERY';
+    if (mod === 4) return 'KAMIKAZE';
+    if (mod === 5) return 'SNIPER';
+    if (mod === 6) return 'ARTILLERY';
     return 'SCOUT';
   }
   if (round <= 9) {
-    const mod = index % 8;
+    const mod = index % 10;
     if (mod === 0) return 'TACTICIAN';
     if (mod === 1) return 'PHANTOM_SNIPER';
     if (mod === 2) return 'FLANKER';
     if (mod === 3) return 'SWARMER';
-    if (mod === 4) return 'ARTILLERY';
-    if (mod === 5) return 'SNIPER';
-    if (mod === 6) return 'STRIKER';
+    if (mod === 4) return 'KAMIKAZE';
+    if (mod === 5) return 'HEALER';
+    if (mod === 6) return 'ARTILLERY';
+    if (mod === 7) return 'SNIPER';
+    if (mod === 8) return 'STRIKER';
     return 'SCOUT';
   }
-  // Level 10+: Full 9-archetype roster including JUGGERNAUT & PHANTOM_SNIPER hybrids
-  const mod = index % 9;
+  // Level 10+: Full 11-archetype roster including JUGGERNAUT, KAMIKAZE & HEALER
+  const mod = index % 11;
   if (mod === 0) return 'JUGGERNAUT';
   if (mod === 1) return 'TACTICIAN';
   if (mod === 2) return 'PHANTOM_SNIPER';
-  if (mod === 3) return 'FLANKER';
-  if (mod === 4) return 'SWARMER';
-  if (mod === 5) return 'ARTILLERY';
-  if (mod === 6) return 'SNIPER';
-  if (mod === 7) return 'STRIKER';
+  if (mod === 3) return 'KAMIKAZE';
+  if (mod === 4) return 'HEALER';
+  if (mod === 5) return 'FLANKER';
+  if (mod === 6) return 'SWARMER';
+  if (mod === 7) return 'ARTILLERY';
+  if (mod === 8) return 'SNIPER';
+  if (mod === 9) return 'STRIKER';
   return 'SCOUT';
 }
 
@@ -731,7 +743,8 @@ const DroneMesh = ({ target, currentRound }: { target: Target; currentRound: num
       archetype === 'SNIPER' ||
       archetype === 'SWARMER' ||
       archetype === 'PHANTOM_SNIPER' ||
-      archetype === 'JUGGERNAUT';
+      archetype === 'JUGGERNAUT' ||
+      archetype === 'HEALER';
 
     // Track reactive threat & hit state
     const tookHit = target.health < prevHealthRef.current;
@@ -881,6 +894,64 @@ const DroneMesh = ({ target, currentRound }: { target: Target; currentRound: num
         17.5 + Math.sin(t * 0.9) * 3.5 + peekBoostRef.current * 3.2,
         Math.min(1, motionDelta * 2.2)
       );
+    } else if (archetype === 'KAMIKAZE') {
+      // High-speed direct rush dive towards player position
+      const kamikazeSpeed = (15 + waveScale * 0.75) * evasionBoost;
+      target.position[0] += _toPlayer.x * kamikazeSpeed * motionDelta;
+      target.position[2] += _toPlayer.z * kamikazeSpeed * motionDelta;
+      target.position[1] = THREE.MathUtils.lerp(
+        target.position[1],
+        playerPos.y + 1.2,
+        Math.min(1, motionDelta * 3.2)
+      );
+
+      // Check detonation range (< 3.2m from player)
+      const distSq =
+        (playerPos.x - target.position[0]) ** 2 +
+        (playerPos.y + 1.2 - target.position[1]) ** 2 +
+        (playerPos.z - target.position[2]) ** 2;
+      if (distSq < 3.2 * 3.2) {
+        target.active = false;
+        target.health = 0;
+        const gState = useGameStore.getState();
+        gState.damagePlayer(25);
+        gState.addCameraShake(0.45);
+        playSound('hit');
+        triggerHaptic('hit');
+      }
+    } else if (archetype === 'HEALER') {
+      // Support drone maintaining 18-28m tactical range and repairing wounded allies
+      if (flatDistToPlayer < 19) {
+        target.position[0] -= _toPlayer.x * 7 * motionDelta;
+        target.position[2] -= _toPlayer.z * 7 * motionDelta;
+      } else if (flatDistToPlayer > 30) {
+        target.position[0] += _toPlayer.x * 5 * motionDelta;
+        target.position[2] += _toPlayer.z * 5 * motionDelta;
+      }
+      target.position[0] += _strafeDir.x * 4.5 * motionDelta;
+      target.position[2] += _strafeDir.z * 4.5 * motionDelta;
+      target.position[1] = THREE.MathUtils.lerp(
+        target.position[1],
+        13.5 + Math.sin(t * 1.4) * 3,
+        Math.min(1, motionDelta * 2.0)
+      );
+
+      // Nanite healing beam to ally with lowest health percentage
+      const targets = SceneState.targets;
+      let woundedAlly: Target | null = null;
+      let lowestPct = 1.0;
+      for (let i = 0; i < targets.length; i++) {
+        const ally = targets[i];
+        if (!ally.active || ally.id === target.id) continue;
+        const pct = ally.health / ally.maxHealth;
+        if (pct < 0.98 && pct < lowestPct) {
+          lowestPct = pct;
+          woundedAlly = ally;
+        }
+      }
+      if (woundedAlly) {
+        woundedAlly.health = Math.min(woundedAlly.maxHealth, woundedAlly.health + 10 * moveDelta);
+      }
     } else if (archetype === 'STRIKER') {
       // Tactical lateral strafe maintaining 18–26m combat range + cover peeking
       if (flatDistToPlayer < 17) {
@@ -1304,13 +1375,15 @@ export const Targets = () => {
             : currentRound <= 10
               ? Math.max(0.85, 1.3 - currentRound * 0.045 + Math.random() * 0.15)
               : Math.max(0.55, 0.85 - Math.min(10, currentRound - 10) * 0.03 + Math.random() * 0.15);
-          const canShoot = enemyType !== 'SCOUT';
+          const canShoot = enemyType !== 'SCOUT' && enemyType !== 'KAMIKAZE' && enemyType !== 'HEALER';
           const maxHealth =
             enemyType === 'JUGGERNAUT'
               ? (currentRound >= 40 ? 8 : currentRound >= 32 ? 6 : currentRound >= 24 ? 5 : 4) + waveHpBonus
               : enemyType === 'TACTICIAN'
                 ? (currentRound >= 40 ? 6 : currentRound >= 30 ? 5 : currentRound >= 22 ? 4 : currentRound >= 15 ? 3 : 2) + waveHpBonus
-                : enemyType === 'ARTILLERY' && isWaveTraining
+                : enemyType === 'HEALER'
+                  ? 2 + waveHpBonus
+                  : enemyType === 'ARTILLERY' && isWaveTraining
                   ? 2 + waveHpBonus
                   : enemyType === 'FLANKER' || enemyType === 'SWARMER' || enemyType === 'SNIPER' || enemyType === 'PHANTOM_SNIPER'
                     ? (isWaveTraining && currentRound >= 5) || (!isWaveTraining && currentRound >= 25 && (enemyType === 'FLANKER' || enemyType === 'SWARMER'))
@@ -1327,7 +1400,9 @@ export const Targets = () => {
             enemyType === 'TACTICIAN' ||
             enemyType === 'SWARMER' ||
             enemyType === 'PHANTOM_SNIPER' ||
-            enemyType === 'JUGGERNAUT';
+            enemyType === 'JUGGERNAUT' ||
+            enemyType === 'HEALER' ||
+            enemyType === 'KAMIKAZE';
           const rawX = isFlankingClass ? Math.cos(flankAngle) * 28 : (Math.random() - 0.5) * 56;
           const rawY =
             enemyType === 'SNIPER' || enemyType === 'ARTILLERY' ? 16 + Math.random() * 6 : 4 + Math.random() * 14;

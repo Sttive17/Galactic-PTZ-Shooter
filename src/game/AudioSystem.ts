@@ -404,6 +404,9 @@ class SynthAudio {
   // Synthesized base ambient nodes
   private ambientStarted = false;
   private ambientGain: GainNode | null = null;
+  private ambientFilter: BiquadFilterNode | null = null;
+  private ambientDrones: OscillatorNode[] = [];
+  private ambientLfo: OscillatorNode | null = null;
   private sonarInterval: number | null = null;
   private heartbeatInterval: number | null = null;
 
@@ -917,6 +920,7 @@ class SynthAudio {
       this.motorGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.04);
     }
 
+    this.updateBiomeAmbience(snapshot.chapter);
     this.syncLayersToDesired();
   }
 
@@ -1290,6 +1294,13 @@ class SynthAudio {
     padGain.connect(filter);
     pad.start(now);
 
+    this.ambientFilter = filter;
+    this.ambientLfo = lfo;
+    this.ambientDrones = [drone1, drone2, pad];
+    if (this.activeChapter) {
+      this.updateBiomeAmbience(this.activeChapter);
+    }
+
     // Subtle periodic tactical radar ping every 5.5s
     this.sonarInterval = window.setInterval(() => {
       if (!this.ctx || !this.sfxGain || this.ctx.state !== 'running' || this.muted) return;
@@ -1309,6 +1320,71 @@ class SynthAudio {
       ping.start(t);
       ping.stop(t + 0.65);
     }, 5500);
+  }
+
+  // Dynamic Procedural Biome Synthesizer Filter & Oscillator Retuning
+  updateBiomeAmbience(chapter: BiomeChapter) {
+    if (!this.ctx || !this.ambientFilter || this.ctx.state !== 'running') return;
+    const now = this.ctx.currentTime;
+    let cutoff = 160;
+    let q = 3.5;
+    let d1Freq = 55;
+    let d2Freq = 55.35;
+    let padFreq = 82.41;
+    let lfoRate = 0.14;
+
+    switch (chapter) {
+      case 'UNDERGROUND_LAB':
+        cutoff = 135;
+        q = 4.2;
+        d1Freq = 48;
+        d2Freq = 48.3;
+        padFreq = 72;
+        lfoRate = 0.08;
+        break;
+      case 'EARTH_OPEN_FIELD':
+        cutoff = 340;
+        q = 1.4;
+        d1Freq = 65.4;
+        d2Freq = 65.8;
+        padFreq = 98;
+        lfoRate = 0.24;
+        break;
+      case 'ROCKET_LAUNCH_ZONE':
+        cutoff = 180;
+        q = 3.2;
+        d1Freq = 38;
+        d2Freq = 38.25;
+        padFreq = 57;
+        lfoRate = 0.12;
+        break;
+      case 'ORBITAL_STRATOSPHERE':
+        cutoff = 420;
+        q = 2.0;
+        d1Freq = 110;
+        d2Freq = 110.5;
+        padFreq = 165;
+        lfoRate = 0.32;
+        break;
+      case 'GALACTIC_ARENA':
+      default:
+        cutoff = 110;
+        q = 4.8;
+        d1Freq = 32.7;
+        d2Freq = 32.9;
+        padFreq = 49;
+        lfoRate = 0.06;
+        break;
+    }
+
+    this.ambientFilter.frequency.setTargetAtTime(cutoff, now, 1.2);
+    this.ambientFilter.Q.setTargetAtTime(q, now, 1.2);
+    if (this.ambientLfo) {
+      this.ambientLfo.frequency.setTargetAtTime(lfoRate, now, 1.2);
+    }
+    if (this.ambientDrones[0]) this.ambientDrones[0].frequency.setTargetAtTime(d1Freq, now, 1.2);
+    if (this.ambientDrones[1]) this.ambientDrones[1].frequency.setTargetAtTime(d2Freq, now, 1.2);
+    if (this.ambientDrones[2]) this.ambientDrones[2].frequency.setTargetAtTime(padFreq, now, 1.2);
   }
 
   // Continuous PTZ Servo Motor Oscillator (silent when speed = 0)
@@ -1646,6 +1722,72 @@ class SynthAudio {
     osc.stop(t + 0.09);
   }
 
+  playPowerup() {
+    if (!this.ensureContext() || !this.ctx || !this.sfxGain) return;
+    const t = this.ctx.currentTime;
+    [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+      if (!this.ctx || !this.sfxGain) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t + i * 0.06);
+      gain.gain.setValueAtTime(0.0001, t + i * 0.06);
+      gain.gain.linearRampToValueAtTime(0.08, t + i * 0.06 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.06 + 0.22);
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+      osc.start(t + i * 0.06);
+      osc.stop(t + i * 0.06 + 0.25);
+    });
+  }
+
+  playEmpty() {
+    if (!this.ensureContext() || !this.ctx || !this.sfxGain) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(220, t);
+    gain.gain.setValueAtTime(0.05, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.09);
+  }
+
+  playDash() {
+    if (!this.ensureContext() || !this.ctx || !this.sfxGain) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(420, t);
+    osc.frequency.exponentialRampToValueAtTime(110, t + 0.24);
+    gain.gain.setValueAtTime(0.12, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.26);
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.28);
+  }
+
+  playCrit() {
+    if (!this.ensureContext() || !this.ctx || !this.sfxGain) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1760, t);
+    osc.frequency.exponentialRampToValueAtTime(880, t + 0.18);
+    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.24);
+  }
+
   getDebugState(): AudioDebugState {
     this.ensureStoreSubscription();
     this.syncFromStore();
@@ -1726,8 +1868,11 @@ export const playShieldBreak = () => audioSystem.playShieldBreak();
 export const playReload = () => audioSystem.playReload();
 export const playPortalOpen = () => audioSystem.playPortalOpen();
 export const playPortalWarp = () => audioSystem.playPortalWarp();
+export const updateBiomeAmbience = (chapter: BiomeChapter) => audioSystem.updateBiomeAmbience(chapter);
 
-export const playSound = (sound: 'shoot' | 'hit' | 'destroy' | 'alarm' | 'ui' | 'zoom') => {
+export const playSound = (
+  sound: 'shoot' | 'hit' | 'destroy' | 'alarm' | 'ui' | 'zoom' | 'powerup' | 'empty' | 'dash' | 'crit'
+) => {
   switch (sound) {
     case 'shoot': audioSystem.playShoot(); break;
     case 'hit': audioSystem.playHit(); break;
@@ -1735,5 +1880,9 @@ export const playSound = (sound: 'shoot' | 'hit' | 'destroy' | 'alarm' | 'ui' | 
     case 'alarm': audioSystem.playAlarm(); break;
     case 'ui': audioSystem.playUI(); break;
     case 'zoom': audioSystem.playZoom(); break;
+    case 'powerup': audioSystem.playPowerup(); break;
+    case 'empty': audioSystem.playEmpty(); break;
+    case 'dash': audioSystem.playDash(); break;
+    case 'crit': audioSystem.playCrit(); break;
   }
 };

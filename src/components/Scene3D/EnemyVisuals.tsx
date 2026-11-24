@@ -756,6 +756,112 @@ export const DroneVisual = ({
     );
   }
 
+  if (archetype === 'KAMIKAZE') {
+    const color = isTargeted ? '#ff1e1e' : '#ff4400';
+    const accent = isTargeted ? '#fde047' : '#ffaa00';
+    return (
+      <>
+        {/* Forward Spear Core */}
+        <mesh ref={coreRef} rotation={[Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[0.3, 0.75, 4]} />
+          <meshPhysicalMaterial
+            color={color}
+            emissive={color}
+            emissiveIntensity={3.2}
+            roughness={0.15}
+            metalness={0.7}
+            toneMapped={false}
+          />
+        </mesh>
+        <mesh ref={shieldRef}>
+          <coneGeometry args={[0.42, 0.9, 4]} />
+          <meshBasicMaterial color={accent} transparent opacity={0.25} wireframe depthWrite={false} toneMapped={false} />
+        </mesh>
+        {/* Swept-back Delta Wings */}
+        {[-1, 1].map((side) => (
+          <group key={side} position={[side * 0.42, 0, -0.15]} rotation={[0, side * 0.45, 0]}>
+            <mesh>
+              <boxGeometry args={[0.55, 0.04, 0.28]} />
+              <meshStandardMaterial color="#1f1f23" metalness={0.88} roughness={0.24} />
+            </mesh>
+            {/* Wingtip warning flare */}
+            <mesh position={[side * 0.28, 0, -0.1]}>
+              <sphereGeometry args={[0.06, 8, 8]} />
+              <meshBasicMaterial color={accent} toneMapped={false} />
+            </mesh>
+          </group>
+        ))}
+        {/* Rear Overcharged Thrusters */}
+        <group ref={ring1Ref} position={[0, 0, -0.38]}>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.12, 0.18, 0.3, 8]} />
+            <meshStandardMaterial color="#09090b" metalness={0.9} roughness={0.2} />
+          </mesh>
+          <mesh position={[0, 0, -0.2]} rotation={[Math.PI / 2, 0, 0]}>
+            <coneGeometry args={[0.16, 0.45, 8]} />
+            <meshBasicMaterial color="#ff3300" toneMapped={false} />
+          </mesh>
+        </group>
+      </>
+    );
+  }
+
+  if (archetype === 'HEALER') {
+    const color = isTargeted ? '#ff3b5c' : '#10b981';
+    const accent = isTargeted ? '#fde047' : '#34d399';
+    return (
+      <>
+        {/* Soothing Bio-Nanite Core */}
+        <mesh ref={coreRef}>
+          <octahedronGeometry args={[0.32, 1]} />
+          <meshPhysicalMaterial
+            color={color}
+            emissive={color}
+            emissiveIntensity={2.8}
+            roughness={0.12}
+            metalness={0.5}
+            toneMapped={false}
+          />
+        </mesh>
+        <mesh ref={shieldRef}>
+          <sphereGeometry args={[0.44, 16, 16]} />
+          <meshBasicMaterial color={accent} transparent opacity={0.22} depthWrite={false} toneMapped={false} />
+        </mesh>
+        {/* Support Chassis Ring */}
+        <mesh>
+          <torusGeometry args={[0.54, 0.035, 8, 32]} />
+          <meshStandardMaterial color="#064e3b" metalness={0.7} roughness={0.3} />
+        </mesh>
+        {/* Cross Emitters */}
+        {FIN_ANGLES.map((ang, i) => (
+          <group key={i} rotation={[0, ang, 0]}>
+            <mesh position={[0.42, 0, 0]}>
+              <boxGeometry args={[0.18, 0.08, 0.08]} />
+              <meshStandardMaterial color="#0f172a" metalness={0.8} roughness={0.3} />
+            </mesh>
+            <mesh position={[0.52, 0, 0]}>
+              <sphereGeometry args={[0.05, 8, 8]} />
+              <meshBasicMaterial color={accent} toneMapped={false} />
+            </mesh>
+          </group>
+        ))}
+        {/* Rotating Halo */}
+        <group ref={ring1Ref}>
+          <mesh rotation={[Math.PI / 3, 0, 0]}>
+            <torusGeometry args={[0.62, 0.018, 8, 32]} />
+            <meshBasicMaterial color={accent} toneMapped={false} />
+          </mesh>
+        </group>
+        <group ref={ring2Ref}>
+          <mesh rotation={[-Math.PI / 3, 0, 0]}>
+            <torusGeometry args={[0.62, 0.018, 8, 32]} />
+            <meshBasicMaterial color="#6ee7b7" toneMapped={false} />
+          </mesh>
+        </group>
+      </>
+    );
+  }
+
   // Default: SCOUT (Neon Green orb)
   const finalColor = isTargeted ? '#ef4444' : '#39ff14';
   const emissiveAccent = isTargeted ? '#f87171' : '#4ade80';
