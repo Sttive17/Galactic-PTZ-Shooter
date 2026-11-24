@@ -5,6 +5,25 @@ import { useGameStore } from '../../game/gameState';
 import type { MapTheme, WeatherStyle } from '../../game/mapGenerator';
 import { getArmorTextures, getCrateTextures, getFloorTextures } from '../../game/proceduralTextures';
 import { SpaceBackdrop } from './SpaceBackdrop';
+import { usePreloadedModel } from '../../game/modelLoader';
+import type { ModelKey } from '../../game/modelLoader';
+
+const ModelProp = ({
+  modelKey,
+  scale = 1,
+  rotation = [0, 0, 0],
+  position = [0, 0, 0],
+}: {
+  modelKey: ModelKey;
+  scale?: number | [number, number, number];
+  rotation?: [number, number, number];
+  position?: [number, number, number];
+}) => {
+  const model = usePreloadedModel(modelKey);
+  if (!model) return null;
+  const s = Array.isArray(scale) ? scale : [scale, scale, scale];
+  return <primitive object={model} scale={s} rotation={rotation} position={position} />;
+};
 
 const PILLAR_COUNT = 10;
 const DUST_COUNT = 550;
@@ -2401,6 +2420,39 @@ export const Environment = () => {
           );
         }
 
+        if (prop.kind === 'crate') {
+          const propHash = Math.abs(Math.round(prop.pos[0] * 19 + prop.pos[2] * 37)) % 4;
+          const modelKey: ModelKey =
+            propHash === 0
+              ? 'CONTAINER'
+              : propHash === 1
+                ? 'CONTAINER_TALL'
+                : propHash === 2
+                  ? 'GENERATOR'
+                  : 'PLASMA_BARREL';
+
+          const mScale: [number, number, number] = [
+            prop.size[0] * 0.48,
+            prop.size[1] * 0.48,
+            prop.size[2] * 0.48,
+          ];
+
+          return (
+            <group key={prop.id} position={prop.pos}>
+              {/* Structural base crate with PBR metallic finish */}
+              <mesh material={materials.crateMat} castShadow receiveShadow>
+                <boxGeometry args={prop.size} />
+              </mesh>
+              {/* High-detail 3D Sci-Fi Model Asset */}
+              <ModelProp modelKey={modelKey} scale={mScale} position={[0, 0, 0]} />
+              {/* Subtle glowing energy seam */}
+              <mesh position={[0, prop.size[1] / 2 + 0.02, 0]} material={glowMat}>
+                <boxGeometry args={[prop.size[0] * 0.8, 0.04, prop.size[2] * 0.8]} />
+              </mesh>
+            </group>
+          );
+        }
+
         const isStructural = prop.kind === 'wall' || prop.kind === 'tower';
         const bodyMat = isStructural ? materials.wallMat : materials.crateMat;
         const capMat = isStructural ? materials.crateMat : materials.wallMat;
@@ -2414,6 +2466,14 @@ export const Environment = () => {
               <mesh position={[0, prop.size[1] / 2 + 0.14, 0]} material={capMat} castShadow receiveShadow>
                 <boxGeometry args={[prop.size[0] * 0.9, 0.28, prop.size[2] * 0.9]} />
               </mesh>
+            )}
+            {/* Real 3D Satellite Radar Dish on Tower Peak */}
+            {prop.kind === 'tower' && (
+              <ModelProp
+                modelKey="SATELLITE_DISH"
+                scale={0.7}
+                position={[0, prop.size[1] / 2 + 0.45, 0]}
+              />
             )}
             {/* Top glowing tactical trim */}
             <mesh position={[0, prop.size[1] / 2 + (isStructural ? 0.3 : 0.04), 0]} material={glowMat}>
@@ -2452,20 +2512,32 @@ export const Environment = () => {
               }}
               position={[cfg.rx, cfg.y, -10]}
             >
-              <mesh material={materials.crateMat}>
-                <boxGeometry args={[2.2, 0.9, 3.2]} />
-              </mesh>
-              <mesh position={[0, -0.7, 0]} material={materials.wallMat}>
-                <boxGeometry args={[1.6, 0.7, 2.0]} />
-              </mesh>
+              <ModelProp
+                modelKey={idx % 2 === 0 ? 'CRAFT_BOSS' : 'CRAFT_TANK'}
+                scale={2.2}
+                rotation={[0, Math.PI / 2, 0]}
+              />
               {[-1.3, 1.3].map((tx, tIdx) => (
-                <mesh key={tIdx} position={[tx, 0.1, 0]} rotation={[Math.PI / 2, 0, 0]}>
-                  <cylinderGeometry args={[0.25, 0.35, 1.4, 8]} />
+                <mesh key={tIdx} position={[tx, 0.1, -1.2]} rotation={[Math.PI / 2, 0, 0]}>
+                  <cylinderGeometry args={[0.22, 0.35, 1.2, 8]} />
                   <meshBasicMaterial color={idx % 2 === 0 ? theme.primaryGlow : theme.secondaryGlow} toneMapped={false} />
                 </mesh>
               ))}
             </group>
           ))}
+
+          {/* Central Tactical Holographic Planetary Table & Command Consoles */}
+          <group position={[0, 0.02, -8]}>
+            <ModelProp modelKey="HOLOGRAM_TABLE" scale={1.4} position={[0, 0.45, 0]} />
+            <ModelProp modelKey="COMPUTER_TERMINAL" scale={1.2} position={[-3.6, 0.5, 0.4]} rotation={[0, 0.45, 0]} />
+            <ModelProp modelKey="COMPUTER_TERMINAL" scale={1.2} position={[3.6, 0.5, 0.4]} rotation={[0, -0.45, 0]} />
+          </group>
+
+          {/* Drifting Cosmic Asteroid Formations */}
+          <group>
+            <ModelProp modelKey="METEOR" scale={3.6} position={[44, 18, -48]} rotation={[0.4, 0.8, 0.2]} />
+            <ModelProp modelKey="METEOR" scale={4.4} position={[-48, 24, -42]} rotation={[-0.3, 1.2, 0.5]} />
+          </group>
 
           {/* 4 Perimeter Holographic Status Pylons */}
           {HOLO_PYLON_ANGLES.map((angle, idx) => {

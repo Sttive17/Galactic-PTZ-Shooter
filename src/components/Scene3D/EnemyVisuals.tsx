@@ -1,6 +1,24 @@
 import type { RefObject } from 'react';
 import * as THREE from 'three';
 import type { EnemyArchetype } from '../../types/game';
+import { usePreloadedModel } from '../../game/modelLoader';
+import type { ModelKey } from '../../game/modelLoader';
+
+const ModelCraft = ({
+  modelKey,
+  scale = 0.5,
+  rotation = [0, 0, 0],
+  position = [0, 0, 0],
+}: {
+  modelKey: ModelKey;
+  scale?: number;
+  rotation?: [number, number, number];
+  position?: [number, number, number];
+}) => {
+  const model = usePreloadedModel(modelKey);
+  if (!model) return null;
+  return <primitive object={model} scale={scale} rotation={rotation} position={position} />;
+};
 
 const FIN_ANGLES = [0, Math.PI / 2, Math.PI, (Math.PI * 3) / 2];
 const SIX_ANGLES = Array.from({ length: 6 }, (_, i) => (i * Math.PI) / 3);
@@ -20,6 +38,7 @@ const StrikerHull = ({ isTargeted, coreRef, ring1Ref, ring2Ref }: BossHullProps)
   const accentColor = isTargeted ? '#fde047' : '#fb923c';
   return (
     <>
+      <ModelCraft modelKey="CRAFT_BOSS" scale={1.85} rotation={[0, Math.PI, 0]} position={[0, -0.15, 0]} />
       <mesh ref={coreRef}>
         <octahedronGeometry args={[0.4, 1]} />
         <meshPhysicalMaterial
@@ -67,6 +86,7 @@ const AegisHull = ({ isTargeted, isShielded, coreRef, ring1Ref, ring2Ref }: Boss
   const coreColor = isTargeted ? '#ff3b5c' : '#06b6d4';
   return (
     <>
+      <ModelCraft modelKey="CRAFT_BOSS" scale={2.0} rotation={[0, Math.PI, 0]} position={[0, -0.16, 0]} />
       <mesh ref={coreRef}>
         <icosahedronGeometry args={[0.38, 1]} />
         <meshPhysicalMaterial
@@ -140,6 +160,7 @@ const StormHull = ({ isTargeted, coreRef, ring1Ref, ring2Ref }: BossHullProps) =
   ];
   return (
     <>
+      <ModelCraft modelKey="CRAFT_BOSS" scale={2.1} rotation={[0, Math.PI, 0]} position={[0, -0.16, 0]} />
       <mesh ref={coreRef}>
         <icosahedronGeometry args={[0.42, 0]} />
         <meshPhysicalMaterial
@@ -189,6 +210,7 @@ const PhantomBossHull = ({ isTargeted, coreRef, ring1Ref, ring2Ref }: BossHullPr
   const accentColor = isTargeted ? '#fda4af' : '#2dd4bf';
   return (
     <>
+      <ModelCraft modelKey="CRAFT_SNIPER" scale={2.2} rotation={[0, Math.PI, 0]} position={[0, -0.14, 0]} />
       <mesh ref={coreRef} scale={[0.75, 1.35, 0.75]}>
         <octahedronGeometry args={[0.42, 0]} />
         <meshPhysicalMaterial
@@ -232,6 +254,7 @@ const ArtilleryBossHull = ({ isTargeted, coreRef, ring1Ref, ring2Ref }: BossHull
   const accentColor = isTargeted ? '#fde047' : '#fb923c';
   return (
     <>
+      <ModelCraft modelKey="CRAFT_TANK" scale={2.35} rotation={[0, Math.PI, 0]} position={[0, -0.15, 0]} />
       <mesh ref={coreRef}>
         <sphereGeometry args={[0.42, 16, 16]} />
         <meshPhysicalMaterial
@@ -584,6 +607,7 @@ export const DroneVisual = ({
     const accent = isTargeted ? '#fde047' : isDamaged ? '#fda4af' : '#facc15';
     return (
       <>
+        <ModelCraft modelKey="CRAFT_SNIPER" scale={0.48} rotation={[0, Math.PI, 0]} position={[0, -0.05, 0]} />
         <mesh ref={coreRef}>
           <dodecahedronGeometry args={[0.3, 0]} />
           <meshPhysicalMaterial color={color} emissive={color} emissiveIntensity={2.6} roughness={0.15} metalness={0.8} toneMapped={false} />
@@ -625,6 +649,7 @@ export const DroneVisual = ({
     const accent = isTargeted ? '#fde047' : '#facc15';
     return (
       <>
+        <ModelCraft modelKey="CRAFT_SCOUT" scale={0.34} rotation={[0, Math.PI, 0]} position={[0, -0.04, 0]} />
         <mesh ref={coreRef}>
           <tetrahedronGeometry args={[0.34, 0]} />
           <meshPhysicalMaterial color={color} emissive={color} emissiveIntensity={2.4} roughness={0.16} metalness={0.65} toneMapped={false} />
@@ -650,6 +675,7 @@ export const DroneVisual = ({
     const accent = isTargeted ? '#fde047' : '#fb923c';
     return (
       <>
+        <ModelCraft modelKey="CRAFT_TANK" scale={0.55} rotation={[0, Math.PI, 0]} position={[0, -0.05, 0]} />
         <mesh ref={coreRef}>
           <sphereGeometry args={[0.3, 14, 14]} />
           <meshPhysicalMaterial color={color} emissive={color} emissiveIntensity={2.4} roughness={0.2} metalness={0.75} toneMapped={false} />
@@ -687,6 +713,7 @@ export const DroneVisual = ({
     const accent = isTargeted ? '#fde047' : '#e879f9';
     return (
       <>
+        <ModelCraft modelKey="CRAFT_SNIPER" scale={0.54} rotation={[0, Math.PI, 0]} position={[0, -0.06, 0]} />
         <mesh ref={coreRef} scale={[0.75, 1.3, 0.75]}>
           <octahedronGeometry args={[0.3, 0]} />
           <meshPhysicalMaterial color={color} emissive={color} emissiveIntensity={2.6} roughness={0.14} metalness={0.75} toneMapped={false} />
@@ -722,6 +749,7 @@ export const DroneVisual = ({
     ];
     return (
       <>
+        <ModelCraft modelKey="CRAFT_TANK" scale={0.62} rotation={[0, Math.PI, 0]} position={[0, -0.05, 0]} />
         <mesh ref={coreRef}>
           <dodecahedronGeometry args={[0.34, 0]} />
           <meshPhysicalMaterial color={color} emissive={color} emissiveIntensity={2.6} roughness={0.16} metalness={0.85} toneMapped={false} />
@@ -761,6 +789,7 @@ export const DroneVisual = ({
     const accent = isTargeted ? '#fde047' : '#ffaa00';
     return (
       <>
+        <ModelCraft modelKey="CRAFT_KAMIKAZE" scale={0.56} rotation={[0, Math.PI, 0]} position={[0, -0.05, 0]} />
         {/* Forward Spear Core */}
         <mesh ref={coreRef} rotation={[Math.PI / 2, 0, 0]}>
           <coneGeometry args={[0.3, 0.75, 4]} />
@@ -811,6 +840,7 @@ export const DroneVisual = ({
     const accent = isTargeted ? '#fde047' : '#34d399';
     return (
       <>
+        <ModelCraft modelKey="CRAFT_SCOUT" scale={0.46} rotation={[0, Math.PI, 0]} position={[0, -0.05, 0]} />
         {/* Soothing Bio-Nanite Core */}
         <mesh ref={coreRef}>
           <octahedronGeometry args={[0.32, 1]} />
@@ -868,6 +898,7 @@ export const DroneVisual = ({
 
   return (
     <>
+      <ModelCraft modelKey="CRAFT_SCOUT" scale={0.52} rotation={[0, Math.PI, 0]} position={[0, -0.06, 0]} />
       <mesh visible={false}>
         <boxGeometry args={[1, 1, 1]} />
       </mesh>
