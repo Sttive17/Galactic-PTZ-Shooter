@@ -17,8 +17,8 @@ export const PTZCamera = () => {
   const muzzleRef = useRef<THREE.Mesh>(null);
   const muzzleLightRef = useRef<THREE.PointLight>(null);
   const bobPhaseRef = useRef(0);
-  const initialFovRef = useRef(
-    THREE.MathUtils.clamp(useGameStore.getState().preferences?.fov ?? 68, 55, 90)
+  const baseFov = useGameStore((state) =>
+    THREE.MathUtils.clamp(state.preferences?.fov ?? 68, 55, 90)
   );
 
   useFrame((state, delta) => {
@@ -196,7 +196,7 @@ export const PTZCamera = () => {
     <PerspectiveCamera
       ref={cameraRef}
       makeDefault
-      fov={initialFovRef.current}
+      fov={baseFov}
       near={0.05}
       far={650}
       position={[0, 2, 14]}

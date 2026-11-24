@@ -467,7 +467,8 @@ class SynthAudio {
         return;
       }
       this.storeSubscribed = true;
-      this.storeUnsubscribe = useGameStore.subscribe((state, prevState) => {
+      let prevState = useGameStore.getState();
+      this.storeUnsubscribe = useGameStore.subscribe((state) => {
         const nextPrefs = state.preferences;
         const oldPrefs = prevState.preferences;
         if (nextPrefs.masterVolume !== oldPrefs.masterVolume) {
@@ -482,10 +483,70 @@ class SynthAudio {
         if (nextPrefs.muted !== oldPrefs.muted) {
           this.setMuted(nextPrefs.muted);
         }
+
+        if (
+          state.mode !== prevState.mode ||
+          state.roundState !== prevState.roundState ||
+          state.isPaused !== prevState.isPaused ||
+          state.isSettingsOpen !== prevState.isSettingsOpen ||
+          state.bossInfo !== prevState.bossInfo ||
+          state.playerHealth !== prevState.playerHealth ||
+          state.currentMap !== prevState.currentMap
+        ) {
+          this.syncFromStore(state);
+        }
+        prevState = state;
       });
     } catch {
       this.storeSubscribed = false;
     }
+  }
+
+  syncFromStore(state = useGameStore.getState()) {
+    let screen: AudioScreen = 'MAIN_MENU';
+    if (state.isSettingsOpen) {
+      screen = 'SETTINGS_MENU';
+    } else if (state.mode === 'LEVEL_MAP') {
+      screen = 'LEVEL_MAP';
+    } else if (state.mode === 'GAMEOVER') {
+      screen = 'GAMEOVER';
+    } else if (state.mode === 'CHALLENGE' || state.mode === 'TRAINING') {
+      screen = state.isPaused ? 'PAUSED' : 'GAMEPLAY';
+    }
+
+    let situation: AudioSituation = 'EXPLORE';
+    if (state.mode === 'GAMEOVER') {
+      situation = 'GAMEOVER';
+    } else if (state.roundState === 'POWER_SELECT') {
+      situation = 'POWER_SELECT';
+    } else if (state.roundState === 'PORTAL_ACTIVE') {
+      situation = 'PORTAL_ACTIVE';
+    } else if (state.roundState === 'WARP_CINEMATIC') {
+      situation = 'WARP_CINEMATIC';
+    } else if (state.roundState === 'TRANSITION') {
+      situation = 'ROUND_COMPLETE';
+    } else if (
+      (state.mode === 'CHALLENGE' || state.mode === 'TRAINING') &&
+      state.playerHealth <= 35
+    ) {
+      situation = 'CRITICAL';
+    } else if (state.bossInfo && state.bossInfo.health > 0) {
+      situation = 'COMBAT';
+    } else if (state.mode === 'CHALLENGE' || state.mode === 'TRAINING') {
+      situation = 'COMBAT';
+    }
+
+    const isBoss = Boolean(state.bossInfo && state.bossInfo.health > 0);
+    const chapter = state.currentMap?.theme?.chapter ?? 'GALACTIC_ARENA';
+
+    this.setAudioContext({
+      screen,
+      chapter,
+      situation,
+      isBoss,
+      bossTier: state.bossInfo?.tier,
+      bossShielded: state.bossInfo?.shielded,
+    });
   }
 
   private ensureAudioContextGraph(): boolean {
@@ -519,6 +580,10 @@ class SynthAudio {
           this.syncLayersToDesired();
         }
       };
+
+      if (!this.tracksLoaded && !this.tracksLoading) {
+        void this.preloadAllTracks();
+      }
     }
 
     return Boolean(this.ctx && this.masterGain && this.musicGain && this.ambienceGain && this.sfxGain);
@@ -1583,6 +1648,7 @@ class SynthAudio {
 
   getDebugState(): AudioDebugState {
     this.ensureStoreSubscription();
+    this.syncFromStore();
     const activeTrackKey = this.failedTrackKeys.has(this.desiredMusicKey)
       ? (this.musicLayer.active?.key ?? this.desiredMusicKey)
       : this.desiredMusicKey;

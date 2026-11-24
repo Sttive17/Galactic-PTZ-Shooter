@@ -49,6 +49,10 @@ export const SettingsPanel = ({
   const [activeTab, setActiveTab] = useState<'GRAPHICS' | 'DISPLAY' | 'AUDIO_CONTROLS'>('GRAPHICS');
   const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement));
   const [autoDetectNotice, setAutoDetectNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    initAudio();
+  }, []);
   const noticeTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -591,7 +595,7 @@ export const SettingsPanel = ({
             <div className="space-y-2">
               <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-800">
                 <div>
-                  <span className="text-white font-medium">Mostrar Contador FPS</span>
+                  <span className="text-white font-medium">Mostrar FPS</span>
                   <p className="text-[10px] text-slate-400">
                     Muestra el rendimiento en tiempo real en la esquina superior.
                   </p>
@@ -614,7 +618,7 @@ export const SettingsPanel = ({
 
               <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-800">
                 <div>
-                  <span className="text-white font-medium">Efectos de HUD / Scanlines</span>
+                  <span className="text-white font-medium">Efectos HUD</span>
                   <p className="text-[10px] text-slate-400">
                     Capas visuales de visor táctico y viñeta cinematográfica.
                   </p>

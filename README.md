@@ -29,16 +29,17 @@ Requiere un navegador moderno con WebGL. En móviles, abre el enlace en el naveg
 
 ## Características
 
-- Cámara en primera persona con giro de 360°, inclinación y zoom.
+- Cámara en primera persona con giro de 360°, inclinación y zoom táctico.
 - Movimiento, salto, sprint, colisiones y plataformas.
-- Disparo, munición, recarga, proyectiles y objetivos con diferentes clases.
-- Jefes, escudos, combos, puntuación y poderes.
+- **HUD táctico con indicador de munición** (`50 / ∞`) en la esquina inferior derecha, barra de recarga en tiempo real y aviso de recarga manual `[R]` / `[X]`.
+- **Minimapa táctico ampliado (208×208 px)** con resolución nítida adaptable (DPR) y seguimiento de aliados (drones escolta en verde esmeralda), enemigos carmesí, generadores y portales.
+- Jefes, escudos, combos, puntuación y poderes seleccionables.
 - Campaña de hasta 50 niveles, mapa estelar y modo de oleadas de entrenamiento.
-- Biomas y escenarios generados para los niveles.
-- Controles táctiles en pantalla para jugar desde teléfonos y tabletas.
-- Mando compatible con Gamepad API.
-- Ajustes de gráficos, audio, sensibilidad y accesibilidad.
-- Música y ambiente que cambian según el estado de la partida.
+- 5 biomas espaciales generados proceduralmente con iluminación y texturas únicas.
+- Controles táctiles en pantalla adaptativos para jugar desde teléfonos y tabletas.
+- Mando compatible con Gamepad API (Xbox / DualShock).
+- **Centro de Configuración integral** con pestañas de Gráficos, Pantalla & Brillo (50% a 150%), Audio & Sensibilidad, y botón **"⚡ ACOMODAR A MI PC"** para optimización automática contra bloqueos/crashes de GPU.
+- **Sistema de audio inmersivo multicapa (CC0 Royalty-Free)** con 14 pistas que transicionan suavemente según bioma, situación (exploración, combate tenso, tensión crítica, victoria, derrota) y menús.
 
 ## Experiencia de juego
 
@@ -158,14 +159,17 @@ Los nombres y la disponibilidad de los botones pueden variar con mandos no está
 
 ## Ajustes y compatibilidad
 
-El panel de ajustes permite cambiar la calidad gráfica, brillo, sensibilidad de cámara, inversión vertical, vibración de cámara y volúmenes de música y efectos. Los perfiles gráficos disponibles son **Bajo**, **Medio**, **Alto** y **Personalizado**; también hay una opción de detección automática del hardware.
+El panel de configuración integral (**Centro de Configuración**) ofrece tres pestañas principales:
 
-La aplicación requiere WebGL. Si la escena aparece negra o el rendimiento es bajo:
+1. **Gráficos:** Presets **Bajo**, **Medio**, **Alto** y **Personalizado**. Incluye controles granulares para sombras dinámicas, resolución de sombras (512 / 1024), reflejos ambientales IBL, shaders complejos y recuento de partículas estelares. Incluye el botón **"⚡ ACOMODAR A MI PC"**, que analiza la GPU (`WEBGL_debug_renderer_info`), núcleos de CPU y memoria para aplicar una configuración segura que previene cuelgues o reinicios forzados por TDR (Timeout Detection and Recovery) en GPUs integradas (Intel HD/Iris, AMD Radeon Vega).
+2. **Pantalla & Brillo:** Deslizador de brillo regulable del **50% al 150%**, modo pantalla completa (Fullscreen API), alternador de efectos HUD/scanlines y contador de FPS en tiempo real.
+3. **Audio & Control:** Volumen maestro, música de fondo, efectos de sonido (SFX), sensibilidad de ratón/stick, inversión del eje Y y vibración de cámara.
 
-1. Actualiza el navegador y los controladores de gráficos.
-2. Comprueba que WebGL esté habilitado en el navegador.
-3. Selecciona el perfil **Bajo** desde Ajustes.
-4. Cierra otras aplicaciones que utilicen intensivamente la GPU.
+La aplicación requiere WebGL. Si la escena presenta caídas de rendimiento o el equipo tiene recursos limitados:
+
+1. Haz clic en **"⚡ ACOMODAR A MI PC"** desde el menú de Ajustes para calibrar automáticamente los gráficos.
+2. Selecciona manualmente el perfil **Bajo** si utilizas gráficos integrados.
+3. Comprueba que la aceleración de hardware esté habilitada en el navegador.
 
 Para habilitar audio, interactúa primero con la aplicación: los navegadores suelen bloquear la reproducción de audio hasta que exista una acción del usuario. Si el mando no aparece, conéctalo, pulsa un botón y revisa que el navegador y el sistema operativo lo reconozcan.
 
