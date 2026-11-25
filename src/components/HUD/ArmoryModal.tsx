@@ -5,6 +5,7 @@ import { playSound } from '../../game/AudioSystem';
 import { triggerHaptic } from '../../game/haptics';
 import { UPGRADE_TIERS, SKIN_CATALOG } from '../../game/armory';
 import type { WeaponSkinId } from '../../game/armory';
+import { ShipTurntable } from './ShipTurntable';
 import {
   Shield,
   Heart,
@@ -16,6 +17,8 @@ import {
   Crosshair,
   ChevronRight,
   Check,
+  Trophy,
+  Award,
 } from 'lucide-react';
 
 interface ArmoryModalProps {
@@ -24,9 +27,10 @@ interface ArmoryModalProps {
 }
 
 export const ArmoryModal = ({ isOpen, onClose }: ArmoryModalProps) => {
-  const [tab, setTab] = useState<'UPGRADES' | 'SKINS'>('UPGRADES');
+  const [tab, setTab] = useState<'UPGRADES' | 'SKINS' | 'PILOT'>('UPGRADES');
   const nanites = useGameStore((state) => state.nanites);
   const armory = useGameStore((state) => state.armory);
+  const pilotStats = useGameStore((state) => state.pilotStats);
   const purchaseArmoryUpgrade = useGameStore((state) => state.purchaseArmoryUpgrade);
   const selectArmorySkin = useGameStore((state) => state.selectArmorySkin);
 
@@ -55,6 +59,13 @@ export const ArmoryModal = ({ isOpen, onClose }: ArmoryModalProps) => {
   const handleSkin = (skinId: WeaponSkinId) => {
     playSound('ui');
     selectArmorySkin(skinId);
+  };
+
+  const getPilotRank = (kills: number) => {
+    if (kills >= 150) return { title: 'AS DE LA FEDERACIÓN', color: 'text-amber-400', border: 'border-amber-400/40' };
+    if (kills >= 60) return { title: 'COMANDANTE DE ASALTO', color: 'text-fuchsia-400', border: 'border-fuchsia-400/40' };
+    if (kills >= 20) return { title: 'PILOTO DE ÉLITE', color: 'text-cyan-400', border: 'border-cyan-400/40' };
+    return { title: 'CADETE ESPACIAL', color: 'text-emerald-400', border: 'border-emerald-400/40' };
   };
 
   const upgradeCards = [
@@ -178,10 +189,27 @@ export const ArmoryModal = ({ isOpen, onClose }: ArmoryModalProps) => {
             <Palette size={16} />
             CAMUFLAJES Y SKINS
           </button>
+          <button
+            onClick={() => {
+              playSound('ui');
+              setTab('PILOT');
+            }}
+            className={`flex items-center gap-2 py-3 px-4 text-xs font-orbitron font-bold border-b-2 transition-all ${
+              tab === 'PILOT'
+                ? 'border-amber-400 text-amber-300 bg-amber-950/20'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Trophy size={16} />
+            ESTADÍSTICAS DEL PILOTO
+          </button>
         </div>
 
         {/* Tab Content */}
         <div className="p-6 overflow-y-auto space-y-4">
+          {/* 3D Hangar Turntable Preview */}
+          <ShipTurntable />
+
           {tab === 'UPGRADES' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {upgradeCards.map((up) => {
@@ -335,6 +363,92 @@ export const ArmoryModal = ({ isOpen, onClose }: ArmoryModalProps) => {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {tab === 'PILOT' && (
+            <div className="space-y-4">
+              {/* Pilot Rank Banner */}
+              <div
+                className={`p-4 rounded-xl bg-slate-950/70 border ${
+                  getPilotRank(pilotStats.killsTotal).border
+                } flex flex-wrap items-center justify-between gap-4`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-400/30 text-amber-400">
+                    <Award size={26} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-mono text-slate-400 tracking-wider">
+                      HOJA DE SERVICIO // RANGO MILITAR
+                    </div>
+                    <div
+                      className={`text-lg font-orbitron font-black tracking-wider ${
+                        getPilotRank(pilotStats.killsTotal).color
+                      }`}
+                    >
+                      {getPilotRank(pilotStats.killsTotal).title}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right font-mono text-xs text-slate-400">
+                  <div>RÉCORD DE PUNTUACIÓN</div>
+                  <div className="text-base font-orbitron font-bold text-white">
+                    {pilotStats.highScore.toLocaleString()} PTS
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                  <div className="text-[10px] font-mono text-slate-400">ENEMIGOS DESTRUIDOS</div>
+                  <div className="text-xl font-orbitron font-black text-rose-400 mt-1">
+                    {pilotStats.killsTotal}
+                  </div>
+                  <div className="text-[10px] font-mono text-slate-500 mt-0.5">Bajas confirmadas</div>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                  <div className="text-[10px] font-mono text-slate-400">JEFES NEUTRALIZADOS</div>
+                  <div className="text-xl font-orbitron font-black text-amber-400 mt-1">
+                    {pilotStats.bossesDefeated}
+                  </div>
+                  <div className="text-[10px] font-mono text-slate-500 mt-0.5">Titanes caídos</div>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                  <div className="text-[10px] font-mono text-slate-400">PRECISIÓN DE TIRO</div>
+                  <div className="text-xl font-orbitron font-black text-cyan-400 mt-1">
+                    {pilotStats.shotsFired > 0
+                      ? ((pilotStats.shotsHit / pilotStats.shotsFired) * 100).toFixed(1)
+                      : '0.0'}
+                    %
+                  </div>
+                  <div className="text-[10px] font-mono text-slate-500 mt-0.5">
+                    {pilotStats.shotsHit} / {pilotStats.shotsFired} disp.
+                  </div>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                  <div className="text-[10px] font-mono text-slate-400">COMBO MÁXIMO</div>
+                  <div className="text-xl font-orbitron font-black text-fuchsia-400 mt-1">
+                    {pilotStats.highestCombo}x
+                  </div>
+                  <div className="text-[10px] font-mono text-slate-500 mt-0.5">Multiplicador récord</div>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                  <div className="text-[10px] font-mono text-slate-400">NANITAS ACUMULADAS</div>
+                  <div className="text-xl font-orbitron font-black text-emerald-400 mt-1">
+                    {pilotStats.nanitesCollected}
+                  </div>
+                  <div className="text-[10px] font-mono text-slate-500 mt-0.5">Material recolectado</div>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+                  <div className="text-[10px] font-mono text-slate-400">MISIONES COMPLETADAS</div>
+                  <div className="text-xl font-orbitron font-black text-sky-400 mt-1">
+                    {pilotStats.missionsCompleted}
+                  </div>
+                  <div className="text-[10px] font-mono text-slate-500 mt-0.5">Sectores pacificados</div>
+                </div>
+              </div>
             </div>
           )}
         </div>

@@ -12,13 +12,14 @@ import {
   GRAPHICS_PRESETS,
 } from './graphicsSettings';
 import type { GraphicsConfig, GraphicsPreset, HardwareInfo } from './graphicsSettings';
-import type { BossStyle, PTZOpticalMode, WeaponArchetype, CinematicState, BossIntroData } from '../types/game';
+import type { BossStyle, PTZOpticalMode, WeaponArchetype, CinematicState, BossIntroData, PilotStats } from '../types/game';
 import { audioSystem, playSound } from './AudioSystem';
 import { triggerHaptic } from './haptics';
 import { loadArmoryState, saveArmoryState, UPGRADE_TIERS, SKIN_CATALOG } from './armory';
 import type { ArmoryState, WeaponSkinId } from './armory';
 import { unlockAchievement } from './achievements';
 import { speakTacticalCue } from './tacticalVoice';
+import { loadPilotStats, recordStatUpdate } from './pilotStats';
 
 const initialMap = generateRandomMap();
 SceneState.colliders = initialMap.obstacles;
@@ -234,8 +235,17 @@ export interface GameState {
   isArmoryOpen: boolean;
   cinematicState: CinematicState;
   activeBossIntro: BossIntroData | null;
+  empCooldown: number;
+  maxEmpCooldown: number;
+  overdriveActive: boolean;
+  overdriveDuration: number;
+  overdriveCooldown: number;
+  maxOverdriveCooldown: number;
+  pilotStats: PilotStats;
   
   // Actions
+  triggerEmpPulse: () => boolean;
+  triggerOverdrive: () => boolean;
   setMode: (mode: GameMode) => void;
   setRoundState: (state: RoundState) => void;
   setOpticalMode: (mode: PTZOpticalMode) => void;
@@ -330,6 +340,48 @@ export const useGameStore = create<GameState>((set) => ({
   isArmoryOpen: false,
   cinematicState: 'NONE',
   activeBossIntro: null,
+  empCooldown: 0,
+  maxEmpCooldown: 15,
+  overdriveActive: false,
+  overdriveDuration: 0,
+  overdriveCooldown: 0,
+  maxOverdriveCooldown: 25,
+  pilotStats: loadPilotStats(),
+
+  triggerEmpPulse: () => {
+    const state = useGameStore.getState();
+    if (state.empCooldown > 0 || state.isPaused || state.roundState !== 'PLAYING') return false;
+    playSound('emp');
+    triggerHaptic('dash');
+    speakTacticalCue('emp_ready');
+    useGameStore.getState().addCameraShake(0.45);
+    const p = SceneState.playerPosition;
+    for (const t of SceneState.targets) {
+      if (!t.active) continue;
+      const dist = Math.hypot(t.position[0] - p.x, t.position[1] - p.y, t.position[2] - p.z);
+      if (dist <= 24) {
+        if (!t.isBoss && !t.isGenerator) {
+          t.health = Math.max(0, t.health - 2);
+        }
+      }
+    }
+    set({ empCooldown: 15 });
+    return true;
+  },
+
+  triggerOverdrive: () => {
+    const state = useGameStore.getState();
+    if (state.overdriveCooldown > 0 || state.isPaused || state.roundState !== 'PLAYING') return false;
+    playSound('overdrive');
+    triggerHaptic('crit');
+    useGameStore.getState().addCameraShake(0.35);
+    set({
+      overdriveActive: true,
+      overdriveDuration: 6,
+      overdriveCooldown: 25,
+    });
+    return true;
+  },
 
   setCinematicState: (cinematicState) => set({ cinematicState }),
   triggerBossIntro: (activeBossIntro) => {
@@ -343,7 +395,8 @@ export const useGameStore = create<GameState>((set) => ({
     playSound('crit');
     triggerHaptic('bossDeath');
     speakTacticalCue('titan_neutralized');
-    set({ cinematicState: 'BOSS_VICTORY' });
+    const updatedStats = recordStatUpdate((s) => ({ ...s, bossesDefeated: s.bossesDefeated + 1 }));
+    set({ cinematicState: 'BOSS_VICTORY', pilotStats: updatedStats });
   },
   finishBossVictory: () => set({ cinematicState: 'NONE' }),
   startDeploymentCinematic: () => {
@@ -359,7 +412,7 @@ export const useGameStore = create<GameState>((set) => ({
     set({ selectedWeapon });
   },
   cycleWeapon: (dir) => set((state) => {
-    const list: WeaponArchetype[] = ['PLASMA_RIFLE', 'SCATTER_SHOTGUN', 'HEAVY_RAILGUN'];
+    const list: WeaponArchetype[] = ['PLASMA_RIFLE', 'SCATTER_SHOTGUN', 'HEAVY_RAILGUN', 'MICRO_MISSILES', 'CRYO_BEAM'];
     const idx = list.indexOf(state.selectedWeapon);
     const nextIdx = (idx + dir + list.length) % list.length;
     playSound('ui');
@@ -430,11 +483,16 @@ export const useGameStore = create<GameState>((set) => ({
     return { opticalMode: next };
   }),
   addNanites: (amount) => set((state) => {
-    const newCount = state.nanites + Math.max(0, amount);
+    const validAmount = Math.max(0, amount);
+    const newCount = state.nanites + validAmount;
     if (newCount >= 50) {
       unlockAchievement('NANITE_HOARDER');
     }
-    return { nanites: newCount };
+    const updatedStats = recordStatUpdate((s) => ({
+      ...s,
+      nanitesCollected: s.nanitesCollected + validAmount,
+    }));
+    return { nanites: newCount, pilotStats: updatedStats };
   }),
   setDashCooldown: (dashCooldown) => set({ dashCooldown }),
 
@@ -742,7 +800,8 @@ export const useGameStore = create<GameState>((set) => ({
   registerShot: () => set((state) => {
     if (state.isPaused) return state;
     triggerHaptic('fire');
-    return { shots: state.shots + 1 }
+    const updatedStats = recordStatUpdate((s) => ({ ...s, shotsFired: s.shotsFired + 1 }));
+    return { shots: state.shots + 1, pilotStats: updatedStats };
   }),
 
   registerHit: (points) => set((state) => {
@@ -765,6 +824,13 @@ export const useGameStore = create<GameState>((set) => ({
       const remainingHeal = healAmount - shieldGain;
       nextHealth = Math.min(state.maxPlayerHealth, state.playerHealth + remainingHeal);
     }
+    const updatedStats = recordStatUpdate((s) => ({
+      ...s,
+      shotsHit: s.shotsHit + 1,
+      killsTotal: s.killsTotal + 1,
+      highestCombo: Math.max(s.highestCombo, newCombo),
+      totalDamageDealt: s.totalDamageDealt + addedScore,
+    }));
     return {
       hits: state.hits + 1,
       score: state.score + addedScore,
@@ -772,12 +838,24 @@ export const useGameStore = create<GameState>((set) => ({
       targetsDestroyed: state.targetsDestroyed + 1,
       playerShield: nextShield,
       playerHealth: nextHealth,
+      pilotStats: updatedStats,
     };
   }),
 
   resetCombo: () => set({ combo: 1 }),
 
   tickTime: (delta) => set((state) => {
+    const nextEmp = Math.max(0, state.empCooldown - delta);
+    const nextOdCd = Math.max(0, state.overdriveCooldown - delta);
+    const nextOdDur = Math.max(0, state.overdriveDuration - delta);
+    const nextOdActive = nextOdDur > 0;
+    const abilityUpdates = {
+      empCooldown: nextEmp,
+      overdriveCooldown: nextOdCd,
+      overdriveDuration: nextOdDur,
+      overdriveActive: nextOdActive,
+    };
+
     if (state.mode === 'CHALLENGE' && state.timeRemaining > 0 && state.roundState === 'PLAYING' && !state.isPaused) {
       const newTime = state.timeRemaining - delta;
       if (newTime <= 0) {
@@ -793,11 +871,11 @@ export const useGameStore = create<GameState>((set) => ({
              totalTargets
           };
         }
-        return { timeRemaining: 0, mode: 'GAMEOVER', bossInfo: null, levelStats: newStats };
+        return { ...abilityUpdates, timeRemaining: 0, mode: 'GAMEOVER', bossInfo: null, levelStats: newStats };
       }
-      return { timeRemaining: newTime };
+      return { ...abilityUpdates, timeRemaining: newTime };
     }
-    return state;
+    return { ...abilityUpdates };
   }),
 
   resetGame: (mode) => {
@@ -851,10 +929,12 @@ export const useGameStore = create<GameState>((set) => ({
         };
     }
     
+    const updatedStats = recordStatUpdate((s) => ({ ...s, missionsCompleted: s.missionsCompleted + 1 }));
     return {
        roundState: 'TRANSITION',
        bossInfo: null,
-       levelStats: newStats
+       levelStats: newStats,
+       pilotStats: updatedStats,
     };
   }),
 

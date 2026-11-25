@@ -48,6 +48,41 @@ export const MODEL_PATHS = {
   // Crystals & Deep Space Biome (Arena Galáctica / Nebulosa)
   CRYSTAL_LARGE: 'models/props/crystal_large.glb',
   CRYSTAL_CLUSTER: 'models/props/crystal_cluster.glb',
+
+  // High-Fidelity Spaceships & Player Vessel
+  PLAYER_SHIP: 'assets/models/ships/player_ship.glb',
+  FIGHTER_INTERCEPTOR: 'assets/models/ships/fighter_interceptor.glb',
+
+  // Cyberpunk & Advanced Combat Enemies
+  DRONE_GUNNER: 'assets/models/enemies/drone_gunner.glb',
+  DRONE_SCOUT: 'assets/models/enemies/drone_scout.glb',
+  ROBOT_WALKER: 'assets/models/enemies/robot_walker.glb',
+  HEAVY_CYBORG: 'assets/models/enemies/heavy_cyborg.glb',
+
+  // Colossal Mechas & Bosses
+  BOSS_MECHA_TITAN: 'assets/models/bosses/boss_mecha_titan.glb',
+  BOSS_BEHEMOTH: 'assets/models/bosses/boss_behemoth.glb',
+
+  // Weapons
+  WEAPON_RIFLE_PLASMA: 'assets/models/weapons/rifle_plasma.glb',
+  WEAPON_LAUNCHER_HEAVY: 'assets/models/weapons/launcher_heavy.glb',
+  WEAPON_SNIPER_RAILGUN: 'assets/models/weapons/sniper_railgun.glb',
+
+  // Modular Hangar Environment
+  HANGAR_FLOOR: 'assets/models/environments/hangar_floor.glb',
+  HANGAR_WALL: 'assets/models/environments/hangar_wall.glb',
+  HANGAR_COLUMN: 'assets/models/environments/hangar_column.glb',
+  HANGAR_DOOR: 'assets/models/environments/hangar_door.glb',
+  HANGAR_STAIRS: 'assets/models/environments/hangar_stairs.glb',
+
+  // Props & Pickups
+  SCIFI_CRATE: 'assets/models/props/scifi_crate.glb',
+  SCIFI_CAPSULE: 'assets/models/props/scifi_capsule.glb',
+  POWER_GENERATOR: 'assets/models/props/power_generator.glb',
+  TURRET_DEFENSE: 'assets/models/props/turret_defense.glb',
+  PICKUP_LOOTBOX: 'assets/models/pickups/lootbox.glb',
+  PICKUP_SHIELD: 'assets/models/pickups/pickup_shield.glb',
+  PICKUP_CORE: 'assets/models/pickups/pickup_core.glb',
 } as const;
 
 export type ModelKey = keyof typeof MODEL_PATHS;

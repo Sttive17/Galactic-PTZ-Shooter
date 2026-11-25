@@ -443,6 +443,71 @@ export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelPr
         </group>
       )}
 
+      {/* ========================================================= */}
+      {/* ARCHETYPE: MICRO MISSILES (Swarm Battery Launcher)        */}
+      {/* ========================================================= */}
+      {displayedWeapon === 'MICRO_MISSILES' && (
+        <group>
+          {/* Dual Multi-Cell Rocket Pods */}
+          {[-0.038, 0.038].map((px, pIdx) => (
+            <group key={`m-pod-${pIdx}`} position={[px, 0.035, -0.32]}>
+              <mesh>
+                <boxGeometry args={[0.048, 0.052, 0.26]} />
+                <meshStandardMaterial color="#1e293b" metalness={0.85} roughness={0.25} />
+              </mesh>
+              {/* 4 Cell Launch Tubes */}
+              {[
+                [-0.012, 0.012],
+                [0.012, 0.012],
+                [-0.012, -0.012],
+                [0.012, -0.012],
+              ].map(([tx, ty], tIdx) => (
+                <mesh key={`tube-${tIdx}`} position={[tx, ty, -0.132]} rotation={[Math.PI / 2, 0, 0]}>
+                  <cylinderGeometry args={[0.007, 0.007, 0.02, 8]} />
+                  <meshBasicMaterial color="#f97316" toneMapped={false} />
+                </mesh>
+              ))}
+            </group>
+          ))}
+          <mesh position={[0, 0.018, -0.28]}>
+            <boxGeometry args={[0.032, 0.024, 0.2]} />
+            <meshStandardMaterial color="#0f172a" metalness={0.7} roughness={0.3} />
+          </mesh>
+        </group>
+      )}
+
+      {/* ========================================================= */}
+      {/* ARCHETYPE: CRYO BEAM (Sub-Zero Liquid Nitrogen Emitter)   */}
+      {/* ========================================================= */}
+      {displayedWeapon === 'CRYO_BEAM' && (
+        <group>
+          {/* Central Cryogenic Flask Core */}
+          <mesh position={[0, 0.028, -0.32]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.022, 0.022, 0.28, 14]} />
+            <meshStandardMaterial
+              color="#38bdf8"
+              emissive="#0284c7"
+              emissiveIntensity={2.5}
+              roughness={0.1}
+              transparent
+              opacity={0.85}
+            />
+          </mesh>
+          {/* Frost Spiral Induction Rings */}
+          {[-0.24, -0.32, -0.4].map((zPos, idx) => (
+            <mesh key={`cryo-ring-${idx}`} position={[0, 0.028, zPos]}>
+              <torusGeometry args={[0.034, 0.004, 8, 18]} />
+              <meshBasicMaterial color="#a5f3fc" toneMapped={false} />
+            </mesh>
+          ))}
+          {/* Cryo Nozzle Emitter */}
+          <mesh position={[0, 0.028, -0.48]} rotation={[Math.PI / 2, 0, 0]}>
+            <coneGeometry args={[0.028, 0.06, 12]} />
+            <meshStandardMaterial color="#0f172a" metalness={0.88} roughness={0.2} />
+          </mesh>
+        </group>
+      )}
+
       {/* Holographic Reflex Sight (Upgraded when CRITICAL_OPTICS active) */}
       <group position={[0, 0.095, 0.04]}>
         <mesh position={[0, -0.022, 0]}>

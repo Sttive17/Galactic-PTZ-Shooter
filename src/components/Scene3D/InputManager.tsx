@@ -100,12 +100,21 @@ const canPlayFPS = (state: GameState) => {
 const getFireCooldown = (state: GameState) => {
   const rapidStacks = state.activePowers.RAPID_FIRE || 0;
   const autoLockStacks = state.activePowers.SMART_AUTOLOCK || 0;
-  const mult = Math.pow(0.7, rapidStacks) * (autoLockStacks > 1 ? (autoLockStacks >= 3 ? 0.65 : 0.8) : 1.0);
+  let mult = Math.pow(0.7, rapidStacks) * (autoLockStacks > 1 ? (autoLockStacks >= 3 ? 0.65 : 0.8) : 1.0);
+  if (state.overdriveActive) {
+    mult *= 0.5; // Overdrive speeds up firing rate
+  }
   if (state.selectedWeapon === 'SCATTER_SHOTGUN') {
     return Math.max(140, Math.round(420 * mult));
   }
   if (state.selectedWeapon === 'HEAVY_RAILGUN') {
     return Math.max(240, Math.round(750 * mult));
+  }
+  if (state.selectedWeapon === 'MICRO_MISSILES') {
+    return Math.max(110, Math.round(280 * mult));
+  }
+  if (state.selectedWeapon === 'CRYO_BEAM') {
+    return Math.max(40, Math.round(95 * mult));
   }
   return Math.max(45, Math.round(160 * mult));
 };
@@ -121,7 +130,15 @@ const attemptFire = (
     return;
   }
   const weapon = state.selectedWeapon;
-  const ammoCost = weapon === 'SCATTER_SHOTGUN' ? 3 : weapon === 'HEAVY_RAILGUN' ? 4 : 1;
+  const baseAmmoCost =
+    weapon === 'SCATTER_SHOTGUN'
+      ? 3
+      : weapon === 'HEAVY_RAILGUN'
+        ? 4
+        : weapon === 'MICRO_MISSILES'
+          ? 2
+          : 1;
+  const ammoCost = state.overdriveActive ? 0 : baseAmmoCost;
   if (SceneState.ammo < ammoCost) {
     tryStartReload(state);
     return;
@@ -137,7 +154,8 @@ const attemptFire = (
     );
     registerShot();
     SceneState.ammo = Math.max(0, SceneState.ammo - ammoCost);
-    SceneState.weaponRecoil = weapon === 'HEAVY_RAILGUN' ? 2.5 : weapon === 'SCATTER_SHOTGUN' ? 1.8 : 1.0;
+    SceneState.weaponRecoil =
+      weapon === 'HEAVY_RAILGUN' ? 2.5 : weapon === 'SCATTER_SHOTGUN' ? 1.8 : weapon === 'MICRO_MISSILES' ? 1.6 : 1.0;
     lastFireRef.current = now;
     if (SceneState.ammo <= 0) {
       tryStartReload(state);
@@ -163,6 +181,8 @@ export const InputManager = () => {
   const wasOpticsPressed = useRef<boolean>(false);
   const wasDpadLeftRef = useRef<boolean>(false);
   const wasDpadRightRef = useRef<boolean>(false);
+  const wasEmpPressed = useRef<boolean>(false);
+  const wasOverdrivePressed = useRef<boolean>(false);
   const airJumpsUsedRef = useRef<number>(0);
   const jumpPadCooldownRef = useRef<number>(0);
   const keys = useRef({
@@ -226,6 +246,22 @@ export const InputManager = () => {
       }
     };
 
+    const handleTouchEmp = () => {
+      const state = useGameStore.getState();
+      if (canPlayFPS(state)) {
+        initAudio();
+        state.triggerEmpPulse();
+      }
+    };
+
+    const handleTouchOverdrive = () => {
+      const state = useGameStore.getState();
+      if (canPlayFPS(state)) {
+        initAudio();
+        state.triggerOverdrive();
+      }
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
       initAudio();
       const state = useGameStore.getState();
@@ -247,6 +283,14 @@ export const InputManager = () => {
       if (e.code === 'Digit1') state.switchWeapon('PLASMA_RIFLE');
       if (e.code === 'Digit2') state.switchWeapon('SCATTER_SHOTGUN');
       if (e.code === 'Digit3') state.switchWeapon('HEAVY_RAILGUN');
+      if (e.code === 'Digit4') state.switchWeapon('MICRO_MISSILES');
+      if (e.code === 'Digit5') state.switchWeapon('CRYO_BEAM');
+      if (e.code === 'KeyF' && !e.repeat && canPlayFPS(state)) {
+        state.triggerEmpPulse();
+      }
+      if (e.code === 'KeyQ' && !e.repeat && canPlayFPS(state)) {
+        state.triggerOverdrive();
+      }
       if (e.code === 'KeyR' && !e.repeat && canPlayFPS(state)) {
         tryStartReload(state);
       }
@@ -387,6 +431,8 @@ export const InputManager = () => {
     window.addEventListener('ptz-zoom-step', handleZoomStep);
     window.addEventListener('touch-jump', handleTouchJump);
     window.addEventListener('touch-reload', handleTouchReload);
+    window.addEventListener('touch-emp', handleTouchEmp);
+    window.addEventListener('touch-overdrive', handleTouchOverdrive);
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     window.addEventListener('mousedown', handleMouseDown);
@@ -402,6 +448,8 @@ export const InputManager = () => {
       window.removeEventListener('ptz-zoom-step', handleZoomStep);
       window.removeEventListener('touch-jump', handleTouchJump);
       window.removeEventListener('touch-reload', handleTouchReload);
+      window.removeEventListener('touch-emp', handleTouchEmp);
+      window.removeEventListener('touch-overdrive', handleTouchOverdrive);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('mousedown', handleMouseDown);
@@ -535,6 +583,20 @@ export const InputManager = () => {
       }
       wasDpadLeftRef.current = dpadLeft;
       wasDpadRightRef.current = dpadRight;
+
+      // RB button (5) -> EMP Pulse!
+      const rbPressed = gp.buttons[5]?.pressed || false;
+      if (rbPressed && !wasEmpPressed.current) {
+        state.triggerEmpPulse();
+      }
+      wasEmpPressed.current = rbPressed;
+
+      // D-Pad Down (13) -> Overdrive Frenesí!
+      const dpadDown = gp.buttons[13]?.pressed || false;
+      if (dpadDown && !wasOverdrivePressed.current) {
+        state.triggerOverdrive();
+      }
+      wasOverdrivePressed.current = dpadDown;
 
       // Gamepad Aim Assist: Target friction and magnetic pull
       if (state.preferences.aimAssist !== false) {

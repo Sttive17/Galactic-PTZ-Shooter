@@ -38,6 +38,7 @@ export interface Target {
   bossTier?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
   bossStyle?: BossStyle;
   isGenerator?: boolean;
+  isCrate?: boolean;
   isArmored?: boolean;
   canShoot?: boolean;
   enemyType?: EnemyArchetype;
@@ -55,7 +56,24 @@ export interface Projectile {
 
 export type PTZOpticalMode = 'NORMAL' | 'THERMAL' | 'NIGHT_VISION';
 
-export type WeaponArchetype = 'PLASMA_RIFLE' | 'SCATTER_SHOTGUN' | 'HEAVY_RAILGUN';
+export type WeaponArchetype =
+  | 'PLASMA_RIFLE'
+  | 'SCATTER_SHOTGUN'
+  | 'HEAVY_RAILGUN'
+  | 'MICRO_MISSILES'
+  | 'CRYO_BEAM';
+
+export interface PilotStats {
+  killsTotal: number;
+  bossesDefeated: number;
+  shotsFired: number;
+  shotsHit: number;
+  highestCombo: number;
+  highScore: number;
+  nanitesCollected: number;
+  totalDamageDealt: number;
+  missionsCompleted: number;
+}
 
 export type CombatDropKind = 'SHIELD' | 'AMMO' | 'NANITE';
 

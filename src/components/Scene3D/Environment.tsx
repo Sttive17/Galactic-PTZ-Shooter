@@ -94,52 +94,65 @@ const BiomeLandmarks = ({
   switch (theme.architecture) {
     case 'ORBITAL_HANGAR':
       return (
-        <group position={[0, 26, -10]}>
-          <group ref={centerGroupRef} position={[0, 3, 0]}>
-            <mesh>
-              <icosahedronGeometry args={[4.5, 2]} />
+        <group>
+          {/* Architectural 3D Hangar Infrastructure */}
+          <ModelProp modelKey="HANGAR_WALL" scale={4.5} position={[-48, 0, -32]} rotation={[0, 0.35, 0]} />
+          <ModelProp modelKey="HANGAR_WALL" scale={4.5} position={[48, 0, -32]} rotation={[0, -0.35, 0]} />
+          <ModelProp modelKey="HANGAR_DOOR" scale={4.2} position={[0, 0, -56]} />
+          <ModelProp modelKey="HANGAR_COLUMN" scale={3.8} position={[-28, 0, -18]} />
+          <ModelProp modelKey="HANGAR_COLUMN" scale={3.8} position={[28, 0, -18]} />
+          <ModelProp modelKey="TURRET_DEFENSE" scale={2.4} position={[-22, 0.1, -12]} rotation={[0, 0.4, 0]} />
+          <ModelProp modelKey="TURRET_DEFENSE" scale={2.4} position={[22, 0.1, -12]} rotation={[0, -0.4, 0]} />
+          <ModelProp modelKey="POWER_GENERATOR" scale={2.6} position={[0, 0.1, -44]} />
+
+          {/* Central Levitating Core */}
+          <group position={[0, 26, -10]}>
+            <group ref={centerGroupRef} position={[0, 3, 0]}>
+              <mesh>
+                <icosahedronGeometry args={[4.5, 2]} />
+                <meshBasicMaterial
+                  color={theme.primaryGlow}
+                  wireframe
+                  transparent
+                  opacity={0.34}
+                  blending={THREE.AdditiveBlending}
+                  depthWrite={false}
+                  toneMapped={false}
+                />
+              </mesh>
+              <mesh>
+                <sphereGeometry args={[2.1, 16, 16]} />
+                <meshBasicMaterial
+                  color={theme.secondaryGlow}
+                  transparent
+                  opacity={0.28}
+                  blending={THREE.AdditiveBlending}
+                  depthWrite={false}
+                  toneMapped={false}
+                />
+              </mesh>
+            </group>
+            <mesh ref={ring1Ref} rotation={[Math.PI * 0.32, 0.4, 0]}>
+              <torusGeometry args={[6.8, 0.1, 8, 48]} />
+              <meshBasicMaterial color={theme.primaryGlow} transparent opacity={0.62} toneMapped={false} />
+            </mesh>
+            <mesh ref={ring2Ref} rotation={[-Math.PI * 0.28, -0.3, 0.5]}>
+              <torusGeometry args={[8.4, 0.08, 8, 48]} />
+              <meshBasicMaterial color={theme.secondaryGlow} transparent opacity={0.48} toneMapped={false} />
+            </mesh>
+            <mesh position={[0, -6, 0]}>
+              <cylinderGeometry args={[4.4, 1.4, 12, 24, 1, true]} />
               <meshBasicMaterial
                 color={theme.primaryGlow}
-                wireframe
                 transparent
-                opacity={0.34}
+                opacity={0.11}
                 blending={THREE.AdditiveBlending}
-                depthWrite={false}
-                toneMapped={false}
-              />
-            </mesh>
-            <mesh>
-              <sphereGeometry args={[2.1, 16, 16]} />
-              <meshBasicMaterial
-                color={theme.secondaryGlow}
-                transparent
-                opacity={0.28}
-                blending={THREE.AdditiveBlending}
+                side={THREE.DoubleSide}
                 depthWrite={false}
                 toneMapped={false}
               />
             </mesh>
           </group>
-          <mesh ref={ring1Ref} rotation={[Math.PI * 0.32, 0.4, 0]}>
-            <torusGeometry args={[6.8, 0.1, 8, 48]} />
-            <meshBasicMaterial color={theme.primaryGlow} transparent opacity={0.62} toneMapped={false} />
-          </mesh>
-          <mesh ref={ring2Ref} rotation={[-Math.PI * 0.28, -0.3, 0.5]}>
-            <torusGeometry args={[8.4, 0.08, 8, 48]} />
-            <meshBasicMaterial color={theme.secondaryGlow} transparent opacity={0.48} toneMapped={false} />
-          </mesh>
-          <mesh position={[0, -6, 0]}>
-            <cylinderGeometry args={[4.4, 1.4, 12, 24, 1, true]} />
-            <meshBasicMaterial
-              color={theme.primaryGlow}
-              transparent
-              opacity={0.11}
-              blending={THREE.AdditiveBlending}
-              side={THREE.DoubleSide}
-              depthWrite={false}
-              toneMapped={false}
-            />
-          </mesh>
         </group>
       );
 
@@ -2524,10 +2537,12 @@ export const Environment = () => {
             <ModelProp modelKey="COMPUTER_TERMINAL" scale={1.2} position={[3.6, 0.5, 0.4]} rotation={[0, -0.45, 0]} />
           </group>
 
-          {/* Drifting Cosmic Asteroid Formations & Giant Extraterrestrial Crystals */}
+          {/* Drifting Cosmic Asteroid Formations, Sci-Fi Crates & Giant Extraterrestrial Crystals */}
           <group>
             <ModelProp modelKey="METEOR" scale={3.6} position={[44, 18, -48]} rotation={[0.4, 0.8, 0.2]} />
             <ModelProp modelKey="METEOR" scale={4.4} position={[-48, 24, -42]} rotation={[-0.3, 1.2, 0.5]} />
+            <ModelProp modelKey="SCIFI_CRATE" scale={2.4} position={[-18, 0.1, -8]} rotation={[0, 0.4, 0]} />
+            <ModelProp modelKey="SCIFI_CAPSULE" scale={2.2} position={[20, 0.1, -9]} rotation={[0, -0.6, 0]} />
             <ModelProp modelKey="CRYSTAL_LARGE" scale={3.8} position={[-36, 0.2, -32]} rotation={[0.1, 0.6, 0]} />
             <ModelProp modelKey="CRYSTAL_LARGE" scale={3.4} position={[38, 0.2, -30]} rotation={[-0.1, -0.7, 0]} />
             <ModelProp modelKey="CRYSTAL_CLUSTER" scale={2.8} position={[-24, 0.2, -18]} rotation={[0, 0.3, 0]} />

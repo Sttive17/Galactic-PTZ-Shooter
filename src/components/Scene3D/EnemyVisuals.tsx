@@ -38,7 +38,7 @@ const StrikerHull = ({ isTargeted, coreRef, ring1Ref, ring2Ref }: BossHullProps)
   const accentColor = isTargeted ? '#fde047' : '#fb923c';
   return (
     <>
-      <ModelCraft modelKey="BOSS_RACER" scale={2.3} rotation={[0, Math.PI, 0]} position={[0, -0.14, 0]} />
+      <ModelCraft modelKey="BOSS_MECHA_TITAN" scale={1.05} rotation={[0, Math.PI, 0]} position={[0, -0.22, 0]} />
       <mesh ref={coreRef}>
         <octahedronGeometry args={[0.4, 1]} />
         <meshPhysicalMaterial
@@ -86,7 +86,7 @@ const AegisHull = ({ isTargeted, isShielded, coreRef, ring1Ref, ring2Ref }: Boss
   const coreColor = isTargeted ? '#ff3b5c' : '#06b6d4';
   return (
     <>
-      <ModelCraft modelKey="BOSS_TITAN" scale={2.4} rotation={[0, Math.PI, 0]} position={[0, -0.16, 0]} />
+      <ModelCraft modelKey="BOSS_BEHEMOTH" scale={1.1} rotation={[0, Math.PI, 0]} position={[0, -0.24, 0]} />
       <mesh ref={coreRef}>
         <icosahedronGeometry args={[0.38, 1]} />
         <meshPhysicalMaterial
@@ -524,6 +524,7 @@ export const DroneVisual = ({
     const accent = isTargeted ? '#fda4af' : '#fbbf24';
     return (
       <>
+        <ModelCraft modelKey="DRONE_GUNNER" scale={0.52} rotation={[0, Math.PI, 0]} position={[0, -0.06, 0]} />
         <mesh ref={coreRef}>
           <octahedronGeometry args={[0.28, 0]} />
           <meshPhysicalMaterial color={color} emissive={color} emissiveIntensity={2.3} roughness={0.18} metalness={0.7} toneMapped={false} />
@@ -551,6 +552,7 @@ export const DroneVisual = ({
     const accent = isTargeted ? '#fda4af' : '#c084fc';
     return (
       <>
+        <ModelCraft modelKey="FIGHTER_INTERCEPTOR" scale={0.25} rotation={[0, Math.PI, 0]} position={[0, -0.06, 0]} />
         <mesh ref={coreRef} scale={[0.7, 0.65, 1.35]}>
           <octahedronGeometry args={[0.3, 0]} />
           <meshPhysicalMaterial color={color} emissive={color} emissiveIntensity={2.5} roughness={0.14} metalness={0.75} toneMapped={false} />
@@ -580,6 +582,7 @@ export const DroneVisual = ({
     const railColor = isTargeted ? '#fde047' : '#38bdf8';
     return (
       <>
+        <ModelCraft modelKey="ROBOT_WALKER" scale={0.48} rotation={[0, Math.PI, 0]} position={[0, -0.1, 0]} />
         <mesh ref={coreRef}>
           <octahedronGeometry args={[0.25, 1]} />
           <meshPhysicalMaterial color={color} emissive={color} emissiveIntensity={2.5} roughness={0.15} metalness={0.75} toneMapped={false} />
@@ -753,7 +756,7 @@ export const DroneVisual = ({
     ];
     return (
       <>
-        <ModelCraft modelKey="CRAFT_TANK" scale={0.62} rotation={[0, Math.PI, 0]} position={[0, -0.05, 0]} />
+        <ModelCraft modelKey="HEAVY_CYBORG" scale={0.62} rotation={[0, Math.PI, 0]} position={[0, -0.08, 0]} />
         <mesh ref={coreRef}>
           <dodecahedronGeometry args={[0.34, 0]} />
           <meshPhysicalMaterial color={color} emissive={color} emissiveIntensity={2.6} roughness={0.16} metalness={0.85} toneMapped={false} />
@@ -902,7 +905,7 @@ export const DroneVisual = ({
 
   return (
     <>
-      <ModelCraft modelKey="CRAFT_SCOUT" scale={0.52} rotation={[0, Math.PI, 0]} position={[0, -0.06, 0]} />
+      <ModelCraft modelKey="DRONE_SCOUT" scale={0.55} rotation={[0, Math.PI, 0]} position={[0, -0.06, 0]} />
       <mesh visible={false}>
         <boxGeometry args={[1, 1, 1]} />
       </mesh>

@@ -4,8 +4,10 @@ import {
   ArrowUp,
   Crosshair,
   DoorOpen,
+  Flame,
   Pause,
   RotateCcw,
+  Shield,
   Target,
   Zap,
 } from 'lucide-react';
@@ -15,7 +17,7 @@ import { SceneState } from '../../game/sceneState';
 
 type JoystickAxis = 'move' | 'look';
 type HoldAction = 'fire' | 'zoom' | 'sprint';
-type Action = HoldAction | 'jump' | 'reload' | 'pause' | 'portal';
+type Action = HoldAction | 'jump' | 'reload' | 'pause' | 'portal' | 'emp' | 'overdrive';
 
 interface VirtualJoystickProps {
   label: string;
@@ -147,6 +149,10 @@ const ActionButton = ({ action, label, icon: Icon, prominent = false }: ActionBu
       window.dispatchEvent(new Event('touch-jump'));
     } else if (action === 'reload') {
       window.dispatchEvent(new Event('touch-reload'));
+    } else if (action === 'emp') {
+      window.dispatchEvent(new Event('touch-emp'));
+    } else if (action === 'overdrive') {
+      window.dispatchEvent(new Event('touch-overdrive'));
     } else if (action === 'pause') {
       useGameStore.getState().togglePause();
       playSound('ui');
@@ -229,6 +235,8 @@ export const TouchControls = ({ enabled }: TouchControlsProps) => {
         <ActionButton action="zoom" label="ZOOM" icon={Crosshair} />
         <ActionButton action="reload" label="RECARGA" icon={RotateCcw} />
         <ActionButton action="sprint" label="CORRER" icon={Zap} />
+        <ActionButton action="emp" label="EMP" icon={Shield} />
+        <ActionButton action="overdrive" label="FRENESÍ" icon={Flame} />
         {roundState === 'PORTAL_ACTIVE' && (
           <ActionButton action="portal" label="ENTRAR" icon={DoorOpen} />
         )}

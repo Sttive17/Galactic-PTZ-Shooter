@@ -1788,6 +1788,73 @@ class SynthAudio {
     osc.stop(t + 0.24);
   }
 
+  playEmpPulse() {
+    if (!this.ensureContext() || !this.ctx || !this.sfxGain) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(880, t);
+    osc.frequency.exponentialRampToValueAtTime(65, t + 0.45);
+    gain.gain.setValueAtTime(0.25, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.52);
+  }
+
+  playOverdrive() {
+    if (!this.ensureContext() || !this.ctx || !this.sfxGain) return;
+    const t = this.ctx.currentTime;
+    [330, 440, 660, 880].forEach((freq, idx) => {
+      if (!this.ctx || !this.sfxGain) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, t + idx * 0.05);
+      osc.frequency.linearRampToValueAtTime(freq * 1.5, t + idx * 0.05 + 0.35);
+      gain.gain.setValueAtTime(0.08, t + idx * 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.05 + 0.4);
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+      osc.start(t + idx * 0.05);
+      osc.stop(t + idx * 0.05 + 0.42);
+    });
+  }
+
+  playMissileLaunch() {
+    if (!this.ensureContext() || !this.ctx || !this.sfxGain) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(150, t);
+    osc.frequency.exponentialRampToValueAtTime(600, t + 0.28);
+    gain.gain.setValueAtTime(0.14, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.34);
+  }
+
+  playCrateBreak() {
+    if (!this.ensureContext() || !this.ctx || !this.sfxGain) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(320, t);
+    osc.frequency.exponentialRampToValueAtTime(80, t + 0.2);
+    gain.gain.setValueAtTime(0.15, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.24);
+  }
+
   getDebugState(): AudioDebugState {
     this.ensureStoreSubscription();
     this.syncFromStore();
@@ -1871,7 +1938,21 @@ export const playPortalWarp = () => audioSystem.playPortalWarp();
 export const updateBiomeAmbience = (chapter: BiomeChapter) => audioSystem.updateBiomeAmbience(chapter);
 
 export const playSound = (
-  sound: 'shoot' | 'hit' | 'destroy' | 'alarm' | 'ui' | 'zoom' | 'powerup' | 'empty' | 'dash' | 'crit'
+  sound:
+    | 'shoot'
+    | 'hit'
+    | 'destroy'
+    | 'alarm'
+    | 'ui'
+    | 'zoom'
+    | 'powerup'
+    | 'empty'
+    | 'dash'
+    | 'crit'
+    | 'emp'
+    | 'overdrive'
+    | 'missile'
+    | 'crate_break'
 ) => {
   switch (sound) {
     case 'shoot': audioSystem.playShoot(); break;
@@ -1884,5 +1965,9 @@ export const playSound = (
     case 'empty': audioSystem.playEmpty(); break;
     case 'dash': audioSystem.playDash(); break;
     case 'crit': audioSystem.playCrit(); break;
+    case 'emp': audioSystem.playEmpPulse(); break;
+    case 'overdrive': audioSystem.playOverdrive(); break;
+    case 'missile': audioSystem.playMissileLaunch(); break;
+    case 'crate_break': audioSystem.playCrateBreak(); break;
   }
 };

@@ -8,6 +8,10 @@ type AmmoVisualStatus = 'RELOADING' | 'EMPTY' | 'LOW' | 'OK';
 
 export const AmmoHUD = () => {
   const selectedWeapon = useGameStore((state) => state.selectedWeapon);
+  const empCooldown = useGameStore((state) => state.empCooldown);
+  const overdriveActive = useGameStore((state) => state.overdriveActive);
+  const overdriveDuration = useGameStore((state) => state.overdriveDuration);
+  const overdriveCooldown = useGameStore((state) => state.overdriveCooldown);
   const ammoCountRef = useRef<HTMLSpanElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const reloadPctRef = useRef<HTMLSpanElement>(null);
@@ -137,15 +141,58 @@ export const AmmoHUD = () => {
               ? 'text-rose-400'
               : selectedWeapon === 'HEAVY_RAILGUN'
                 ? 'text-amber-400'
-                : 'text-cyan-400'
+                : selectedWeapon === 'MICRO_MISSILES'
+                  ? 'text-emerald-400'
+                  : selectedWeapon === 'CRYO_BEAM'
+                    ? 'text-sky-300'
+                    : 'text-cyan-400'
           }`}
         >
           {selectedWeapon === 'SCATTER_SHOTGUN'
             ? 'FLAK ESCOPETA [2]'
             : selectedWeapon === 'HEAVY_RAILGUN'
               ? 'RAILGUN PESADO [3]'
-              : 'RIFLE PLASMA [1]'}
+              : selectedWeapon === 'MICRO_MISSILES'
+                ? 'MICRO-MISILES [4]'
+                : selectedWeapon === 'CRYO_BEAM'
+                  ? 'RAYO CRÍO [5]'
+                  : 'RIFLE PLASMA [1]'}
         </span>
+      </div>
+
+      {/* Active Abilities Tactical HUD */}
+      <div className="flex items-center gap-1 text-[8px] font-mono">
+        {/* EMP Ability Badge */}
+        <div
+          className={`flex-1 flex items-center justify-between px-2 py-0.5 rounded border backdrop-blur-sm transition-all ${
+            empCooldown <= 0
+              ? 'bg-cyan-950/70 border-cyan-400/40 text-cyan-300 shadow-[0_0_8px_rgba(34,211,238,0.2)]'
+              : 'bg-slate-950/60 border-slate-800 text-slate-500'
+          }`}
+        >
+          <span className="font-bold">EMP [F]</span>
+          <span>{empCooldown <= 0 ? 'LISTO' : `${Math.ceil(empCooldown)}s`}</span>
+        </div>
+
+        {/* Overdrive Ability Badge */}
+        <div
+          className={`flex-1 flex items-center justify-between px-2 py-0.5 rounded border backdrop-blur-sm transition-all ${
+            overdriveActive
+              ? 'bg-amber-950/80 border-amber-400 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.4)] animate-pulse'
+              : overdriveCooldown <= 0
+                ? 'bg-fuchsia-950/70 border-fuchsia-400/40 text-fuchsia-300 shadow-[0_0_8px_rgba(232,121,249,0.2)]'
+                : 'bg-slate-950/60 border-slate-800 text-slate-500'
+          }`}
+        >
+          <span className="font-bold">FRENESÍ [Q]</span>
+          <span>
+            {overdriveActive
+              ? `${Math.ceil(overdriveDuration)}s`
+              : overdriveCooldown <= 0
+                ? 'LISTO'
+                : `${Math.ceil(overdriveCooldown)}s`}
+          </span>
+        </div>
       </div>
 
       <div

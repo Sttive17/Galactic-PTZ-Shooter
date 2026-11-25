@@ -350,17 +350,30 @@ export const Projectiles = () => {
       const weapon = customEvt.detail?.weapon || storeState.selectedWeapon || 'PLASMA_RIFLE';
       const isShotgun = weapon === 'SCATTER_SHOTGUN';
       const isRailgun = weapon === 'HEAVY_RAILGUN';
+      const isMissiles = weapon === 'MICRO_MISSILES';
+      const isCryo = weapon === 'CRYO_BEAM';
 
-      const totalBolts = isShotgun ? (5 + tripleStacks * 2) : isRailgun ? 1 : (1 + tripleStacks * 2);
-      const effectiveSpeed = isRailgun ? speed * 1.8 : isShotgun ? speed * 0.95 : speed;
-      const effectivePierce = isRailgun ? 99 : pierceStacks;
-      const { bolt: boltColor, tracer: tracerColor } = getPlayerBoltPalette(activePowers);
+      const totalBolts = isShotgun
+        ? (5 + tripleStacks * 2)
+        : isMissiles
+          ? (3 + tripleStacks)
+          : isRailgun
+            ? 1
+            : isCryo
+              ? 1
+              : (1 + tripleStacks * 2);
+
+      const effectiveSpeed = isRailgun ? speed * 1.8 : isShotgun ? speed * 0.95 : isMissiles ? speed * 1.15 : isCryo ? speed * 1.4 : speed;
+      const effectivePierce = isRailgun ? 99 : isCryo ? 2 : pierceStacks;
+      const defaultPalette = getPlayerBoltPalette(activePowers);
+      const boltColor = isMissiles ? '#f97316' : isCryo ? '#38bdf8' : defaultPalette.bolt;
+      const tracerColor = isMissiles ? '#fdba74' : isCryo ? '#a5f3fc' : defaultPalette.tracer;
       if (playerProjMatRef.current && lastBoltColorRef.current !== boltColor) {
         playerProjMatRef.current.color.set(boltColor);
         lastBoltColorRef.current = boltColor;
       }
 
-      const spreadStepRad = isShotgun ? THREE.MathUtils.degToRad(5.2) : THREE.MathUtils.degToRad(2.8);
+      const spreadStepRad = isShotgun ? THREE.MathUtils.degToRad(5.2) : isMissiles ? THREE.MathUtils.degToRad(3.6) : THREE.MathUtils.degToRad(2.8);
       const halfSpread = (totalBolts - 1) / 2;
 
       const baseDir = _aimPoint.clone().sub(_startPos).normalize();
@@ -411,8 +424,12 @@ export const Projectiles = () => {
         playerProjMesh.current.instanceMatrix.needsUpdate = true;
       }
 
-      playSound('shoot');
-      useGameStore.getState().addCameraShake(0.16);
+      if (isMissiles) {
+        playSound('missile');
+      } else {
+        playSound('shoot');
+      }
+      useGameStore.getState().addCameraShake(isMissiles ? 0.22 : 0.16);
     };
 
     const handleBossFire = (e: Event) => {
@@ -803,6 +820,9 @@ export const Projectiles = () => {
               spawnCombatDrop(_targetCenter, 'SHIELD');
               spawnCombatDrop(_targetCenter, 'AMMO');
               spawnCombatDrop(_targetCenter, 'NANITE');
+            } else if (closestTarget.isCrate) {
+              playSound('crate_break');
+              spawnCombatDrop(_targetCenter, Math.random() > 0.5 ? 'AMMO' : 'NANITE');
             } else if (Math.random() < 0.65) {
               spawnCombatDrop(_targetCenter);
             }

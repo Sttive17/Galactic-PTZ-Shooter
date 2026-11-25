@@ -11,6 +11,7 @@ import {
   getBossTierForRound,
 } from '../../game/gameState';
 import { BossVisual, DroneVisual } from './EnemyVisuals';
+import { usePreloadedModel } from '../../game/modelLoader';
 import { playSound } from '../../game/AudioSystem';
 import { triggerHaptic } from '../../game/haptics';
 import * as THREE from 'three';
@@ -262,9 +263,14 @@ const GeneratorMesh = ({ target }: { target: Target }) => {
 
   const mainColor = isTargeted ? '#ef4444' : isDamaged ? '#f43f5e' : '#06b6d4';
   const accentColor = isTargeted ? '#fda4af' : isDamaged ? '#fb7185' : '#a855f7';
+  const genModel = usePreloadedModel('POWER_GENERATOR');
 
   return (
     <group ref={groupRef} position={target.position} scale={target.scale}>
+      {/* 3D Sci-Fi Power Generator Chassis */}
+      {genModel && (
+        <primitive object={genModel} scale={[0.32, 0.32, 0.32]} position={[0, -0.35, 0]} />
+      )}
       {/* Central glowing octahedral crystal */}
       <mesh ref={crystalRef}>
         <octahedronGeometry args={[0.36, 0]} />
@@ -294,6 +300,41 @@ const GeneratorMesh = ({ target }: { target: Target }) => {
       <mesh ref={ring2Ref}>
         <torusGeometry args={[0.7, 0.018, 8, 28]} />
         <meshBasicMaterial color={accentColor} toneMapped={false} />
+      </mesh>
+    </group>
+  );
+};
+
+const CrateMesh = ({ target }: { target: Target }) => {
+  const groupRef = useRef<THREE.Group>(null);
+  const crateModel = usePreloadedModel('SCIFI_CRATE');
+  const currentTargetId = useGameStore((state) => state.currentTarget?.id);
+  const isTargeted = currentTargetId === target.id;
+  const isDamaged = target.health < target.maxHealth;
+
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    const t = state.clock.elapsedTime;
+    groupRef.current.position.set(target.position[0], target.position[1] + Math.sin(t * 2) * 0.05, target.position[2]);
+    groupRef.current.rotation.y = Math.sin(t * 0.4) * 0.15;
+  });
+
+  const glowColor = isTargeted ? '#ef4444' : isDamaged ? '#f59e0b' : '#38bdf8';
+
+  return (
+    <group ref={groupRef} position={target.position} scale={target.scale}>
+      {crateModel ? (
+        <primitive object={crateModel} scale={[0.85, 0.85, 0.85]} />
+      ) : (
+        <mesh>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="#1e293b" roughness={0.3} metalness={0.8} />
+        </mesh>
+      )}
+      {/* Floating Tactical Marker / Loot Hologram */}
+      <mesh position={[0, 0.9, 0]}>
+        <octahedronGeometry args={[0.2, 0]} />
+        <meshBasicMaterial color={glowColor} wireframe toneMapped={false} />
       </mesh>
     </group>
   );
@@ -1461,6 +1502,25 @@ export const Targets = () => {
               : undefined,
           });
         }
+
+        // Spawn 1-2 Destructible Tactical Supply Crates
+        const crateCount = currentRound % 2 === 0 ? 2 : 1;
+        for (let c = 0; c < crateCount; c++) {
+          const cAngle = c * Math.PI + 0.6;
+          const cDist = 16 + c * 8;
+          const cx = Math.cos(cAngle) * cDist;
+          const cz = -12 + Math.sin(cAngle) * cDist;
+          newTargets.push({
+            id: `crate-${Date.now()}-${c}`,
+            position: [cx, 1.0, cz],
+            scale: 1.25,
+            health: 20,
+            maxHealth: 20,
+            points: 150,
+            active: true,
+            isCrate: true,
+          });
+        }
       }
     } else {
       useGameStore.getState().setBossInfo(null);
@@ -1521,6 +1581,8 @@ export const Targets = () => {
           <BossMesh key={t.id} target={t} currentRound={currentRound} />
         ) : t.isGenerator ? (
           <GeneratorMesh key={t.id} target={t} />
+        ) : t.isCrate ? (
+          <CrateMesh key={t.id} target={t} />
         ) : (
           <DroneMesh key={t.id} target={t} currentRound={currentRound} />
         )

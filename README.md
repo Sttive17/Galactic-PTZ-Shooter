@@ -1,265 +1,326 @@
-# Galactic PTZ
+# Galactic PTZ Shooter — Mega Actualización y Evolución 3D
 
-**Simulador táctico 3D de cámara PTZ y combate orbital**, desarrollado con React, TypeScript y Three.js. Explora biomas, supera oleadas y niveles, y juega en computadora con teclado y ratón o mando, o en dispositivos táctiles con controles en pantalla.
+**Galactic PTZ Shooter** es un shooter espacial 3D táctico e inmersivo en primera persona desarrollado con React 19, TypeScript, Three.js y React Three Fiber. El jugador pilota la nave interceptora *Vanguard MK-IV* a través de diversos biomas estelares, enfrentando drones de combate, soldados cyborg pesados, robots de asalto y titanes colosales mecanizados.
+
+Disfruta de combate táctico con 5 arquetipos de armas, habilidades activas de pulso EMP y sobrecarga frenesí, hangares tridimensionales con vista previa en tiempo real, drones aliados escolta, elementos destruibles en el entorno y un registro persistente de estadísticas militares del piloto.
 
 [![CI](https://github.com/Sttive17/Galactic-PTZ-Shooter/actions/workflows/ci.yml/badge.svg)](https://github.com/Sttive17/Galactic-PTZ-Shooter/actions/workflows/ci.yml)
 
-## Jugar
+---
 
-**Prueba el juego en el navegador:** [Abrir Galactic PTZ](https://sttive17.github.io/Galactic-PTZ-Shooter/)
+## 🎮 Jugar
 
-Requiere un navegador moderno con WebGL. En móviles, abre el enlace en el navegador y gira el dispositivo para una vista más amplia. Para activar el audio, toca o haz clic en la página; para jugar con un mando, conéctalo antes de iniciar la partida.
+- **Versión oficial en línea:** [Abrir Galactic PTZ Shooter](https://sttive17.github.io/Galactic-PTZ-Shooter/)
+- **Compatibilidad:** Navegadores modernos con aceleración WebGL 2.0 (Google Chrome, Microsoft Edge, Firefox, Safari).
+- **Dispositivos:** Compatible con PC (Teclado + Ratón), Mandos (Xbox Gamepad API con vibración háptica) y Dispositivos Móviles (Teléfonos y Tablets con pantalla táctil adaptable).
 
-## Contenido
+---
 
-- [Características](#características)
-- [Experiencia de juego](#experiencia-de-juego)
-- [Tecnologías](#tecnologías)
-- [Requisitos e instalación](#requisitos-e-instalación)
-- [Comandos](#comandos)
-- [Cómo jugar](#cómo-jugar)
-- [Controles](#controles)
-- [Ajustes y compatibilidad](#ajustes-y-compatibilidad)
-- [Estructura del proyecto](#estructura-del-proyecto)
-- [Pruebas](#pruebas)
-- [Contribuciones y protección](#contribuciones-y-protección)
-- [Seguridad](#seguridad)
-- [Privacidad y datos](#privacidad-y-datos)
-- [Créditos, copyright y licencia](#créditos-copyright-y-licencia)
+## 📑 Tabla de Contenidos
 
-## Características
+1. [Características Principales](#-características-principales)
+2. [Evolución Técnica y Modelos 3D](#-evolución-técnica-y-modelos-3d)
+3. [Arsenal y Armamento](#-arsenal-y-armamento)
+4. [Habilidades Activas Tácticas](#-habilidades-activas-tácticas)
+5. [Enemigos y Unidades Hostiles](#-enemigos-y-unidades-hostiles)
+6. [Jefes y Titanes Mecanizados](#-jefes-y-titanes-mecanizados)
+7. [Drones Aliados de Escolta](#-drones-aliados-de-escolta)
+8. [Mundo, Biomas y Entorno Interactivo](#-mundo-biomas-y-entorno-interactivo)
+9. [Progresión, Armería y Estadísticas del Piloto](#-progresión-armería-y-estadísticas-del-piloto)
+10. [Controles y Esquemas de Entrada](#-controles-y-esquemas-de-entrada)
+11. [Audio, Síntesis y Voz Táctica](#-audio-síntesis-y-voz-táctica)
+12. [Optimización WebGL y Rendimiento](#-optimización-webgl-y-rendimiento)
+13. [Estructura del Proyecto](#-estructura-del-proyecto)
+14. [Requisitos e Instalación Local](#-requisitos-e-instalación-local)
+15. [Comandos y Verificación](#-comandos-y-verificación)
+16. [Catálogo de Modelos 3D y Licencias](#-catálogo-de-modelos-3d-y-licencias)
+17. [Hoja de Ruta (Roadmap)](#-hoja-de-ruta-roadmap)
 
-- Cámara en primera persona con giro de 360°, inclinación y zoom táctico.
-- Movimiento, salto, sprint, colisiones y plataformas.
-- **HUD táctico con indicador de munición** (`50 / ∞`) en la esquina inferior derecha, barra de recarga en tiempo real y aviso de recarga manual `[R]` / `[X]`.
-- **Minimapa táctico ampliado (208×208 px)** con resolución nítida adaptable (DPR) y seguimiento de aliados (drones escolta en verde esmeralda), enemigos carmesí, generadores y portales.
-- Jefes, escudos, combos, puntuación y poderes seleccionables.
-- Campaña de hasta 50 niveles, mapa estelar y modo de oleadas de entrenamiento.
-- 5 biomas espaciales generados proceduralmente con iluminación y texturas únicas.
-- Controles táctiles en pantalla adaptativos para jugar desde teléfonos y tabletas.
-- Mando compatible con Gamepad API (Xbox / DualShock).
-- **Centro de Configuración integral** con pestañas de Gráficos, Pantalla & Brillo (50% a 150%), Audio & Sensibilidad, y botón **"⚡ ACOMODAR A MI PC"** para optimización automática contra bloqueos/crashes de GPU.
-- **Sistema de audio inmersivo multicapa (CC0 Royalty-Free)** con 14 pistas que transicionan suavemente según bioma, situación (exploración, combate tenso, tensión crítica, victoria, derrota) y menús.
+---
 
-## Experiencia de juego
+## 🚀 Características Principales
 
-La partida se juega desde una vista en primera persona. Gira la cámara, desplázate por el escenario, elimina objetivos y usa el entorno para evitar obstáculos. Los impactos aumentan la puntuación y el combo; recibir daño afecta primero al escudo y después a la salud.
+- **Cámara Táctica PTZ en Primera Persona:** Giro de 360° en acimut, inclinación de elevación, modos ópticos (Normal, Visión Térmica FLIR, Visión Nocturna NVG) y zoom progresivo.
+- **Modelos 3D Reales en GLB:** Naves de combate detalladas, droides hostiles, soldados mecha, titanes de gran escala, torretas defensivas y hangares industriales (assets CC0 de alta fidelidad).
+- **Hangar 3D Central Interactivo:** Mesa giratoria (*turntable*) en tiempo real de la nave *Vanguard MK-IV* con iluminación de estudio, efectos de estela iónica y previsualización de skins de camuflaje.
+- **Arsenal Extendido de 5 Arquetipos:** Rifle de Plasma, Escopeta Flak de Dispersión, Railgun Pesado de Precisión, Micro-Misiles Autoguiados y Rayo Criogénico de Enfriamiento.
+- **Habilidades Activas:** Pulso Electromagnético (EMP) defensivo `[F]` y Sobrecarga Frenesí (Overdrive) `[Q]`.
+- **Drones Aliados de Apoyo:** Escolta automatizada con modelo 3D `DRONE_SCOUT`, fuego asistido, escudos de plasma y balizas sensoriales en tiempo real.
+- **Entorno Interactivo y Destructibles:** Cajas de suministros tácticos y cápsulas energéticas que se fracturan bajo fuego enemigo o del jugador, liberando munición, nanitas y escudos.
+- **Hoja de Servicio y Estadísticas del Piloto:** Sistema persistente (`localStorage`) que registra bajas enemigas, titanes eliminados, disparos, impactos, precisión porcentual, combo máximo, récord de puntos y rango militar honorífico.
+- **Compatibilidad Total Multiplataforma:** Soporte para PC (KBM), Mandos Xbox con vibración háptica completa y controles táctiles dinámicos en pantalla.
 
-| Sistema | Descripción |
+---
+
+## 🛰️ Evolución Técnica y Modelos 3D
+
+El proyecto ha evolucionado más allá de geometrías puramente abstractas mediante la integración de **22 modelos 3D optimizados en formato GLB**, garantizando una identidad visual cohesiva y un consumo de memoria mínimo (menos de 16 MB en total):
+
+- **Nave del Jugador:** `player_ship.glb` (*Vanguard MK-IV* con turbinas dobles y alerones de maniobra orbital).
+- **Caza Interceptor:** `fighter_interceptor.glb` (caza de combate estelar de alta velocidad).
+- **Droides y Tropas Hostiles:** `drone_gunner.glb`, `drone_scout.glb`, `robot_walker.glb`, `heavy_cyborg.glb`.
+- **Titanes y Jefes Colosales:** `boss_mecha_titan.glb` (Titán Mecha cuadrúpedo con baterías pesadas) y `boss_behemoth.glb` (Coloso blindado Aegis).
+- **Arsenal Táctico:** Modelos y viewmodels para rifles de plasma, lanzacohetes pesados y rifles de francotirador.
+- **Infraestructura de Hangar:** Muros industriales (`hangar_wall.glb`), columnas estructurales (`hangar_column.glb`), compuertas blindadas (`hangar_door.glb`), escaleras de servicio y torretas de defensa perimetral.
+- **Objetos Interactivos y Botín:** Generadores de energía (`power_generator.glb`), cajas de suministros sci-fi (`scifi_crate.glb`), cápsulas criogénicas (`scifi_capsule.glb`), núcleos de nanitas y orbes de escudo.
+
+---
+
+## 💥 Arsenal y Armamento
+
+El sistema de combate cuenta con 5 armas seleccionables en combate mediante teclas numéricas `[1]` a `[5]`, ciclado con rueda de ratón o cruceta del mando:
+
+| Arma | Tecla | Cadencia | Daño | Capacidad | Especialidad |
+|---|---|---|---|---|---|
+| **Rifle de Plasma** | `[1]` | Alta (90ms) | Medio (12) | 50 proyectiles | Fuego sostenido balanceado para enfrentamientos medios. |
+| **Escopeta Flak** | `[2]` | Media (450ms) | Alto (30 por disparo) | 8 cartuchos | Ráfaga de 6 perdigones de alta dispersión a quemarropa. |
+| **Railgun Pesado** | `[3]` | Baja (900ms) | Masivo (80) | 5 cargas | Haz perforante instantáneo capaz de penetrar blindajes de titán. |
+| **Micro-Misiles** | `[4]` | Rápida (180ms) | Explosivo (24 + área) | 20 cohetes | Misiles propulsados de trayectoria acelerada y detonación en racimo. |
+| **Rayo Criogénico** | `[5]` | Continua (60ms) | Alto continuo | Haz sostenido | Haz de cero absoluto que ralentiza e inhabilita sistemas de drones enemigos. |
+
+---
+
+## ⚡ Habilidades Activas Tácticas
+
+1. **Pulso Electromagnético (EMP Pulse) `[Tecla F] / [Mando RB] / [Botón EMP]`:**
+   - Emite una onda de choque esférica de 24 metros alrededor del jugador.
+   - Destruye proyectiles hostiles entrantes, neutraliza generadores y aturde objetivos circundantes.
+   - Enfriamiento: 15 segundos.
+
+2. **Sobrecarga Frenesí (Overdrive) `[Tecla Q] / [Mando D-Pad Abajo] / [Botón FRENESÍ]`:**
+   - Activa los sobrealimentadores de plasma durante 6 segundos.
+   - Duplica la cadencia de fuego de todas las armas y otorga **munición infinita sin recarga** durante el estado activo.
+   - Enfriamiento: 25 segundos.
+
+---
+
+## 👾 Enemigos y Unidades Hostiles
+
+La inteligencia artificial táctica coordina 11 arquetipos de enemigos con comportamientos de vuelo y asalto diferenciados:
+
+- **STRIKER (`drone_gunner.glb`):** Dron de ataque artillado con cañones automáticos gemelos.
+- **FLANKER (`fighter_interceptor.glb`):** Caza veloz que realiza maniobras de rodeo orbital a 28 metros.
+- **SNIPER (`robot_walker.glb`):** Unidad bípeda de alta precisión que dispara cerrojos de largo alcance desde elevaciones.
+- **JUGGERNAUT (`heavy_cyborg.glb`):** Soldado pesado acorazado con blindaje reforzado capaz de absorber fuego sostenido.
+- **SCOUT (`drone_scout.glb`):** Unidad de reconocimiento ligera de alta maniobrabilidad.
+- **SWARMER:** Enjambres veloces que atacan en formaciones sincronizadas.
+- **KAMIKAZE:** Drones explosivos que aceleran en rumbo de colisión directa hacia el jugador.
+- **TACTICIAN:** Dron de comando que emite pulsos de escudo a sus aliados cercanos.
+- **HEALER:** Dron bio-mecánico que regenera la integridad de otras unidades hostiles.
+
+---
+
+## 👹 Jefes y Titanes Mecanizados
+
+Los encuentros con titanes ocurren en rondas clave (cada 5 niveles de campaña o en oleadas de entrenamiento designadas):
+
+- **Titán Mecha Quadrúpedo (`boss_mecha_titan.glb`):** Titán de combate masivo equipado con baterías dobles de misiles en la torreta dorsal y colmillos hidráulicos de asalto.
+- **Coloso Behemoth Aegis (`boss_behemoth.glb`):** Unidad hiperblindada protegida por generadores de escudo orbital satelitales que deben ser destruidos previamente.
+- **Fases de Combate:** Al descender del 50% de salud, los titanes activan ráfagas de misiles en espiral, saltos de teletransporte cuántico y patrones de barrido térmico.
+
+---
+
+## 🛸 Drones Aliados de Escolta
+
+Al desbloquear mejoras o poderes tácticos, el jugador cuenta con compañeros autómatas:
+- Representados mediante el modelo 3D `DRONE_SCOUT`.
+- Cuentan con propulsores lumínicos gemelos, halo de energía protectora y radar rotatorio esmeralda.
+- Rastrean el espacio aéreo del jugador, abriendo fuego automático contra objetivos hostiles detectados.
+
+---
+
+## 🌌 Mundo, Biomas y Entorno Interactivo
+
+El generador de sectores procedural incluye 10 biomas estelares:
+1. **Hangar Orbital:** Instalación militar con muros blindados, compuertas de presurización, torretas de defensa perimetral y generadores de energía.
+2. **Ciudadela Helada:** Estructuras de hielo extraterrestre con cristales masivos y refracción fría.
+3. **Mundo Volcánico:** Terrenos ígneos con niebla de azufre, ceniza solar y roca volcánica.
+4. **Laboratorio Alienígena:** Cápsulas biológicas, esporas bioluminiscentes y reliquias de energía.
+5. **Campo de Asteroides:** Cúmulos de meteoritos flotantes y plataformas gravitacionales.
+
+### Cajas de Suministro Destructibles
+En cada sector aparecen cajas tácticas (`scifi_crate.glb`) y cápsulas (`scifi_capsule.glb`). Al ser disparadas por el jugador, reproducen sonido de fractura de metal, generan escombros de partículas y liberan orbes de munición, nanitas o recarga de escudo.
+
+---
+
+## 🎖️ Progresión, Armería y Estadísticas del Piloto
+
+### Hangar y Taller Táctico
+Accede a la Armería desde el menú principal o pulsando `[B]` durante la partida:
+- **Mejoras Permanentes:**
+  - *Blindaje de Escudo:* Incrementa los deflectores de plasma para soportar más impactos.
+  - *Integridad del Casco:* Soldadura de nanofibras que eleva la salud máxima.
+  - *Imán de Botín Cuántico:* Radio ampliado de atracción de orbes de nanitas y munición.
+  - *Propulsores Tácticos:* Reduce el tiempo de reutilización de la esquiva (dash).
+- **Camuflajes y Skins:**
+  - *Interceptor Estándar* (Azul cian y gris naval).
+  - *Golden Vanguard* (Chasis dorado de élite con estelas ámbar).
+  - *Stealth Shadow* (Negro mate absorbente de radar).
+  - *Inferno Overdrive* (Rojo carmesí volcánico).
+  - *Cyber Neon* (Fucsia y violeta bio-sintético).
+
+### Hoja de Servicio Militar
+El registro de estadísticas rastrea:
+- **Rango Militar:** *Cadete Espacial* ➡️ *Piloto de Élite* ➡️ *Comandante de Asalto* ➡️ *As de la Federación Galáctica*.
+- **Métricas:** Bajas totales confirmadas, titanes caídos, disparos efectuados, impactos, porcentaje de precisión balística, combo multiplicador récord, nanitas acumuladas y misiones completadas.
+
+---
+
+## 🕹️ Controles y Esquemas de Entrada
+
+### Teclado y Ratón (PC)
+
+| Acción | Control |
 |---|---|
-| Campaña | Rondas cronometradas de dos minutos, progresión de niveles, encuentros con jefes y avance por biomas. |
-| Oleadas | Modo de entrenamiento sin temporizador de campaña; las oleadas aumentan y pueden incluir jefes. |
-| Mapa estelar | Vista para consultar y seleccionar niveles de la campaña que estén disponibles. |
-| Poderes | Mejoras seleccionables que modifican habilidades o estadísticas de la partida. |
-| Movimiento | Caminar, correr con resistencia, saltar, usar plataformas y colisionar con el escenario. |
-| Combate | Disparo continuo, cargador, recarga, combos, puntuación, objetivos y jefes. |
-| Audio adaptativo | Música, ambiente y efectos varían según el menú, el bioma y el estado del combate. |
+| Desplazamiento | `W`, `A`, `S`, `D` o Flechas |
+| Mirar / Apuntar | Movimiento del ratón |
+| Disparar | Clic izquierdo sostenido |
+| Zoom Táctico PTZ | Clic derecho sostenido |
+| Saltar | Barra espaciadora |
+| Sprint / Acelerar | `Shift` izquierdo sostenido |
+| Esquivar / Dash | `C` |
+| **Pulso EMP** | **`F`** |
+| **Sobrecarga Frenesí** | **`Q`** |
+| **Cambio de Arma** | **`1` a `5` o rueda del ratón** |
+| Modo Óptico (Térmico / NVG) | `V` |
+| Recargar Manualmente | `R` |
+| Armería / Hangar | `B` |
+| Pausa / Menú | `Escape` o `P` |
 
-## Tecnologías
+### Pantallas Táctiles (Móviles / Tablets)
 
-- React 19 y TypeScript
-- Vite 8
-- Three.js, React Three Fiber y Drei
-- Zustand
-- Tailwind CSS
-- Playwright Core para pruebas end-to-end
-- GitHub Pages para alojar la versión web
+| Control | Acción |
+|---|---|
+| **Joystick Izquierdo** | Moverse y desplazarse lateralmente |
+| **Joystick Derecho** | Mirar 360° y apuntar |
+| **Botón FUEGO** | Disparo sostenido |
+| **Botón ZOOM** | Zoom táctico asistido |
+| **Botón SALTAR** | Salto gravitacional |
+| **Botón RECARGA** | Recarga rápida del cargador |
+| **Botón CORRER** | Sprint táctico |
+| **Botón EMP** | Activa el pulso electromagnético |
+| **Botón FRENESÍ** | Activa la sobrecarga de disparo |
+| **Botón PAUSA** | Menú de pausa y configuración |
 
-## Requisitos e instalación
+### Mando Xbox (Gamepad API)
 
-Se requiere Node.js **20.19+** o **22.12+**, npm y un navegador moderno con WebGL.
+| Control | Acción |
+|---|---|
+| **Stick Izquierdo** | Movimiento y strafe |
+| **Stick Derecho** | Apuntado de precisión con fricción asistida |
+| **Gatillo Derecho (RT)** | Disparo continuo con vibración háptica |
+| **Gatillo Izquierdo (LT)** | Zoom táctico óptico |
+| **Botón A** | Salto |
+| **Botón B / LB** | Dash con propulsor |
+| **Botón X** | Recargar |
+| **Botón Y** | Alternar modos ópticos PTZ |
+| **Right Bumper (RB)** | **Pulso EMP** |
+| **D-Pad Abajo** | **Sobrecarga Frenesí** |
+| **D-Pad Izq. / Der.** | **Ciclar entre las 5 armas** |
+| **Start** | Menú de pausa |
+
+---
+
+## 🔊 Audio, Síntesis y Voz Táctica
+
+- **Motor Web Audio Procedural:** Síntesis sonora para pulsos electromagnéticos de baja frecuencia, estallidos de sobrecarga frenesí, lanzamiento de micro-misiles y fractura de contenedores.
+- **Banda Sonora Multicapa CC0:** 14 temas musicales adaptativos que transicionan suavemente según tensión de combate, jefes y biomas.
+- **Voz Sintetizada de Cabina (SpeechSynthesis):** Confirmación vocal en español neutro para estados tácticos (`"Pulso electromagnético cargado"`, `"Titán hostil detectado"`, `"Modo frenesí disponible"`).
+
+---
+
+## ⚡ Optimización WebGL y Rendimiento
+
+1. **Gestión de Memoria y Zero-GC:** Reutilización de vectores temporales (`THREE.Vector3`, `THREE.Ray`) y pooling de proyectiles e impactos.
+2. **Carga y Clonación de Modelos:** Los archivos GLB se descargan una sola vez a través de `useGLTF.preload` y se clonan mediante `clone(true)` preservando geometrías compartidas en GPU.
+3. **Calibrador "⚡ ACOMODAR A MI PC":** Evalúa el hardware del cliente (`WEBGL_debug_renderer_info`) para fijar la tasa de sombra, resolución y densidad de partículas adecuada para gráficos integrados (Intel HD, Iris, Vega).
+
+---
+
+## 📂 Estructura del Proyecto
+
+```text
+public/
+  assets/
+    models/
+      ships/          player_ship.glb, fighter_interceptor.glb
+      enemies/        drone_gunner.glb, drone_scout.glb, robot_walker.glb, heavy_cyborg.glb
+      bosses/         boss_mecha_titan.glb, boss_behemoth.glb
+      weapons/        rifle_plasma.glb, launcher_heavy.glb, sniper_railgun.glb
+      environments/   hangar_wall.glb, hangar_column.glb, hangar_door.glb, hangar_stairs.glb
+      props/          scifi_crate.glb, scifi_capsule.glb, power_generator.glb, turret_defense.glb
+      pickups/        lootbox.glb, pickup_shield.glb, pickup_core.glb
+      ATTRIBUTION.md  Inventario completo de licencias CC0 de modelos 3D
+  audio/              Música y efectos de audio
+src/
+  components/
+    HUD/              ArmoryModal, ShipTurntable, AmmoHUD, TouchControls, MainMenu...
+    Scene3D/          Environment, Targets, EnemyVisuals, AllyDrones, Projectiles, WeaponViewmodel...
+  game/               gameState, modelLoader, armory, pilotStats, AudioSystem, tacticalVoice...
+  hooks/              useGamepad, useKeyboard, useScreenLayout...
+  types/              game.ts (definiciones TypeScript)
+tests/
+  e2e/                Suites de pruebas Playwright Core
+```
+
+---
+
+## 🛠️ Requisitos e Instalación Local
+
+- **Node.js:** Versión `20.19+` o `22.12+` recomendada.
+- **Gestor de paquetes:** `npm` v10+.
 
 ```bash
+# 1. Clonar el repositorio
 git clone https://github.com/Sttive17/Galactic-PTZ-Shooter.git
 cd Galactic-PTZ-Shooter
+
+# 2. Instalar dependencias
 npm install
+
+# 3. Iniciar servidor de desarrollo
 npm run dev
 ```
 
-Abre la dirección local que muestra Vite en la terminal. Para usar un mando, conéctalo antes de iniciar la partida y permite que el navegador lo detecte.
+---
 
-## Comandos
+## 🧪 Comandos y Verificación
 
 | Comando | Descripción |
 |---|---|
-| `npm run dev` | Inicia el servidor de desarrollo. |
-| `npm run build` | Ejecuta TypeScript y crea la versión de producción en `dist/`. |
-| `npm run preview` | Sirve localmente la compilación de producción. |
-| `npm run lint` | Analiza el código con Oxlint. |
-| `npm run test:e2e` | Ejecuta las suites end-to-end. |
-| `npm run test:e2e -- --tier smoke` | Ejecuta las pruebas rápidas de arranque, WebGL y audio. |
+| `npm run dev` | Inicia el servidor de desarrollo Vite con Hot Module Replacement. |
+| `npm run build` | Compila TypeScript (`tsc -b`) y empaqueta la versión optimizada de producción. |
+| `npm run preview` | Sirve localmente los archivos compilados en `dist/`. |
+| `npm run lint` | Ejecuta el análisis estático de código mediante Oxlint. |
+| `npm run test:e2e` | Ejecuta las pruebas E2E con Playwright Core. |
+| `npm run test:e2e -- --tier smoke` | Ejecuta la suite de verificación básica (Arranque, WebGL, WebAudio). |
 
-Las pruebas E2E necesitan Google Chrome o Microsoft Edge instalado. El proyecto usa `playwright-core` y no descarga un navegador automáticamente. Se puede seleccionar el navegador mediante `E2E_BROWSER_PATH` y ejecutar pruebas concretas con `--grep`.
+---
 
-## Publicación web
+## 📜 Catálogo de Modelos 3D y Licencias
 
-GitHub Actions compila la aplicación con la ruta base de GitHub Pages y publica el contenido de `dist/` automáticamente al actualizar `main`. El flujo está definido en `.github/workflows/deploy-pages.yml`. Los cambios a la aplicación se publican después de que termine el despliegue; revisa la ejecución **Deploy GitHub Pages** en la pestaña **Actions** del repositorio.
+Todos los modelos tridimensionales integrados en el videojuego están publicados bajo licencias permisivas abiertas compatibles con distribución comercial y no comercial:
+- **Modelos Quaternius (CC0 1.0 Universal - Dominio Público):** Naves espaciales, droides militares, robots mecha, arsenal, estructuras de hangar, torretas y generadores.
+- **Modelos Kenney (CC0 1.0 Universal - Dominio Público):** Vehículos utilitarios, cristales y asteroides.
+- Consulta el registro detallado en [public/assets/models/ATTRIBUTION.md](public/assets/models/ATTRIBUTION.md) y [public/audio/ATTRIBUTION.md](public/audio/ATTRIBUTION.md).
 
-## Cómo jugar
+---
 
-En el menú principal se puede iniciar:
+## 🗺️ Hoja de Ruta (Roadmap)
 
-- **Campaña:** progresión por niveles, con jefes y transiciones entre biomas.
-- **Mapa estelar:** permite consultar y seleccionar niveles disponibles.
-- **Oleadas:** modo de entrenamiento sin el límite de tiempo de la campaña.
-- **Ajustes:** opciones de gráficos, pantalla, audio y controles.
+- [x] **Fase 1:** Auditoría técnica integral del proyecto.
+- [x] **Fase 2:** Integración de catálogo de 22 modelos 3D reales en formato GLB.
+- [x] **Fase 3:** Expansión del arsenal a 5 armas y habilidades activas (EMP y Overdrive).
+- [x] **Fase 4:** Hangar 3D interactivo en tiempo real y estadísticas persistentes del piloto.
+- [x] **Fase 5:** Biomas de hangar con elementos arquitectónicos y cajas destruibles.
+- [x] **Fase 6:** Drones compañeros aliados con modelos 3D y escolta automatizada.
+- [x] **Fase 7:** Modernización de HUD, badges de recarga, controles táctiles y gamepad.
+- [x] **Fase 8:** Audio procedimental Web Audio y sistema de síntesis de voz táctica.
+- [x] **Fase 9:** Optimización WebGL, pooling de proyectiles e instanciación.
+- [x] **Fase 10:** Verificación continua de compilación TypeScript y pruebas Playwright.
+- [x] **Fase 11:** Actualización completa y exhaustiva de documentación.
+- [ ] **Fase 12:** Modo multijugador cooperativo orbital (en desarrollo futuro).
 
-La interfaz muestra información de partida como salud, escudo, munición, puntuación y objetivos. La campaña tiene un temporizador por ronda; el entrenamiento continúa mediante oleadas. Al terminar una ronda se puede elegir un poder y continuar la progresión.
+---
 
-## Controles
-
-### Teclado y ratón
-
-| Acción | Control |
-|---|---|
-| Avanzar / retroceder | `W` / `S` o flechas arriba / abajo |
-| Desplazarse lateralmente | `A` / `D` o flechas izquierda / derecha |
-| Mirar | Ratón |
-| Disparar | Mantener botón izquierdo |
-| Apuntar con zoom táctico | Mantener botón derecho |
-| Ajustar zoom base | `Q` / `E` o rueda del ratón |
-| Saltar | `Espacio` |
-| Correr | Mantener `Shift` mientras te mueves |
-| Esquivar / Dash con propulsor | `C` |
-| Modo óptico PTZ (Normal / Térmico / Nocturno) | `V` |
-| Recargar | `R` |
-| Entrar al portal activo | `E` |
-| Pausar / reanudar | `P` o `Escape` |
-
-El primer clic dentro del área de juego puede bloquear el puntero para permitir mirar alrededor. Pulsa `Escape` para liberar el puntero.
-
-### Pantallas táctiles
-
-| Acción | Control |
-|---|---|
-| Moverse | Joystick izquierdo |
-| Mirar | Joystick derecho |
-| Disparar | Mantener **FUEGO** |
-| Zoom táctico | Mantener **ZOOM** |
-| Saltar | **SALTAR** |
-| Recargar | **RECARGA** |
-| Correr | Mantener **CORRER** mientras te mueves |
-| Entrar al portal activo | **ENTRAR** |
-| Pausar / reanudar | **PAUSA** |
-
-Al abrir la página, el juego detecta si el dispositivo ofrece entrada táctil o puntero y si la pantalla es compacta o amplia. Recalcula la orientación y el diseño al girar o cambiar el tamaño de la ventana. Los joysticks y botones táctiles aparecen durante una ronda activa en dispositivos táctiles; el rendimiento 3D depende de las capacidades del equipo, así que reduce la calidad gráfica en Ajustes si la imagen va lenta.
-
-### Mando Xbox / Gamepad API
-
-| Acción | Control |
-|---|---|
-| Moverse y desplazarse | Joystick izquierdo |
-| Mirar y apuntar (con asistencia y fricción) | Joystick derecho |
-| Disparar (con vibración háptica) | Gatillo derecho (`RT`) |
-| Zoom táctico | Gatillo izquierdo (`LT`) |
-| Saltar | Botón `A` |
-| Esquivar / Dash con propulsor | Botón `B` o botón `LB` |
-| Alternar modo óptico PTZ | Botón `Y` o cruceta arriba (`D-Pad Up`) |
-| Recargar | Botón `X` |
-| Correr | Pulsar joystick izquierdo (`L3`) |
-| Navegación de menús y poderes | Cruceta / sticks y botón `A` para confirmar |
-| Pausar / reanudar | `Start` |
-
-Los nombres y la disponibilidad de los botones pueden variar con mandos no estándar o configuraciones particulares del navegador. El juego cuenta con soporte para el actuador de vibración háptica dual del mando Xbox en disparos, impactos recibidos, recarga y explosiones de jefes.
-
-## Ajustes y compatibilidad
-
-El panel de configuración integral (**Centro de Configuración**) ofrece tres pestañas principales:
-
-1. **Gráficos:** Presets **Bajo**, **Medio**, **Alto** y **Personalizado**. Incluye controles granulares para sombras dinámicas, resolución de sombras (512 / 1024), reflejos ambientales IBL, shaders complejos y recuento de partículas estelares. Incluye el botón **"⚡ ACOMODAR A MI PC"**, que analiza la GPU (`WEBGL_debug_renderer_info`), núcleos de CPU y memoria para aplicar una configuración segura que previene cuelgues o reinicios forzados por TDR (Timeout Detection and Recovery) en GPUs integradas (Intel HD/Iris, AMD Radeon Vega).
-2. **Pantalla & Brillo:** Deslizador de brillo regulable del **50% al 150%**, modo pantalla completa (Fullscreen API), alternador de efectos HUD/scanlines y contador de FPS en tiempo real.
-3. **Audio & Control:** Volumen maestro, música de fondo, efectos de sonido (SFX), sensibilidad de ratón/stick, inversión del eje Y y vibración de cámara.
-
-La aplicación requiere WebGL. Si la escena presenta caídas de rendimiento o el equipo tiene recursos limitados:
-
-1. Haz clic en **"⚡ ACOMODAR A MI PC"** desde el menú de Ajustes para calibrar automáticamente los gráficos.
-2. Selecciona manualmente el perfil **Bajo** si utilizas gráficos integrados.
-3. Comprueba que la aceleración de hardware esté habilitada en el navegador.
-
-Para habilitar audio, interactúa primero con la aplicación: los navegadores suelen bloquear la reproducción de audio hasta que exista una acción del usuario. Si el mando no aparece, conéctalo, pulsa un botón y revisa que el navegador y el sistema operativo lo reconozcan.
-
-## Estructura del proyecto
-
-```text
-src/
-  components/
-    HUD/       Interfaz, menús y paneles
-    Scene3D/   Cámara, escenario, enemigos y lógica visual 3D
-  game/        Estado, configuración, mapas, poderes y audio
-  hooks/       Lectura de teclado y gamepad
-  types/       Tipos compartidos
-tests/
-  e2e/         Suites de pruebas end-to-end
-public/
-  audio/       Recursos de audio y atribuciones
-```
-
-El estado de alta frecuencia del bucle 3D se mantiene en `SceneState` para evitar renders de React en cada frame. El estado de partida e interfaz se gestiona con Zustand.
-
-### Flujo de datos
-
-```text
-Teclado / Gamepad
-        |
-        v
-   InputManager -----> SceneState (movimiento y objetos por frame)
-        |                       |
-        v                       v
-   Zustand Store <------ GameManager / sistemas 3D
-        |
-        v
-       HUD
-```
-
-`GameEngine` monta el lienzo WebGL y los sistemas de escena. `InputManager` convierte teclado y gamepad en movimiento, apuntado y disparos. `GameManager` coordina temporizadores, transiciones de rondas y estado de combate. Los componentes del HUD leen el estado de Zustand para mostrar menús e indicadores.
-
-## Pruebas
-
-La integración continua de GitHub Actions instala dependencias con `npm ci` y ejecuta la compilación, lint y pruebas smoke en Pull Requests y en cambios a `main`. Las pruebas usan Chrome en modo headless y verifican el arranque, la escena WebGL y funciones principales de audio y configuración.
-
-Para ejecutar una suite local:
-
-```bash
-npm run test:e2e -- --tier smoke
-npm run test:e2e -- --tier 1
-npm run test:e2e -- --tier 2
-npm run test:e2e -- --tier 3
-npm run test:e2e -- --tier 4
-```
-
-El runner también permite filtrar por nombre, por ejemplo:
-
-```bash
-npm run test:e2e -- --tier 1 --grep reload
-```
-
-## Contribuciones y protección
-
-Las contribuciones externas deben llegar mediante Pull Request; **no hagas push directamente a `main`**.
-
-1. Haz un fork y crea una rama descriptiva desde `main`.
-2. Implementa un cambio acotado y no incluyas archivos generados ni credenciales.
-3. Ejecuta `npm run build`, `npm run lint` y las pruebas pertinentes.
-4. Abre un Pull Request con la plantilla del repositorio y explica los cambios.
-5. Espera a que CI pase y a que el propietario revise y apruebe el Pull Request.
-6. Resuelve las conversaciones de revisión; el cambio se fusiona solo después de la aprobación.
-
-La rama `main` requiere una aprobación, revisión del propietario indicada en `CODEOWNERS`, checks de CI exitosos e hilos resueltos. Dependabot propone actualizaciones de dependencias. Consulta [CONTRIBUTING.md](CONTRIBUTING.md) para más detalles.
-
-Al preparar un cambio, mantén los commits acotados, actualiza la documentación si cambia el comportamiento visible y no incluyas `node_modules/`, `dist/`, credenciales o archivos locales. Los cambios de escena 3D deben comprobarse en un navegador con WebGL cuando sea posible.
-
-## Seguridad
-
-No publiques tokens, contraseñas ni vulnerabilidades sin corregir en issues o Pull Requests. Consulta [SECURITY.md](SECURITY.md) para reportes privados y recomendaciones.
-
-## Privacidad y datos
-
-El proyecto no necesita una cuenta ni un servidor propio para jugar. Las preferencias de juego y gráficos se guardan en el almacenamiento local del navegador. La carga de las fuentes visuales configuradas en `index.html` requiere conexión a Google Fonts.
-
-## Créditos, copyright y licencia
-
-**Copyright © 2026 Sttive17. Todos los derechos reservados** sobre el código del juego y el material original de este proyecto.
-
-El proyecto usa una licencia propietaria: no se concede permiso general para copiar, reutilizar, modificar, redistribuir o publicar el código o versiones derivadas. Se requiere autorización previa por escrito del titular, salvo que una ley aplicable indique lo contrario. Consulta el archivo [LICENSE](LICENSE).
-
-Los archivos de audio incluidos en `public/audio/` son recursos de terceros publicados bajo CC0 (incluido `tense-combat.mp3`, que también cuenta con una licencia CC-BY 3.0). La atribución, fuentes y contexto de uso están en [public/audio/ATTRIBUTION.md](public/audio/ATTRIBUTION.md). Esos permisos solo se aplican a los recursos identificados allí; no cambian la licencia del código del juego. Las dependencias también conservan sus propias licencias.
+**Desarrollado con dedicación para ofrecer la mejor experiencia espacial 3D en el navegador.**

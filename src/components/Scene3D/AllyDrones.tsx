@@ -5,6 +5,13 @@ import type { EnemyArchetype, Target } from '../../types/game';
 import { SceneState } from '../../game/sceneState';
 import { useGameStore } from '../../game/gameState';
 import { playSound } from '../../game/AudioSystem';
+import { usePreloadedModel } from '../../game/modelLoader';
+
+const AllyModel = () => {
+  const model = usePreloadedModel('DRONE_SCOUT');
+  if (!model) return null;
+  return <primitive object={model} scale={0.44} rotation={[0, Math.PI, 0]} position={[0, -0.05, 0]} />;
+};
 
 const MAX_ALLIES = 3;
 const MAX_ALLY_TRACERS = 16;
@@ -467,6 +474,7 @@ export const AllyDrones = () => {
             }}
             position={[allyPositions.current[idx].x, allyPositions.current[idx].y, allyPositions.current[idx].z]}
           >
+            <AllyModel />
             {/* White-Titanium Interceptor Fuselage */}
             <mesh>
               <boxGeometry args={[0.58, 0.34, 0.86]} />
