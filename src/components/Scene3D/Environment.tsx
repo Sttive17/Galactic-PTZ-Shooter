@@ -92,6 +92,7 @@ const BiomeLandmarks = ({
   });
 
   switch (theme.architecture) {
+    case 'LAB_BUNKER':
     case 'ORBITAL_HANGAR':
       return (
         <group>
@@ -617,6 +618,45 @@ const UndergroundLabWorld = ({
         <ringGeometry args={[48, 48.4, 48]} />
         <meshBasicMaterial color={theme.secondaryGlow} transparent opacity={0.5} toneMapped={false} />
       </mesh>
+
+      {/* Real 3D Modular Hangar Architecture & Logistics */}
+      {/* Front Blast Door & Perimeter Walls */}
+      <ModelProp modelKey="HANGAR_DOOR" scale={4.6} position={[0, 0, -48]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[-20, 0, -48]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[20, 0, -48]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[-38, 0, -42]} rotation={[0, 0.35, 0]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[38, 0, -42]} rotation={[0, -0.35, 0]} />
+
+      {/* East & West Perimeter Hangar Walls */}
+      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[-46, 0, -22]} rotation={[0, Math.PI / 2, 0]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[-46, 0, 2]} rotation={[0, Math.PI / 2, 0]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[-46, 0, 24]} rotation={[0, Math.PI / 2, 0]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[46, 0, -22]} rotation={[0, -Math.PI / 2, 0]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[46, 0, 2]} rotation={[0, -Math.PI / 2, 0]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[46, 0, 24]} rotation={[0, -Math.PI / 2, 0]} />
+
+      {/* Structural Gantry Columns */}
+      {[-30, -15, 15, 30].map((x) => (
+        <group key={`col-${x}`}>
+          <ModelProp modelKey="HANGAR_COLUMN" scale={4.2} position={[x, 0, -34]} />
+          <ModelProp modelKey="HANGAR_COLUMN" scale={4.2} position={[x, 0, 18]} />
+        </group>
+      ))}
+
+      {/* Base Defense Turrets guarding the flanks */}
+      <ModelProp modelKey="TURRET_DEFENSE" scale={2.6} position={[-25, 0.1, -14]} rotation={[0, 0.5, 0]} />
+      <ModelProp modelKey="TURRET_DEFENSE" scale={2.6} position={[25, 0.1, -14]} rotation={[0, -0.5, 0]} />
+
+      {/* High-Tech Power Generators / Glowing Plasma Reactors */}
+      <ModelProp modelKey="POWER_GENERATOR" scale={2.8} position={[-16, 0.1, -38]} rotation={[0, 0.25, 0]} />
+      <ModelProp modelKey="POWER_GENERATOR" scale={2.8} position={[16, 0.1, -38]} rotation={[0, -0.25, 0]} />
+
+      {/* Logistics Cargo: Sci-Fi Crates & Energy Capsules */}
+      <ModelProp modelKey="SCIFI_CRATE" scale={2.4} position={[-11, 0, -18]} rotation={[0, 0.35, 0]} />
+      <ModelProp modelKey="SCIFI_CRATE" scale={2.0} position={[-8, 0, -21]} rotation={[0, -0.2, 0]} />
+      <ModelProp modelKey="SCIFI_CRATE" scale={2.4} position={[12, 0, -17]} rotation={[0, -0.4, 0]} />
+      <ModelProp modelKey="SCIFI_CAPSULE" scale={2.2} position={[-22, 0, -6]} />
+      <ModelProp modelKey="SCIFI_CAPSULE" scale={2.2} position={[22, 0, -6]} />
 
       {/* 4 Active Floor Steam Vent Grates with Rising Vapor */}
       {LAB_STEAM_VENTS.map(([vx, vy, vz], i) => (
@@ -2425,30 +2465,14 @@ export const Environment = () => {
         }
 
         if (prop.kind === 'crate') {
-          const propHash = Math.abs(Math.round(prop.pos[0] * 19 + prop.pos[2] * 37)) % 4;
-          const modelKey: ModelKey =
-            propHash === 0
-              ? 'CONTAINER'
-              : propHash === 1
-                ? 'CONTAINER_TALL'
-                : propHash === 2
-                  ? 'GENERATOR'
-                  : 'PLASMA_BARREL';
-
-          const mScale: [number, number, number] = [
-            prop.size[0] * 0.48,
-            prop.size[1] * 0.48,
-            prop.size[2] * 0.48,
-          ];
-
           return (
             <group key={prop.id} position={prop.pos}>
-              {/* Structural base crate with PBR metallic finish */}
-              <mesh material={materials.crateMat} castShadow receiveShadow>
-                <boxGeometry args={prop.size} />
-              </mesh>
               {/* High-detail 3D Sci-Fi Model Asset */}
-              <ModelProp modelKey={modelKey} scale={mScale} position={[0, 0, 0]} />
+              <ModelProp
+                modelKey="SCIFI_CRATE"
+                scale={[prop.size[0] * 0.95, prop.size[1] * 0.95, prop.size[2] * 0.95]}
+                position={[0, -prop.size[1] * 0.45, 0]}
+              />
               {/* Subtle glowing energy seam */}
               <mesh position={[0, prop.size[1] / 2 + 0.02, 0]} material={glowMat}>
                 <boxGeometry args={[prop.size[0] * 0.8, 0.04, prop.size[2] * 0.8]} />

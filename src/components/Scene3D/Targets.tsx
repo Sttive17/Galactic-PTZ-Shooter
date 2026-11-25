@@ -35,7 +35,7 @@ const BOSS_CONFIGS: Record<BossTier, BossConfig> = {
     name: 'CENTINELA ALFA',
     subtitle: 'INTERCEPTOR RÁPIDO · RÁFAGAS DE PLASMA',
     style: 'STRIKER',
-    scale: 3.3,
+    scale: 1.0,
     escortCount: 2,
     escortType: 'SCOUT',
     generatorCount: 0,
@@ -45,7 +45,7 @@ const BOSS_CONFIGS: Record<BossTier, BossConfig> = {
     name: 'TITÁN AEGIS',
     subtitle: 'ESCUDO INVULNERABLE · 3 GENERADORES',
     style: 'SHIELD_GENERATORS',
-    scale: 3.6,
+    scale: 1.05,
     escortCount: 0,
     generatorCount: 3,
   },
@@ -54,7 +54,7 @@ const BOSS_CONFIGS: Record<BossTier, BossConfig> = {
     name: 'LEVIATÁN TORMENTA',
     subtitle: 'TORMENTA DE BALAS · RÁFAGAS Y ABANICO',
     style: 'BULLET_STORM',
-    scale: 3.8,
+    scale: 1.1,
     escortCount: 3,
     escortType: 'SCOUT',
     generatorCount: 0,
@@ -64,7 +64,7 @@ const BOSS_CONFIGS: Record<BossTier, BossConfig> = {
     name: 'ESPECTRO FASE',
     subtitle: 'TELETRANSPORTE 360° · FRANCOTIRADOR ÉLITE',
     style: 'PHANTOM_BLINK',
-    scale: 3.7,
+    scale: 1.0,
     escortCount: 3,
     escortType: 'FLANKER',
     generatorCount: 0,
@@ -74,7 +74,7 @@ const BOSS_CONFIGS: Record<BossTier, BossConfig> = {
     name: 'ACORAZADO ARTILLERO',
     subtitle: 'ARTILLERÍA PESADA · OLEADAS Y SALVAS PREDICTIVAS',
     style: 'ARTILLERY_FORTRESS',
-    scale: 4.1,
+    scale: 1.15,
     escortCount: 3,
     escortType: 'SWARMER',
     generatorCount: 0,
@@ -84,7 +84,7 @@ const BOSS_CONFIGS: Record<BossTier, BossConfig> = {
     name: 'HIDRA FASE-ESCUDO',
     subtitle: 'HÍBRIDO · 3 GENERADORES + TELETRANSPORTE',
     style: 'HYBRID_SHIELD_BLINK',
-    scale: 4.0,
+    scale: 1.1,
     escortCount: 0,
     generatorCount: 3,
   },
@@ -93,7 +93,7 @@ const BOSS_CONFIGS: Record<BossTier, BossConfig> = {
     name: 'VÓRTICE ESTELAR',
     subtitle: 'HÍBRIDO · ESPIRAL ROTATORIA + ARTILLERÍA',
     style: 'HYBRID_STORM_ARTILLERY',
-    scale: 4.1,
+    scale: 1.15,
     escortCount: 3,
     escortType: 'MIXED',
     generatorCount: 0,
@@ -103,7 +103,7 @@ const BOSS_CONFIGS: Record<BossTier, BossConfig> = {
     name: 'NÚCLEO OMEGA',
     subtitle: 'HÍBRIDO OMEGA · 4 GENERADORES + TORMENTA + TELETRANSPORTE',
     style: 'OMEGA_HYBRID',
-    scale: 4.3,
+    scale: 1.2,
     escortCount: 0,
     generatorCount: 4,
   },
@@ -1079,8 +1079,8 @@ const DroneMesh = ({ target, currentRound }: { target: Target; currentRound: num
       if (target.position[1] > 25) {
         target.position[1] = 25;
         if (target.velocity) target.velocity[1] = -Math.abs(target.velocity[1]);
-      } else if (target.position[1] < 2) {
-        target.position[1] = 2;
+      } else if (target.position[1] < 3.0) {
+        target.position[1] = 3.0;
         if (target.velocity) target.velocity[1] = Math.abs(target.velocity[1]);
       }
 
@@ -1418,10 +1418,10 @@ export const Targets = () => {
           const enemyType = pickEnemyArchetype(currentRound, i, mode);
           const isMoving = isWaveTraining ? true : currentRound >= 2 || enemyType !== 'SCOUT';
           const scale = isWaveTraining
-            ? Math.max(0.55, 1.15 - Math.min(14, currentRound) * 0.04 + Math.random() * 0.12)
+            ? Math.max(0.9, 1.15 - Math.min(14, currentRound) * 0.02)
             : currentRound <= 10
-              ? Math.max(0.85, 1.3 - currentRound * 0.045 + Math.random() * 0.15)
-              : Math.max(0.55, 0.85 - Math.min(10, currentRound - 10) * 0.03 + Math.random() * 0.15);
+              ? Math.max(0.95, 1.2 - currentRound * 0.02)
+              : Math.max(0.85, 1.05 - Math.min(10, currentRound - 10) * 0.015);
           const canShoot = enemyType !== 'SCOUT' && enemyType !== 'KAMIKAZE' && enemyType !== 'HEALER';
           const maxHealth =
             enemyType === 'JUGGERNAUT'
@@ -1452,7 +1452,7 @@ export const Targets = () => {
             enemyType === 'KAMIKAZE';
           const rawX = isFlankingClass ? Math.cos(flankAngle) * 28 : (Math.random() - 0.5) * 56;
           const rawY =
-            enemyType === 'SNIPER' || enemyType === 'ARTILLERY' ? 16 + Math.random() * 6 : 4 + Math.random() * 14;
+            enemyType === 'SNIPER' || enemyType === 'ARTILLERY' ? 12 + Math.random() * 6 : 3.8 + Math.random() * 8.0;
           const rawZ = isFlankingClass ? 14 + Math.sin(flankAngle) * 28 : -20 - Math.random() * 28;
           const pos = getSafeSpawnPosition(rawX, rawY, rawZ);
 

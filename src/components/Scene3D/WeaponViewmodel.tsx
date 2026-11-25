@@ -7,6 +7,8 @@ import { SceneState } from '../../game/sceneState';
 import { playSound } from '../../game/AudioSystem';
 import type { PowerId } from '../../game/powers';
 import type { WeaponArchetype } from '../../types/game';
+import { usePreloadedModel } from '../../game/modelLoader';
+import type { ModelKey } from '../../game/modelLoader';
 
 interface WeaponViewmodelProps {
   muzzleRef: RefObject<THREE.Mesh | null>;
@@ -24,24 +26,29 @@ export function getWeaponAccentHex(activePowers: Partial<Record<PowerId, number>
   return '#22d3ee';
 }
 
+const ModelGun = ({
+  modelKey,
+  scale = 0.32,
+  position = [0, -0.06, -0.05],
+  rotation = [0, -Math.PI / 2, 0],
+}: {
+  modelKey: ModelKey;
+  scale?: number;
+  position?: [number, number, number];
+  rotation?: [number, number, number];
+}) => {
+  const model = usePreloadedModel(modelKey);
+  if (!model) return null;
+  return <primitive object={model} scale={scale} position={position} rotation={rotation} />;
+};
+
 export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelProps) => {
   const activePowers = useGameStore((s) => s.activePowers);
   const selectedWeapon = useGameStore((s) => s.selectedWeapon);
 
   const rootGroupRef = useRef<THREE.Group>(null);
-  const rotaryLeftRef = useRef<THREE.Group>(null);
-  const rotaryRightRef = useRef<THREE.Group>(null);
-  const rotaryQuad1Ref = useRef<THREE.Group>(null);
-  const rotaryQuad2Ref = useRef<THREE.Group>(null);
-  const teslaLeftOrbRef = useRef<THREE.Mesh>(null);
-  const teslaRightOrbRef = useRef<THREE.Mesh>(null);
+  const coilRef = useRef<THREE.Mesh>(null);
   const haloRingRef = useRef<THREE.Group>(null);
-  const haloRing2Ref = useRef<THREE.Group>(null);
-  const prismGroupRef = useRef<THREE.Group>(null);
-  const smartLaserRef = useRef<THREE.Group>(null);
-  const magRef = useRef<THREE.Group>(null);
-  const ventMatRef = useRef<THREE.MeshStandardMaterial>(null);
-  const railgunCoilRefs = useRef<(THREE.Mesh | null)[]>([]);
 
   // Smooth Weapon Swap State
   const [displayedWeapon, setDisplayedWeapon] = useState<WeaponArchetype>(selectedWeapon);
@@ -50,73 +57,12 @@ export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelPr
   const targetWeaponRef = useRef<WeaponArchetype>(selectedWeapon);
   const heatLevelRef = useRef<number>(0);
 
-  const magStacks = activePowers.EXTENDED_MAG || 0;
-  const tripleStacks = activePowers.TRIPLE_SHOT || 0;
-  const rapidStacks = activePowers.RAPID_FIRE || 0;
-  const heavyStacks = activePowers.HEAVY_DAMAGE || 0;
-  const critStacks = activePowers.CRITICAL_OPTICS || 0;
-  const autoLockStacks = activePowers.SMART_AUTOLOCK || 0;
-
-  const hasTriple = tripleStacks > 0;
-  const hasRailgun = (activePowers.RAILGUN_SPEED || 0) > 0;
-  const hasRapid = rapidStacks > 0;
-  const hasHeavy = heavyStacks > 0;
-  const hasPiercing = (activePowers.PIERCING_SHOT || 0) > 0;
-  const hasCrit = critStacks > 0;
-  const hasEmp = (activePowers.EMP_BLAST || 0) > 0;
-  const hasRicochet = (activePowers.RICOCHET_ROUNDS || 0) > 0;
-  const hasBigHitbox = (activePowers.BIG_HITBOX || 0) > 0;
-  const hasShield = (activePowers.VAMPIRIC_SHIELD || 0) > 0 || (activePowers.TITAN_ARMOR || 0) > 0;
-  const hasCryo = (activePowers.SLOW_MO_DRONES || 0) > 0;
-  const hasAlly = (activePowers.ALLY_DRONE || 0) > 0;
-  const hasAutoLock = autoLockStacks > 0;
-  const hasUtility =
-    (activePowers.SCORE_BOOST || 0) > 0 ||
-    (activePowers.TIME_SURGE || 0) > 0 ||
-    (activePowers.JET_BOOTS || 0) > 0 ||
-    (activePowers.TURBO_SPRINT || 0) > 0;
-
-  let totalStacks = 0;
-  for (const val of Object.values(activePowers)) {
-    totalStacks += val || 0;
-  }
-
-  // Multi-tier Weapon Evolution (Mk-I to Apex Mk-VI)
-  const isMk2 = totalStacks >= 2;   // Nivel Táctico Avanzado
-  const isMk3 = totalStacks >= 5;   // Vanguardia Sobrecargada
-  const isMk4 = totalStacks >= 8;   // Prototipo Cuántico
-  const isMkV = totalStacks >= 12;  // Titán Hiper-Energizado
-  const isApex = totalStacks >= 16; // Ascensión Celestial / Singularity Apex
-
   const accentHex = getWeaponAccentHex(activePowers);
-  const chassisTint = isApex
-    ? '#090d16'
-    : isMkV
-      ? '#0f172a'
-      : isMk4
-        ? '#111e38'
-        : isMk3
-          ? '#1e293b'
-          : isMk2
-            ? '#162032'
-            : '#111827';
+  const hasAutoLock = (activePowers.SMART_AUTOLOCK || 0) > 0;
+  const hasOverdrive = (activePowers.RAPID_FIRE || 0) > 0 || (activePowers.HEAVY_DAMAGE || 0) > 0;
 
-  const railMetal = isApex
-    ? '#e2e8f0'
-    : isMkV
-      ? '#cbd5e1'
-      : isMk4
-        ? '#94a3b8'
-        : isMk2
-          ? '#64748b'
-          : '#374151';
-
-  const shieldColor = (activePowers.VAMPIRIC_SHIELD || 0) > 0 ? '#34d399' : '#38bdf8';
-
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     const dt = Math.min(delta, 0.05);
-    const t = state.clock.elapsedTime;
-    const firingBoost = SceneState.weaponRecoil > 0.05 ? 4.2 : 1.0;
 
     // Detect weapon switch request and animate lower-and-raise
     if (selectedWeapon !== targetWeaponRef.current) {
@@ -138,12 +84,6 @@ export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelPr
       }
     }
 
-    if (rootGroupRef.current) {
-      const dip = 1 - swapProgressRef.current;
-      rootGroupRef.current.position.y = -dip * 0.22;
-      rootGroupRef.current.rotation.x = -dip * 0.38;
-    }
-
     // Dynamic Overheat & Thermal Vent Dissipation
     if (SceneState.weaponRecoil > 0.05) {
       heatLevelRef.current = Math.min(1, heatLevelRef.current + dt * 1.8);
@@ -151,754 +91,126 @@ export const WeaponViewmodel = ({ muzzleRef, muzzleLightRef }: WeaponViewmodelPr
       heatLevelRef.current = Math.max(0, heatLevelRef.current - dt * 0.55);
     }
 
-    const heat = heatLevelRef.current;
-    if (ventMatRef.current) {
-      if (heat > 0.05) {
-        ventMatRef.current.emissive.setRGB(1.0, 0.22 + (1 - heat) * 0.45, (1 - heat) * 0.85);
-        ventMatRef.current.emissiveIntensity = 2.2 + heat * 4.2;
-      } else {
-        ventMatRef.current.emissive.set(accentHex);
-        ventMatRef.current.emissiveIntensity = 2.4;
-      }
+    if (rootGroupRef.current) {
+      const dip = 1 - swapProgressRef.current;
+      const reloadDip = SceneState.isReloading ? Math.sin(SceneState.reloadProgress * Math.PI) * 0.12 : 0;
+      rootGroupRef.current.position.y = -dip * 0.22 - reloadDip;
+      rootGroupRef.current.position.z = dip * 0.1;
+      rootGroupRef.current.rotation.x = -dip * 0.38 - reloadDip * 0.6;
     }
 
-    // Dynamic barrel muzzle tip position matching current archetype
+    // Dynamic barrel muzzle tip position matching current 3D archetype
+    const muzzleZ =
+      displayedWeapon === 'HEAVY_RAILGUN' || displayedWeapon === 'CRYO_BEAM'
+        ? -0.58
+        : displayedWeapon === 'SCATTER_SHOTGUN' || displayedWeapon === 'MICRO_MISSILES'
+          ? -0.44
+          : -0.50;
+
+    const muzzleY =
+      displayedWeapon === 'HEAVY_RAILGUN' ? 0.02 : displayedWeapon === 'SCATTER_SHOTGUN' ? 0.03 : 0.02;
+
     if (muzzleRef.current) {
-      muzzleRef.current.position.z =
-        displayedWeapon === 'HEAVY_RAILGUN' ? -0.66 : displayedWeapon === 'SCATTER_SHOTGUN' ? -0.48 : -0.58;
+      muzzleRef.current.position.set(0, muzzleY, muzzleZ);
     }
     if (muzzleLightRef.current) {
-      muzzleLightRef.current.position.z =
-        displayedWeapon === 'HEAVY_RAILGUN' ? -0.7 : displayedWeapon === 'SCATTER_SHOTGUN' ? -0.52 : -0.62;
+      muzzleLightRef.current.position.set(0, muzzleY + 0.01, muzzleZ - 0.04);
     }
 
-    const rotarySpeed = (4.5 + rapidStacks * 2.2) * firingBoost;
-    if (rotaryLeftRef.current) {
-      rotaryLeftRef.current.rotation.z += dt * rotarySpeed;
+    if (coilRef.current) {
+      coilRef.current.rotation.z += dt * (hasOverdrive ? 6.0 : 2.0);
     }
-    if (rotaryRightRef.current) {
-      rotaryRightRef.current.rotation.z -= dt * rotarySpeed;
-    }
-    if (rotaryQuad1Ref.current) {
-      rotaryQuad1Ref.current.rotation.z += dt * rotarySpeed * 1.15;
-    }
-    if (rotaryQuad2Ref.current) {
-      rotaryQuad2Ref.current.rotation.z -= dt * rotarySpeed * 1.15;
-    }
-
-    if (teslaLeftOrbRef.current && teslaRightOrbRef.current) {
-      const s = 1 + Math.sin(t * 11) * 0.25;
-      teslaLeftOrbRef.current.scale.setScalar(s);
-      teslaRightOrbRef.current.scale.setScalar(1 + Math.cos(t * 11) * 0.25);
-    }
-
     if (haloRingRef.current) {
-      haloRingRef.current.rotation.z += dt * (1.8 + totalStacks * 0.12);
-      haloRingRef.current.rotation.y = Math.sin(t * 1.5) * 0.14;
-    }
-    if (haloRing2Ref.current) {
-      haloRing2Ref.current.rotation.z -= dt * (2.4 + totalStacks * 0.16);
-      haloRing2Ref.current.rotation.x = Math.cos(t * 1.8) * 0.16;
-    }
-
-    if (prismGroupRef.current) {
-      prismGroupRef.current.rotation.z += dt * 1.4;
-      prismGroupRef.current.position.z = -0.52 + Math.sin(t * 2.8) * 0.015;
-    }
-
-    if (smartLaserRef.current) {
-      smartLaserRef.current.rotation.y = Math.sin(t * 6.0) * 0.035;
-      smartLaserRef.current.rotation.x = Math.cos(t * 5.0) * 0.025;
-    }
-
-    // Railgun pulse induction coils
-    for (let i = 0; i < railgunCoilRefs.current.length; i++) {
-      const coil = railgunCoilRefs.current[i];
-      if (!coil) continue;
-      const coilPulse = Math.sin(t * 9 + i * 1.4) * 0.5 + 0.5;
-      const mat = coil.material as THREE.MeshBasicMaterial;
-      if (mat) {
-        mat.opacity = 0.45 + coilPulse * 0.55;
-      }
-    }
-
-    if (magRef.current) {
-      if (SceneState.isReloading) {
-        const p = Math.max(0, Math.min(1, SceneState.reloadProgress));
-        const drop = p < 0.5 ? p * 2 : (1 - p) * 2;
-        magRef.current.position.y = -0.068 - drop * 0.16;
-        magRef.current.rotation.x = drop * 0.25;
-      } else {
-        magRef.current.position.y = -0.068;
-        magRef.current.rotation.x = 0;
-      }
+      haloRingRef.current.rotation.z -= dt * 3.0;
     }
   });
 
   return (
     <group ref={rootGroupRef}>
-      {/* Matte Gunmetal Main Chassis Receiver */}
-      <mesh position={[0, -0.005, 0.04]}>
-        <boxGeometry args={[0.084, 0.1, 0.44]} />
-        <meshStandardMaterial color={chassisTint} metalness={0.68} roughness={0.35} />
-      </mesh>
-
-      {/* Sculpted Upper Shroud */}
-      <mesh position={[0, 0.052, -0.06]}>
-        <boxGeometry args={[0.066, 0.036, 0.38]} />
-        <meshStandardMaterial color="#1f2937" metalness={0.68} roughness={0.32} />
-      </mesh>
-
-      {/* Angled Lower Foregrip */}
-      <mesh position={[0, -0.075, -0.15]} rotation={[0.28, 0, 0]}>
-        <boxGeometry args={[0.044, 0.085, 0.052]} />
-        <meshStandardMaterial color="#0f172a" metalness={0.5} roughness={0.55} />
-      </mesh>
-
-      {/* Animated Modular Plasma Magazine Cell */}
-      <group ref={magRef} position={[0, -0.068, 0.02]}>
-        {magStacks === 0 && (
-          <>
-            <mesh>
-              <boxGeometry args={[0.042, 0.09, 0.056]} />
-              <meshStandardMaterial color="#1e293b" metalness={0.75} roughness={0.3} />
-            </mesh>
-            <mesh position={[0, -0.01, 0.03]}>
-              <boxGeometry args={[0.018, 0.055, 0.004]} />
-              <meshBasicMaterial color={accentHex} toneMapped={false} />
-            </mesh>
-          </>
-        )}
-        {magStacks === 1 && (
-          <>
-            <mesh position={[0, -0.02, 0]}>
-              <boxGeometry args={[0.046, 0.13, 0.062]} />
-              <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.26} />
-            </mesh>
-            {[-0.014, 0.014].map((mx, idx) => (
-              <mesh key={`m1-${idx}`} position={[mx, -0.02, 0.032]}>
-                <boxGeometry args={[0.008, 0.095, 0.005]} />
-                <meshBasicMaterial color="#fbbf24" toneMapped={false} />
-              </mesh>
-            ))}
-          </>
-        )}
-        {magStacks === 2 &&
-          [-0.024, 0.024].map((mx, idx) => (
-            <group key={`m2-${idx}`} position={[mx, -0.02, 0]}>
-              <mesh>
-                <boxGeometry args={[0.034, 0.125, 0.058]} />
-                <meshStandardMaterial color="#1e293b" metalness={0.82} roughness={0.24} />
-              </mesh>
-              <mesh position={[0, 0, 0.031]}>
-                <boxGeometry args={[0.012, 0.095, 0.005]} />
-                <meshBasicMaterial color={idx === 0 ? '#fbbf24' : '#22d3ee'} toneMapped={false} />
-              </mesh>
-            </group>
-          ))}
-        {magStacks >= 3 && (
-          <group position={[0, -0.02, 0]}>
-            <mesh rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.054, 0.054, 0.085, 14]} />
-              <meshStandardMaterial color="#1e293b" metalness={0.85} roughness={0.22} />
-            </mesh>
-            <mesh rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.057, 0.057, 0.02, 14]} />
-              <meshBasicMaterial color="#fbbf24" toneMapped={false} />
-            </mesh>
-            <mesh position={[0, 0, 0.045]}>
-              <torusGeometry args={[0.038, 0.0045, 8, 20]} />
-              <meshBasicMaterial color={accentHex} toneMapped={false} />
-            </mesh>
-          </group>
-        )}
-      </group>
-
-      {/* Ventilated Barrel Shroud */}
-      <mesh position={[0, 0.015, -0.24]}>
-        <boxGeometry args={[0.072, 0.068, 0.24]} />
-        <meshStandardMaterial color={chassisTint} metalness={0.68} roughness={0.35} />
-      </mesh>
-
-      {/* 3 Side Heat-Sink Vents with Dynamic Thermal Glow & Overheat (Left & Right) */}
-      {[-0.17, -0.23, -0.29].map((zPos, i) => (
-        <group key={i}>
-          <mesh position={[-0.038, 0.018, zPos]}>
-            <boxGeometry args={[0.006, 0.022, 0.032]} />
-            <meshStandardMaterial
-              ref={i === 0 ? ventMatRef : undefined}
-              color={accentHex}
-              emissive={accentHex}
-              emissiveIntensity={2.6}
-            />
-          </mesh>
-          <mesh position={[0.038, 0.018, zPos]}>
-            <boxGeometry args={[0.006, 0.022, 0.032]} />
-            <meshStandardMaterial color={accentHex} emissive={accentHex} emissiveIntensity={2.6} />
-          </mesh>
-        </group>
-      ))}
-
-      {/* ========================================================= */}
-      {/* ARCHETYPE: PLASMA RIFLE (Balanced Precision Energy Carbine) */}
-      {/* ========================================================= */}
+      {/* Real 3D Weapon Models mounted according to active archetype */}
       {displayedWeapon === 'PLASMA_RIFLE' && (
-        <group>
-          {/* Twin Cylindrical Magnetic Rails Flanking Glowing Plasma Core Tube */}
-          <mesh position={[-0.024, 0.03, -0.34]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.01, 0.01, 0.34, 12]} />
-            <meshStandardMaterial color={railMetal} metalness={0.78} roughness={0.26} />
-          </mesh>
-          <mesh position={[0.024, 0.03, -0.34]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.01, 0.01, 0.34, 12]} />
-            <meshStandardMaterial color={railMetal} metalness={0.78} roughness={0.26} />
-          </mesh>
-          <mesh position={[0, 0.03, -0.32]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.012, 0.012, 0.34, 12]} />
-            <meshStandardMaterial color={accentHex} emissive={accentHex} emissiveIntensity={3} />
-          </mesh>
-          {/* Muzzle Brake */}
-          <mesh position={[0, 0.028, -0.52]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.022, 0.026, 0.08, 12]} />
-            <meshStandardMaterial color="#0f172a" metalness={0.78} roughness={0.28} />
-          </mesh>
-        </group>
+        <ModelGun
+          modelKey="WEAPON_RIFLE_PLASMA"
+          scale={0.32}
+          position={[0, -0.06, -0.05]}
+          rotation={[0, -Math.PI / 2, 0]}
+        />
       )}
 
-      {/* ========================================================= */}
-      {/* ARCHETYPE: SCATTER SHOTGUN (Heavy Wide-Bore Flak Cannon)   */}
-      {/* ========================================================= */}
       {displayedWeapon === 'SCATTER_SHOTGUN' && (
-        <group>
-          {/* Heavy Triangular Clustered Triple Barrels */}
-          {[
-            [-0.022, 0.042, -0.34],
-            [0.022, 0.042, -0.34],
-            [0, 0.016, -0.34],
-          ].map((bPos, idx) => (
-            <mesh key={`shotgun-barrel-${idx}`} position={bPos as [number, number, number]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.015, 0.018, 0.28, 12]} />
-              <meshStandardMaterial color={railMetal} metalness={0.82} roughness={0.22} />
-            </mesh>
-          ))}
-          {/* Flared Muzzle Spreader Choke */}
-          <mesh position={[0, 0.03, -0.46]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.044, 0.032, 0.06, 12]} />
-            <meshStandardMaterial color="#0f172a" metalness={0.88} roughness={0.2} />
-          </mesh>
-          {/* Heavy Ribbed Pump Fore-End */}
-          <mesh position={[0, -0.045, -0.22]}>
-            <boxGeometry args={[0.068, 0.052, 0.16]} />
-            <meshStandardMaterial color="#1e293b" metalness={0.65} roughness={0.4} />
-          </mesh>
-          {/* Side Heavy Flak Shell Magazine Tube */}
-          <mesh position={[0.042, 0.02, -0.16]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.014, 0.014, 0.22, 10]} />
-            <meshStandardMaterial color="#f59e0b" emissive="#d97706" emissiveIntensity={1.8} />
-          </mesh>
-        </group>
+        <ModelGun
+          modelKey="WEAPON_LAUNCHER_HEAVY"
+          scale={0.30}
+          position={[0, -0.07, -0.03]}
+          rotation={[0, -Math.PI / 2, 0]}
+        />
       )}
 
-      {/* ========================================================= */}
-      {/* ARCHETYPE: HEAVY RAILGUN (High-Voltage Hyper-Velocity Lance) */}
-      {/* ========================================================= */}
       {displayedWeapon === 'HEAVY_RAILGUN' && (
-        <group>
-          {/* Extended Monolithic Accelerator Shroud */}
-          <mesh position={[0, 0.028, -0.42]}>
-            <boxGeometry args={[0.064, 0.064, 0.44]} />
-            <meshStandardMaterial color={chassisTint} metalness={0.85} roughness={0.2} />
-          </mesh>
-          {/* Central Hyper-Core Energy Conduit */}
-          <mesh position={[0, 0.028, -0.44]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.014, 0.014, 0.48, 14]} />
-            <meshStandardMaterial color="#67e8f9" emissive="#06b6d4" emissiveIntensity={3.5} />
-          </mesh>
-          {/* 4 Sequential Magnetic Accelerator Coil Rings */}
-          {[-0.26, -0.34, -0.42, -0.5].map((zPos, idx) => (
-            <mesh
-              key={`coil-${idx}`}
-              ref={(el) => {
-                railgunCoilRefs.current[idx] = el;
-              }}
-              position={[0, 0.028, zPos]}
-              rotation={[Math.PI / 2, 0, 0]}
-            >
-              <torusGeometry args={[0.042, 0.0055, 8, 20]} />
-              <meshBasicMaterial color="#38bdf8" transparent opacity={0.85} toneMapped={false} />
-            </mesh>
-          ))}
-          {/* Dual Flanking Capacitor Banks */}
-          {[-0.044, 0.044].map((cx, idx) => (
-            <mesh key={`cap-${idx}`} position={[cx, 0.028, -0.22]}>
-              <boxGeometry args={[0.018, 0.042, 0.16]} />
-              <meshStandardMaterial color="#0284c7" emissive="#0284c7" emissiveIntensity={2.0} />
-            </mesh>
-          ))}
-          {/* Elongated Muzzle Accelerator Barrel */}
-          <mesh position={[0, 0.028, -0.64]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.024, 0.028, 0.06, 12]} />
-            <meshStandardMaterial color="#0f172a" metalness={0.9} roughness={0.18} />
-          </mesh>
-        </group>
+        <ModelGun
+          modelKey="WEAPON_SNIPER_RAILGUN"
+          scale={0.28}
+          position={[0, -0.05, -0.08]}
+          rotation={[0, -Math.PI / 2, 0]}
+        />
       )}
 
-      {/* ========================================================= */}
-      {/* ARCHETYPE: MICRO MISSILES (Swarm Battery Launcher)        */}
-      {/* ========================================================= */}
       {displayedWeapon === 'MICRO_MISSILES' && (
-        <group>
-          {/* Dual Multi-Cell Rocket Pods */}
-          {[-0.038, 0.038].map((px, pIdx) => (
-            <group key={`m-pod-${pIdx}`} position={[px, 0.035, -0.32]}>
-              <mesh>
-                <boxGeometry args={[0.048, 0.052, 0.26]} />
-                <meshStandardMaterial color="#1e293b" metalness={0.85} roughness={0.25} />
-              </mesh>
-              {/* 4 Cell Launch Tubes */}
-              {[
-                [-0.012, 0.012],
-                [0.012, 0.012],
-                [-0.012, -0.012],
-                [0.012, -0.012],
-              ].map(([tx, ty], tIdx) => (
-                <mesh key={`tube-${tIdx}`} position={[tx, ty, -0.132]} rotation={[Math.PI / 2, 0, 0]}>
-                  <cylinderGeometry args={[0.007, 0.007, 0.02, 8]} />
-                  <meshBasicMaterial color="#f97316" toneMapped={false} />
-                </mesh>
-              ))}
-            </group>
-          ))}
-          <mesh position={[0, 0.018, -0.28]}>
-            <boxGeometry args={[0.032, 0.024, 0.2]} />
-            <meshStandardMaterial color="#0f172a" metalness={0.7} roughness={0.3} />
-          </mesh>
-        </group>
+        <ModelGun
+          modelKey="WEAPON_LAUNCHER_HEAVY"
+          scale={0.32}
+          position={[0, -0.07, -0.03]}
+          rotation={[0, -Math.PI / 2, 0]}
+        />
       )}
 
-      {/* ========================================================= */}
-      {/* ARCHETYPE: CRYO BEAM (Sub-Zero Liquid Nitrogen Emitter)   */}
-      {/* ========================================================= */}
       {displayedWeapon === 'CRYO_BEAM' && (
-        <group>
-          {/* Central Cryogenic Flask Core */}
-          <mesh position={[0, 0.028, -0.32]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.022, 0.022, 0.28, 14]} />
-            <meshStandardMaterial
-              color="#38bdf8"
-              emissive="#0284c7"
-              emissiveIntensity={2.5}
-              roughness={0.1}
-              transparent
-              opacity={0.85}
-            />
-          </mesh>
-          {/* Frost Spiral Induction Rings */}
-          {[-0.24, -0.32, -0.4].map((zPos, idx) => (
-            <mesh key={`cryo-ring-${idx}`} position={[0, 0.028, zPos]}>
-              <torusGeometry args={[0.034, 0.004, 8, 18]} />
-              <meshBasicMaterial color="#a5f3fc" toneMapped={false} />
-            </mesh>
-          ))}
-          {/* Cryo Nozzle Emitter */}
-          <mesh position={[0, 0.028, -0.48]} rotation={[Math.PI / 2, 0, 0]}>
-            <coneGeometry args={[0.028, 0.06, 12]} />
-            <meshStandardMaterial color="#0f172a" metalness={0.88} roughness={0.2} />
-          </mesh>
-        </group>
+        <ModelGun
+          modelKey="WEAPON_SNIPER_RAILGUN"
+          scale={0.28}
+          position={[0, -0.05, -0.08]}
+          rotation={[0, -Math.PI / 2, 0]}
+        />
       )}
 
-      {/* Holographic Reflex Sight (Upgraded when CRITICAL_OPTICS active) */}
-      <group position={[0, 0.095, 0.04]}>
-        <mesh position={[0, -0.022, 0]}>
-          <boxGeometry args={[0.048, 0.012, 0.068]} />
-          <meshStandardMaterial color="#0f172a" metalness={0.65} roughness={0.38} />
-        </mesh>
-        <mesh position={[-0.023, 0.002, 0]}>
-          <boxGeometry args={[0.006, 0.042, 0.062]} />
-          <meshStandardMaterial color="#111827" metalness={0.65} roughness={0.38} />
-        </mesh>
-        <mesh position={[0.023, 0.002, 0]}>
-          <boxGeometry args={[0.006, 0.042, 0.062]} />
-          <meshStandardMaterial color="#111827" metalness={0.65} roughness={0.38} />
-        </mesh>
-        <mesh position={[0, 0.022, 0]}>
-          <boxGeometry args={[0.052, 0.006, 0.062]} />
-          <meshStandardMaterial color="#111827" metalness={0.65} roughness={0.38} />
-        </mesh>
-        {/* Holographic Aim Reticle Screen */}
-        <mesh position={[0, 0.002, 0]}>
-          <planeGeometry args={[0.04, 0.038]} />
-          <meshBasicMaterial
-            color={accentHex}
-            transparent
-            opacity={0.35}
-            side={THREE.DoubleSide}
-            blending={THREE.AdditiveBlending}
-            depthWrite={false}
-            toneMapped={false}
-          />
-        </mesh>
-        {hasCrit && (
-          <group position={[0, 0.002, 0.001]}>
-            <mesh>
-              <ringGeometry args={[0.008, 0.012, 16]} />
-              <meshBasicMaterial color="#facc15" toneMapped={false} />
-            </mesh>
-            {critStacks >= 2 && (
-              <mesh position={[0, 0, 0.001]} rotation={[0, 0, Math.PI / 4]}>
-                <ringGeometry args={[0.015, 0.017, 4]} />
-                <meshBasicMaterial color="#fef08a" toneMapped={false} />
-              </mesh>
-            )}
-          </group>
-        )}
-      </group>
-
-      {/* Power Visual Enhancements */}
-      {/* TRIPLE_SHOT: Flanking Outrigger Energy Pods */}
-      {hasTriple && (
-        <group>
-          {[-0.068, 0.068].map((sideX, idx) => (
-            <group key={`triple-${idx}`} position={[sideX, 0.028, -0.28]}>
-              <mesh rotation={[Math.PI / 2, 0, 0]}>
-                <cylinderGeometry args={[0.014, 0.014, 0.22, 10]} />
-                <meshStandardMaterial color={railMetal} metalness={0.75} roughness={0.28} />
-              </mesh>
-              <mesh position={[0, 0, -0.11]} rotation={[Math.PI / 2, 0, 0]}>
-                <cylinderGeometry args={[0.016, 0.016, 0.025, 10]} />
-                <meshStandardMaterial color={accentHex} emissive={accentHex} emissiveIntensity={2.5} />
-              </mesh>
-            </group>
-          ))}
-          {tripleStacks >= 2 &&
-            [-0.102, 0.102].map((sideX, idx) => (
-              <group key={`triple-ext-${idx}`} position={[sideX, 0.038, -0.24]} rotation={[0, 0, idx === 0 ? 0.25 : -0.25]}>
-                <mesh rotation={[Math.PI / 2, 0, 0]}>
-                  <cylinderGeometry args={[0.011, 0.011, 0.18, 10]} />
-                  <meshStandardMaterial color={railMetal} metalness={0.85} roughness={0.22} />
-                </mesh>
-                <mesh position={[0, 0, -0.09]} rotation={[Math.PI / 2, 0, 0]}>
-                  <cylinderGeometry args={[0.013, 0.013, 0.02, 10]} />
-                  <meshStandardMaterial color={accentHex} emissive={accentHex} emissiveIntensity={3.2} />
-                </mesh>
-              </group>
-            ))}
-        </group>
-      )}
-
-      {/* RAILGUN_SPEED: Top-Mounted Heavy Accelerator Rail */}
-      {hasRailgun && (
-        <group position={[0, 0.068, -0.28]}>
-          <mesh>
-            <boxGeometry args={[0.024, 0.018, 0.32]} />
-            <meshStandardMaterial color="#475569" metalness={0.85} roughness={0.2} />
-          </mesh>
-          <mesh position={[0, 0.01, 0]}>
-            <boxGeometry args={[0.01, 0.004, 0.3]} />
-            <meshBasicMaterial color="#38bdf8" toneMapped={false} />
-          </mesh>
-        </group>
-      )}
-
-      {/* RAPID_FIRE: Twin Whirring Rotary Barrel Gatling Cages */}
-      {hasRapid && (
-        <group position={[0, 0.028, -0.32]}>
-          <group ref={rotaryLeftRef} position={[-0.048, 0, 0]}>
-            <mesh rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.018, 0.018, 0.18, 6]} />
-              <meshStandardMaterial color="#334155" metalness={0.8} roughness={0.25} />
-            </mesh>
-          </group>
-          <group ref={rotaryRightRef} position={[0.048, 0, 0]}>
-            <mesh rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.018, 0.018, 0.18, 6]} />
-              <meshStandardMaterial color="#334155" metalness={0.8} roughness={0.25} />
-            </mesh>
-          </group>
-          {rapidStacks >= 3 && (
-            <>
-              <group ref={rotaryQuad1Ref} position={[-0.048, 0.042, 0]}>
-                <mesh rotation={[Math.PI / 2, 0, 0]}>
-                  <cylinderGeometry args={[0.014, 0.014, 0.16, 6]} />
-                  <meshStandardMaterial color="#475569" metalness={0.85} roughness={0.2} />
-                </mesh>
-              </group>
-              <group ref={rotaryQuad2Ref} position={[0.048, 0.042, 0]}>
-                <mesh rotation={[Math.PI / 2, 0, 0]}>
-                  <cylinderGeometry args={[0.014, 0.014, 0.16, 6]} />
-                  <meshStandardMaterial color="#475569" metalness={0.85} roughness={0.2} />
-                </mesh>
-              </group>
-            </>
-          )}
-        </group>
-      )}
-
-      {/* HEAVY_DAMAGE: Massive Reinforced Underbarrel Shroud */}
-      {hasHeavy && (
-        <group>
-          <mesh position={[0, -0.042, -0.26]}>
-            <boxGeometry args={[0.082, 0.045, 0.28]} />
-            <meshStandardMaterial color="#7f1d1d" metalness={0.7} roughness={0.3} />
-          </mesh>
-          {heavyStacks >= 2 && (
-            <mesh position={[0, -0.065, -0.24]}>
-              <boxGeometry args={[0.094, 0.02, 0.22]} />
-              <meshStandardMaterial color="#991b1b" emissive="#7f1d1d" emissiveIntensity={1.5} metalness={0.8} />
-            </mesh>
-          )}
-        </group>
-      )}
-
-      {/* PIERCING_SHOT: Sharp Lance-Like Prongs on Left & Right Barrel Sides */}
-      {hasPiercing && (
-        <group>
-          {[-0.038, 0.038].map((px, idx) => (
-            <mesh key={`pierce-${idx}`} position={[px, 0.028, -0.48]} rotation={[Math.PI / 2, 0, idx === 0 ? 0.2 : -0.2]}>
-              <coneGeometry args={[0.008, 0.14, 6]} />
-              <meshStandardMaterial color="#22d3ee" emissive="#06b6d4" emissiveIntensity={2.5} />
-            </mesh>
-          ))}
-        </group>
-      )}
-
-      {/* EMP_BLAST: Twin Pulsing Tesla Orbs on Rear Stock */}
-      {hasEmp && (
-        <group position={[0, 0.06, 0.14]}>
-          <mesh ref={teslaLeftOrbRef} position={[-0.042, 0, 0]}>
-            <sphereGeometry args={[0.016, 12, 12]} />
-            <meshBasicMaterial color="#60a5fa" toneMapped={false} />
-          </mesh>
-          <mesh ref={teslaRightOrbRef} position={[0.042, 0, 0]}>
-            <sphereGeometry args={[0.016, 12, 12]} />
-            <meshBasicMaterial color="#60a5fa" toneMapped={false} />
-          </mesh>
-        </group>
-      )}
-
-      {/* RICOCHET_ROUNDS: Prismatic Crystal Optics Node under Sight */}
-      {hasRicochet && (
-        <mesh position={[0, 0.068, -0.02]}>
-          <octahedronGeometry args={[0.022, 0]} />
-          <meshStandardMaterial color="#c084fc" emissive="#a855f7" emissiveIntensity={3} roughness={0.1} />
-        </mesh>
-      )}
-
-      {/* BIG_HITBOX: Flared Heavy Muzzle Compensator */}
-      {hasBigHitbox && (
-        <mesh position={[0, 0.028, -0.55]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.038, 0.024, 0.08, 12]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.82} roughness={0.24} />
-        </mesh>
-      )}
-
-      {/* VAMPIRIC_SHIELD / TITAN_ARMOR: Hexagonal Energy Shield Emitter */}
-      {hasShield && (
-        <group position={[0, 0.01, 0.18]} rotation={[0, 0, 0]}>
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[0.062, 0.0035, 6, 6]} />
-            <meshBasicMaterial color={shieldColor} toneMapped={false} />
-          </mesh>
-        </group>
-      )}
-
-      {/* SLOW_MO_DRONES: Right-Side Glowing Cryo-Coolant Canister */}
-      {hasCryo && (
-        <group position={[0.056, -0.01, 0.02]} rotation={[Math.PI / 2, 0, 0]}>
-          <mesh>
-            <cylinderGeometry args={[0.013, 0.013, 0.17, 10]} />
-            <meshStandardMaterial color="#34d399" emissive="#10b981" emissiveIntensity={2.2} />
-          </mesh>
-          <mesh position={[0, 0.086, 0]}>
-            <cylinderGeometry args={[0.015, 0.015, 0.02, 10]} />
-            <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.28} />
-          </mesh>
-          <mesh position={[0, -0.086, 0]}>
-            <cylinderGeometry args={[0.015, 0.015, 0.02, 10]} />
-            <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.28} />
-          </mesh>
-        </group>
-      )}
-
-      {/* ALLY_DRONE: Tactical Drone-Link Antenna Beacon on Right Upper Receiver Rail */}
-      {hasAlly && (
-        <group position={[0.044, 0.068, 0.06]}>
-          <mesh>
-            <boxGeometry args={[0.016, 0.014, 0.036]} />
-            <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.28} />
-          </mesh>
-          <mesh position={[0, 0.026, 0]}>
-            <cylinderGeometry args={[0.003, 0.004, 0.044, 8]} />
-            <meshStandardMaterial color="#94a3b8" metalness={0.88} roughness={0.2} />
-          </mesh>
-          <mesh position={[0, 0.052, 0]}>
-            <sphereGeometry args={[0.007, 10, 10]} />
-            <meshBasicMaterial color="#34d399" toneMapped={false} />
-          </mesh>
-        </group>
-      )}
-
-      {/* SMART_AUTOLOCK: Cybernetic AI Smart-Lock Optics Module & Forward Targeting Laser */}
+      {/* Futuristic Holographic Power Accents (Optics & Targeting Emitter) */}
       {hasAutoLock && (
-        <group position={[-0.046, 0.072, 0.02]}>
+        <group position={[0, 0.055, -0.22]}>
           <mesh>
-            <boxGeometry args={[0.024, 0.022, 0.08]} />
-            <meshStandardMaterial color="#0f172a" metalness={0.85} roughness={0.2} />
+            <ringGeometry args={[0.015, 0.02, 16]} />
+            <meshBasicMaterial color="#06b6d4" transparent opacity={0.85} toneMapped={false} />
           </mesh>
-          <mesh position={[0, 0.014, 0.01]}>
-            <boxGeometry args={[0.014, 0.008, 0.05]} />
-            <meshBasicMaterial color="#06b6d4" toneMapped={false} />
+          <mesh position={[0, 0, -0.04]}>
+            <cylinderGeometry args={[0.001, 0.001, 0.1, 6]} />
+            <meshBasicMaterial color="#06b6d4" transparent opacity={0.5} toneMapped={false} />
           </mesh>
-          <group ref={smartLaserRef}>
-            <mesh position={[0, 0, -0.042]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.006, 0.008, 0.012, 10]} />
-              <meshStandardMaterial color="#22d3ee" emissive="#06b6d4" emissiveIntensity={3.2} />
-            </mesh>
-            {/* Forward Autonomous Scanning Guide Beam */}
-            <mesh position={[0, 0, -0.65]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.0012, 0.0012, 1.2, 6]} />
-              <meshBasicMaterial color="#06b6d4" transparent opacity={0.45} toneMapped={false} />
-            </mesh>
-          </group>
         </group>
       )}
 
-      {/* UTILITY POWERS (SCORE_BOOST / TIME_SURGE / JET_BOOTS / TURBO_SPRINT): Rear Telemetry Fins */}
-      {hasUtility && (
-        <group position={[0, 0.042, 0.2]}>
-          {[-0.036, 0.036].map((fx, idx) => (
-            <group key={`fin-${idx}`} position={[fx, 0, 0]} rotation={[0, 0, idx === 0 ? 0.35 : -0.35]}>
-              <mesh>
-                <boxGeometry args={[0.006, 0.044, 0.08]} />
-                <meshStandardMaterial color="#1e293b" metalness={0.75} roughness={0.3} />
-              </mesh>
-              <mesh position={[0, 0.018, 0.01]}>
-                <boxGeometry args={[0.008, 0.006, 0.064]} />
-                <meshBasicMaterial color={accentHex} toneMapped={false} />
-              </mesh>
-            </group>
-          ))}
-        </group>
-      )}
-
-      {/* MK-II Tier Upgrade (2+ total stacks): Sleek Titanium Upper Trim Rails */}
-      {isMk2 &&
-        [-0.036, 0.036].map((tx, idx) => (
-          <mesh key={`mk2-${idx}`} position={[tx, 0.068, -0.06]}>
-            <boxGeometry args={[0.008, 0.01, 0.34]} />
-            <meshStandardMaterial color="#cbd5e1" metalness={0.9} roughness={0.18} />
-          </mesh>
-        ))}
-
-      {/* MK-III Tier Upgrade (5+ total stacks): Glowing Side Energy Radiator Wings */}
-      {isMk3 &&
-        [-0.066, 0.066].map((wx, idx) => (
-          <group key={`mk3-${idx}`} position={[wx, 0.036, -0.22]} rotation={[0, 0, idx === 0 ? 0.28 : -0.28]}>
-            <mesh>
-              <boxGeometry args={[0.036, 0.006, 0.14]} />
-              <meshStandardMaterial color="#334155" metalness={0.82} roughness={0.24} />
-            </mesh>
-            <mesh position={[idx === 0 ? -0.014 : 0.014, 0, 0]}>
-              <boxGeometry args={[0.006, 0.008, 0.12]} />
-              <meshBasicMaterial color={accentHex} toneMapped={false} />
-            </mesh>
-          </group>
-        ))}
-
-      {/* MK-IV Tier Upgrade (8+ total stacks): Orbiting Holographic Barrel Halo Ring */}
-      {isMk4 && (
-        <group ref={haloRingRef} position={[0, 0.028, -0.4]}>
+      {hasOverdrive && (
+        <group ref={haloRingRef} position={[0, 0.02, -0.38]}>
           <mesh>
-            <torusGeometry args={[0.064, 0.0038, 8, 28]} />
-            <meshBasicMaterial
-              color={accentHex}
-              transparent
-              opacity={0.82}
-              blending={THREE.AdditiveBlending}
-              depthWrite={false}
-              toneMapped={false}
-            />
+            <torusGeometry args={[0.045, 0.003, 8, 24]} />
+            <meshBasicMaterial color={accentHex} transparent opacity={0.65} toneMapped={false} />
           </mesh>
         </group>
       )}
 
-      {/* MK-V Tier Upgrade (12+ total stacks): Dual Counter-Rotating Rings & Heavy Heat Sinks */}
-      {isMkV && (
-        <group>
-          {/* Secondary Concentric Counter-Rotating Halo Ring */}
-          <group ref={haloRing2Ref} position={[0, 0.028, -0.44]}>
-            <mesh>
-              <torusGeometry args={[0.084, 0.0035, 8, 32]} />
-              <meshBasicMaterial
-                color={accentHex}
-                transparent
-                opacity={0.7}
-                blending={THREE.AdditiveBlending}
-                depthWrite={false}
-                toneMapped={false}
-              />
-            </mesh>
-          </group>
-          {/* High-Yield Lateral Capacitor Banks */}
-          {[-0.054, 0.054].map((hx, idx) => (
-            <mesh key={`mkv-cap-${idx}`} position={[hx, 0.055, -0.12]}>
-              <boxGeometry args={[0.014, 0.022, 0.16]} />
-              <meshStandardMaterial color="#f59e0b" emissive="#d97706" emissiveIntensity={2.5} metalness={0.9} />
-            </mesh>
-          ))}
-          {/* Underbarrel Reinforced Harmonic Stabilizer Fin */}
-          <mesh position={[0, -0.062, -0.32]} rotation={[0.15, 0, 0]}>
-            <boxGeometry args={[0.018, 0.045, 0.16]} />
-            <meshStandardMaterial color="#0284c7" emissive="#0ea5e9" emissiveIntensity={2.2} metalness={0.8} />
-          </mesh>
-        </group>
-      )}
-
-      {/* APEX MK-VI Tier Upgrade (16+ total stacks): Celestial Zero-Gravity Orbiting Focusing Prisms */}
-      {isApex && (
-        <group>
-          {/* Floating Zero-G Prisms Orbiting Muzzle */}
-          <group ref={prismGroupRef} position={[0, 0.028, -0.52]}>
-            {[0, (2 * Math.PI) / 3, (4 * Math.PI) / 3].map((angle, idx) => (
-              <group
-                key={`apex-prism-${idx}`}
-                position={[Math.cos(angle) * 0.095, Math.sin(angle) * 0.095, 0]}
-                rotation={[0, 0, angle]}
-              >
-                <mesh>
-                  <octahedronGeometry args={[0.016, 0]} />
-                  <meshStandardMaterial
-                    color="#ffffff"
-                    emissive={accentHex}
-                    emissiveIntensity={4.2}
-                    roughness={0.1}
-                    metalness={0.9}
-                  />
-                </mesh>
-                <mesh position={[0, 0, -0.02]}>
-                  <cylinderGeometry args={[0.002, 0.002, 0.05, 6]} />
-                  <meshBasicMaterial color={accentHex} transparent opacity={0.65} toneMapped={false} />
-                </mesh>
-              </group>
-            ))}
-          </group>
-          {/* Longitudinal Radiant Power Conduits Running Flank */}
-          {[-0.045, 0.045].map((cx, idx) => (
-            <mesh key={`apex-conduit-${idx}`} position={[cx, 0.012, -0.14]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.004, 0.004, 0.46, 8]} />
-              <meshStandardMaterial color="#ffffff" emissive={accentHex} emissiveIntensity={3.8} />
-            </mesh>
-          ))}
-        </group>
-      )}
-
-      {/* Muzzle Flash + Dynamic Point Light (exact barrel tip preserved) */}
-      <mesh ref={muzzleRef} position={[0, 0.028, -0.58]} visible={false}>
-        <octahedronGeometry args={[0.068, 0]} />
+      {/* Muzzle Flash Marker (Preserves Raycast & Exact World Coordinates) */}
+      <mesh ref={muzzleRef} position={[0, 0.02, -0.50]} visible={false}>
+        <octahedronGeometry args={[0.05, 0]} />
         <meshBasicMaterial color={accentHex} transparent opacity={0.92} toneMapped={false} />
       </mesh>
-      <pointLight ref={muzzleLightRef} position={[0, 0.03, -0.62]} color={accentHex} intensity={0} distance={8} decay={2} />
+
+      {/* Dynamic Muzzle Flash Point Light */}
+      <pointLight
+        ref={muzzleLightRef}
+        position={[0, 0.03, -0.54]}
+        color={accentHex}
+        intensity={0}
+        distance={8}
+        decay={2}
+      />
     </group>
   );
 };
