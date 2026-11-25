@@ -1077,7 +1077,11 @@ const DroneMesh = ({ target, currentRound }: { target: Target; currentRound: num
         target.position[0] = (relX / rad) * maxRad;
         target.position[2] = (relZ / rad) * maxRad - 10;
       }
-      target.position[1] = THREE.MathUtils.clamp(target.position[1], archetype === 'SNIPER' ? 11 : 2.5, 24);
+      target.position[1] = THREE.MathUtils.clamp(
+        target.position[1],
+        isGroundUnit ? 1.0 : (archetype === 'PHANTOM_SNIPER' ? 11 : 2.5),
+        24
+      );
     } else {
       if (target.position[0] > 40) {
         target.position[0] = 40;
@@ -1090,8 +1094,8 @@ const DroneMesh = ({ target, currentRound }: { target: Target; currentRound: num
       if (target.position[1] > 25) {
         target.position[1] = 25;
         if (target.velocity) target.velocity[1] = -Math.abs(target.velocity[1]);
-      } else if (target.position[1] < 3.0) {
-        target.position[1] = 3.0;
+      } else if (target.position[1] < (isGroundUnit ? 1.0 : 2.8)) {
+        target.position[1] = isGroundUnit ? 1.25 : 2.8;
         if (target.velocity) target.velocity[1] = Math.abs(target.velocity[1]);
       }
 

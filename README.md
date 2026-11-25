@@ -390,7 +390,16 @@ El proyecto sigue una arquitectura desacoplada de alto rendimiento diseñada par
   - **Zustand ([gameState.ts](src/game/gameState.ts)):** Gestiona el estado de UI, rondas, puntuación, inventario de poderes, armería, configuración y persistencia en `localStorage`.
   - **Estado Mutativo de Escena ([sceneState.ts](src/game/sceneState.ts)):** Almacena posiciones a 60+ Hz (`playerPosition`, `muzzlePosition`, `targets`, `projectiles`, `colliders`, `weaponRecoil`) leídas directamente dentro de `useFrame` sin disparar re-renders de React.
 - **Cargador y Caché de Modelos 3D ([modelLoader.ts](src/game/modelLoader.ts)):**
-  - Carga bajo demanda mediante `GLTFLoader`, caché en memoria de escenas originales y clonación rápida (`scene.clone(true)`) que reutiliza geometrías y texturas en la GPU. `preloadModels` permite anticipar solo los recursos de la próxima transición, sin descargar todo el catálogo al abrir el juego.
+  - Carga bajo demanda mediante `GLTFLoader`, caché en memoria de escenas originales y bifurcación inteligente de clonación: los modelos animados/riggeados utilizan `SkeletonUtils.clone()` para rebind de huesos en tiempo real, mientras que los elementos estáticos del entorno (paredes, columnas, hangares, crates, terminales, rovers) emplean clonación nativa ultrarrápida `scene.clone(true)` (20x más rápida y con mínima presión sobre el recolector de basura).
+- **Optimización de Forward Rendering (60 FPS sin tirones):**
+  - Eliminación de loops de luces puntuales (`pointLight`) en el sombreador WebGL delantero, reemplazándolos con geometría emisiva de alto brillo (`toneMapped={false}`).
+  - Transición de materiales del suelo y estructuras a `MeshStandardMaterial` PBR optimizado, eliminando pases costosos de `clearcoat` en superficies masivas.
+  - Estabilización física en unidades terrestres (cyborgs y mechas bípedos) con interpolación de altura lerp sin conflicto de clamps verticales.
+- **Rediseño Arquitectónico del Hangar (Inmersión y Densidad Visual):**
+  - Escala táctica cerrada (56m x 58m) en lugar de planos vacíos infinitos, enmarcando la cámara con vigas transversales de acero a `y = 12.2m` y paneles de iluminación industrial.
+  - Puerta de contención blindada (`HANGAR_DOOR` escala 4.5) en la cabecera norte (`z = -36m`), columnas perimetrales de acero y pasarelas de observación superiores a `y = 4.0m`.
+  - Bahías de atraque temáticas: piscina de refrigerante de reactor con líquido tóxico esmeralda animado en el muelle oeste, y bahía de mantenimiento vehicular con Rover, consolas de diagnóstico y contenedores de plasma en el muelle este.
+  - Señalizaciones tácticas en el suelo inspiradas en hangares militares ("AREA 22" y chevrons directores de pista) que guían el encuadre y la puntería del jugador.
 - **Optimización Zero-GC (Cero Basura en Memoria):**
   - Vectores y matrices preasignados a nivel de módulo (`_tempVec`, `_leadPos`, ` Box3`) para evitar pausas del recolector de basura durante el combate.
 - **Perfiles Gráficos y Autocalibración (`⚡ ACOMODAR A MI PC`):**

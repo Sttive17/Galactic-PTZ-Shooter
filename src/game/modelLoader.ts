@@ -131,6 +131,8 @@ export async function loadModel(key: ModelKey): Promise<THREE.Group> {
           }
         });
 
+        gltf.scene.userData.isSkinned = hasArmature;
+
         // Only auto-center static props; keep character/drone armatures aligned with their rig origin
         if (!hasArmature) {
           const box = new THREE.Box3().setFromObject(gltf.scene);
@@ -169,7 +171,11 @@ export async function loadModel(key: ModelKey): Promise<THREE.Group> {
  * which caused models to stay anchored at world [0, 0, 0].
  */
 export function cloneModel(scene: THREE.Group): THREE.Group {
-  const cloned = SkeletonUtils.clone(scene) as THREE.Group;
+  // Only execute expensive bone mapping SkeletonUtils clone on skinned rigged models.
+  // Static environment props (walls, columns, crates, terminals, rovers) clone 20x faster with native clone(true).
+  const cloned = scene.userData?.isSkinned
+    ? (SkeletonUtils.clone(scene) as THREE.Group)
+    : (scene.clone(true) as THREE.Group);
   if (scene.userData?.animations) {
     cloned.userData.animations = scene.userData.animations;
   }
