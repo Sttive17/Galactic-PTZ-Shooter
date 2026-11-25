@@ -1909,6 +1909,7 @@ const LivingAirborneFlock = ({ color }: LivingAirborneFlockProps) => {
 
 export const Environment = () => {
   const currentMap = useGameStore((state) => state.currentMap);
+  const mode = useGameStore((state) => state.mode);
   const graphics = useGameStore((state) => state.settings.graphics);
   const { theme, obstacles } = currentMap;
   const currentDustCount = graphics?.dustCount ?? 80;
@@ -2279,7 +2280,7 @@ export const Environment = () => {
           ))}
 
           {/* 6 Floating Antigravity Monoliths with Pulsing Alien Runes */}
-          {LANDMARK_ANGLES_6.map((ang, idx) => {
+          {LANDMARK_ANGLES_6.slice(0, 2).map((ang, idx) => {
             const mx = Math.cos(ang + 0.3) * 51;
             const mz = Math.sin(ang + 0.3) * 51 - 10;
             return (
@@ -2303,7 +2304,7 @@ export const Environment = () => {
           })}
 
           {/* 4 Tall Perimeter Energy Conduit Towers with Rising Pulse Rings */}
-          {CONDUIT_TOWER_ANGLES.map((angle, idx) => {
+          {CONDUIT_TOWER_ANGLES.slice(0, 2).map((angle, idx) => {
             const tx = Math.cos(angle) * 57;
             const tz = Math.sin(angle) * 57 - 10;
             const ringColor = idx % 2 === 0 ? theme.primaryGlow : theme.secondaryGlow;
@@ -2537,7 +2538,7 @@ export const Environment = () => {
       })}
 
       {/* Ambient Hangar Drones, Gantries & Holographic Pylons (Galactic & Orbital Chapters) */}
-      {(isDeepSpace || theme.skyMode === 'ORBITAL_HORIZON') && (
+      {mode === 'MENU' && (isDeepSpace || theme.skyMode === 'ORBITAL_HORIZON') && (
         <>
           {CARGO_DRONE_CONFIGS.map((cfg, idx) => (
             <group

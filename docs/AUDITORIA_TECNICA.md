@@ -34,6 +34,8 @@ Se revisaron el `README.md`, los componentes React, el estado Zustand, los siste
 3. Se reforzó el paquete visual prioritario: plataforma de hangar para la Vanguard, módulos GLB de suelo y escaleras en el capítulo inicial, drones de logística que usan los assets nuevos y rigs visibles para identificar los jefes en combate.
 4. Se añadió un árbol de doctrina persistente con dos ramas y cuatro nodos desbloqueables. Sus efectos modifican enfriamientos de EMP/Frenesí, duración de Frenesí, nanitas recogidas y regeneración de escudo.
 5. Se corrigió la inicialización de misión para que el escudo y casco de las mejoras permanentes se apliquen también al reiniciar, comenzar una misión o elegir un nivel desde el mapa.
+6. Se simplificó la composición de las arenas: cobertura simétrica, perímetro definido, dos pads visibles y variación mínima en anclajes seguros. Los adornos de hangar y drones ambientales quedan para el menú, no para tapar el combate.
+7. Los modelos de enemigo ahora nacen en la posición lógica de su entidad y reciben una animación local de propulsión/balanceo sin poder separarse de la IA. La voz táctica queda desactivada por defecto, se eliminó el ping periódico y las alarmas repetitivas se sustituyeron por feedback discreto.
 
 ## Riesgos y trabajo técnico pendiente
 

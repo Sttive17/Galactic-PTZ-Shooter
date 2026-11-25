@@ -117,7 +117,7 @@ export const PowerSelection = () => {
 
   const handleChoose = useCallback((id: PowerId) => {
     initAudio();
-    playSound('alarm');
+    playSound('ui');
     const canvas = document.querySelector('canvas');
     if (getDeviceProfile().inputMode === 'pointer' && canvas?.requestPointerLock) {
       Promise.resolve(canvas.requestPointerLock()).catch(() => {});

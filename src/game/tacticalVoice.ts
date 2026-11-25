@@ -31,29 +31,8 @@ const CUE_PHRASES: Record<VoiceCue, string> = {
 
 let lastSpeechTime = 0;
 
-export function speakTacticalCue(cue: VoiceCue): void {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return;
-
-  const prefs = useGameStore.getState().preferences;
-  if (prefs && prefs.muted) return;
-
-  const now = performance.now();
-  if (now - lastSpeechTime < 3200) return; // Prevent audio overlap
-
-  try {
-    const text = CUE_PHRASES[cue];
-    if (!text) return;
-
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.15;
-    utterance.pitch = 1.1;
-    utterance.volume = Math.min(1.0, (prefs?.masterVolume ?? 0.8) * 0.9);
-    utterance.lang = 'es-ES';
-
-    lastSpeechTime = now;
-    window.speechSynthesis.speak(utterance);
-  } catch {
-    // Speech synthesis unavailable or blocked
-  }
+export function speakTacticalCue(_cue: VoiceCue): void {
+  // Voice synthesis completely silenced. Robotic browser TTS interrupted combat
+  // and annoyed players. High-fidelity audio synthesizer SFX handle all tactical audio.
+  return;
 }

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import type { RefObject } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -18,12 +18,54 @@ const ModelCraft = ({
   position?: [number, number, number];
 }) => {
   const model = usePreloadedModel(modelKey);
-  if (!model) return null;
   const isDrone = modelKey === 'DRONE_GUNNER' || modelKey === 'DRONE_SCOUT';
   const isHeavyUnit = modelKey === 'ROBOT_WALKER' || modelKey === 'HEAVY_CYBORG';
+  const craftRef = useRef<THREE.Group>(null);
+  const motionPhase = modelKey.length * 0.61;
+
+  // Set up animation mixer for rigged units (drones, cyborgs, walkers)
+  const mixer = useMemo(() => {
+    if (!model) return null;
+    const anims = model.userData?.animations as THREE.AnimationClip[] | undefined;
+    if (!anims || anims.length === 0) return null;
+    const m = new THREE.AnimationMixer(model);
+    const clip =
+      anims.find((a) => /idle/i.test(a.name)) ||
+      anims.find((a) => /run|walk|fly/i.test(a.name)) ||
+      anims[0];
+    if (clip) {
+      const action = m.clipAction(clip);
+      action.play();
+    }
+    return m;
+  }, [model]);
+
+  useEffect(() => {
+    return () => {
+      mixer?.stopAllAction();
+    };
+  }, [mixer]);
+
+  // The GLB stays inside the moving target's transform. This local motion only
+  // adds organic hover/float to the craft; the parent owns world coordinates.
+  useFrame(({ clock }, delta) => {
+    if (mixer) {
+      mixer.update(Math.min(delta, 0.05));
+    }
+    if (!craftRef.current) return;
+    const t = clock.elapsedTime + motionPhase;
+    craftRef.current.position.y = position[1] + (isDrone ? Math.sin(t * 3.2) * 0.11 : Math.sin(t * 1.8) * 0.025);
+    craftRef.current.rotation.z = rotation[2] + (isDrone ? Math.sin(t * 2.1) * 0.07 : 0);
+    craftRef.current.rotation.x = rotation[0] + (isDrone ? Math.cos(t * 1.65) * 0.035 : 0);
+    if (isHeavyUnit) {
+      craftRef.current.rotation.y = rotation[1] + Math.sin(t * 1.1) * 0.035;
+    }
+  });
+
+  if (!model) return null;
 
   return (
-    <group scale={scale} rotation={rotation} position={position}>
+    <group ref={craftRef} scale={scale} rotation={rotation} position={position}>
       <primitive object={model} />
       {isDrone && (
         <>

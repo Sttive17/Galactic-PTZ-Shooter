@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGameStore, getRoundTotalTargets, isChapterBossLevel } from '../../game/gameState';
-import { playSound, setAudioMood, playTensionAlarm, playShieldBreak, playPortalOpen } from '../../game/AudioSystem';
+import { setAudioMood, playTensionAlarm, playShieldBreak, playPortalOpen } from '../../game/AudioSystem';
 import { getDoctrineModifiers } from '../../game/armory';
 import type { SoundMood } from '../../game/AudioSystem';
 
@@ -98,7 +98,6 @@ export const GameManager = () => {
 
         if (targetsDestroyed > 0 && targetsDestroyed >= totalTargets) {
           checking.current = true;
-          playSound('alarm');
           if (mode === 'TRAINING') {
             advanceTrainingWave();
             debounceTimer = window.setTimeout(() => {

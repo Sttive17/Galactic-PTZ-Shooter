@@ -50,7 +50,7 @@ export const PortalCinematic = () => {
       arrivalCommittedRef.current = true;
       commitPortalArrival();
       setPhase('ARRIVAL');
-      playSound('alarm');
+      playSound('ui');
     }, 1100);
 
     const endTimer = window.setTimeout(() => {

@@ -1229,15 +1229,41 @@ export function generateMapForLevel(level: number, randomizeSalt = false): Gener
 
   buildParkourLayout(layoutName, seed, obstacles, rng);
 
-  const targetGroundCount = 14 + Math.floor(rng() * 5);
+  // Keep the vertical traversal data available for future mission variants,
+  // but play standard missions in a readable combat bowl: four cover lanes,
+  // a clear central duel space and two obvious traversal points.
+  obstacles.length = 0;
+  const authoredCover = [
+    { id: 'cover-nw', kind: 'wall' as const, x: -18, z: -18, w: 8.5, h: 4.8, d: 2.0, accent: 'primary' as const },
+    { id: 'cover-ne', kind: 'wall' as const, x: 18, z: -18, w: 8.5, h: 4.8, d: 2.0, accent: 'secondary' as const },
+    { id: 'cover-sw', kind: 'barrier' as const, x: -20, z: 2, w: 6.5, h: 1.6, d: 1.5, accent: 'secondary' as const },
+    { id: 'cover-se', kind: 'barrier' as const, x: 20, z: 2, w: 6.5, h: 1.6, d: 1.5, accent: 'primary' as const },
+    { id: 'cover-west', kind: 'tower' as const, x: -34, z: -34, w: 3.6, h: 8.5, d: 3.6, accent: 'primary' as const },
+    { id: 'cover-east', kind: 'tower' as const, x: 34, z: -34, w: 3.6, h: 8.5, d: 3.6, accent: 'secondary' as const },
+  ];
+  for (const cover of authoredCover) {
+    obstacles.push(createMapBox(`authored-${seed}-${cover.id}`, cover.kind, cover.x, 0, cover.z, cover.w, cover.h, cover.d, cover.accent));
+  }
+  for (const [index, [x, z]] of ([[-11, -34], [11, -34]] as [number, number][]).entries()) {
+    obstacles.push(createMapBox(`authored-jump-${seed}-${index}`, 'jumppad', x, 0, z, 2.6, 0.25, 2.6, index === 0 ? 'primary' : 'secondary'));
+  }
+
+  // Keep the sightline legible: a small number of deliberate cover zones is
+  // more useful (and more attractive) than filling the arena with random props.
+  const targetGroundCount = 2;
   const arenaCenterZ = -10;
-  const maxArenaRadius = 46;
   const spawnX = 0;
   const spawnZ = 14;
   const spawnClearRadius = 9.5;
   const portalPlazaClearRadius =
     safeLevel === 10 || safeLevel === 20 || safeLevel === 30 || safeLevel === 40 ? 6.5 : 0;
   const paddingBetweenBoxes = 2.2;
+  const coverAnchors: [number, number][] = [
+    [-25, 4], [25, 4],
+    [-28, -22], [28, -22],
+    [-11, -39], [11, -39],
+    [0, -45], [0, 22],
+  ];
 
   let groundCreated = 0;
   let attempts = 0;
@@ -1274,10 +1300,9 @@ export function generateMapForLevel(level: number, randomizeSalt = false): Gener
       h = randRange(7.0, 12.0, rng);
     }
 
-    const angle = rng() * Math.PI * 2;
-    const dist = Math.sqrt(rng()) * maxArenaRadius;
-    const x = Math.cos(angle) * dist;
-    const z = arenaCenterZ + Math.sin(angle) * dist;
+    const [anchorX, anchorZ] = coverAnchors[groundCreated % coverAnchors.length];
+    const x = anchorX + randRange(-2.2, 2.2, rng);
+    const z = anchorZ + randRange(-1.8, 1.8, rng);
 
     const distToSpawn = Math.hypot(x - spawnX, z - spawnZ);
     if (distToSpawn < spawnClearRadius + Math.max(w, d) * 0.5) continue;

@@ -128,6 +128,7 @@ export interface UserPreferences {
   masterVolume: number;
   musicVolume: number;
   sfxVolume: number;
+  voiceEnabled: boolean;
   muted: boolean;
 }
 
@@ -145,6 +146,7 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
   masterVolume: 0.7,
   musicVolume: 0.7,
   sfxVolume: 0.85,
+  voiceEnabled: false,
   muted: false,
 };
 
@@ -166,6 +168,7 @@ function sanitizePreferences(partial: Partial<UserPreferences>, base: UserPrefer
     masterVolume: clampNumber(partial.masterVolume, 0, 1, base.masterVolume),
     musicVolume: clampNumber(partial.musicVolume, 0, 1, base.musicVolume),
     sfxVolume: clampNumber(partial.sfxVolume, 0, 1, base.sfxVolume),
+    voiceEnabled: typeof partial.voiceEnabled === 'boolean' ? partial.voiceEnabled : base.voiceEnabled,
     muted: typeof partial.muted === 'boolean' ? partial.muted : base.muted,
   };
 }
@@ -399,7 +402,6 @@ export const useGameStore = create<GameState>((set) => ({
 
   setCinematicState: (cinematicState) => set({ cinematicState }),
   triggerBossIntro: (activeBossIntro) => {
-    playSound('alarm');
     triggerHaptic('bossLaser');
     speakTacticalCue('titan_detected');
     set({ cinematicState: 'BOSS_INTRO', activeBossIntro });

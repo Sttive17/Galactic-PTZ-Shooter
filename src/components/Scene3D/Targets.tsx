@@ -1232,9 +1232,7 @@ const DroneMesh = ({ target, currentRound }: { target: Target; currentRound: num
     }
 
     groupRef.current.position.set(...target.position);
-    if (archetype !== 'SCOUT') {
-      groupRef.current.lookAt(playerPos.x, target.position[1], playerPos.z);
-    }
+    groupRef.current.lookAt(playerPos.x, target.position[1], playerPos.z);
 
     if (ring1Ref.current) {
       ring1Ref.current.rotation.x += delta * 2.2;
@@ -1261,7 +1259,7 @@ const DroneMesh = ({ target, currentRound }: { target: Target; currentRound: num
   const isDamaged = target.health < target.maxHealth;
 
   return (
-    <group ref={groupRef} scale={target.scale}>
+    <group ref={groupRef} position={target.position} scale={target.scale}>
       <DroneVisual
         archetype={archetype}
         isTargeted={isTargeted}

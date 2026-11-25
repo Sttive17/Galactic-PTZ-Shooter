@@ -407,7 +407,6 @@ class SynthAudio {
   private ambientFilter: BiquadFilterNode | null = null;
   private ambientDrones: OscillatorNode[] = [];
   private ambientLfo: OscillatorNode | null = null;
-  private sonarInterval: number | null = null;
   private heartbeatInterval: number | null = null;
 
   // Track decoding & caching
@@ -1301,25 +1300,8 @@ class SynthAudio {
       this.updateBiomeAmbience(this.activeChapter);
     }
 
-    // Subtle periodic tactical radar ping every 5.5s
-    this.sonarInterval = window.setInterval(() => {
-      if (!this.ctx || !this.sfxGain || this.ctx.state !== 'running' || this.muted) return;
-      const t = this.ctx.currentTime;
-      const ping = this.ctx.createOscillator();
-      const pingGain = this.ctx.createGain();
-      ping.type = 'sine';
-      ping.frequency.setValueAtTime(1320, t);
-      ping.frequency.exponentialRampToValueAtTime(880, t + 0.35);
-
-      pingGain.gain.setValueAtTime(0.0001, t);
-      pingGain.gain.linearRampToValueAtTime(0.025, t + 0.02);
-      pingGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
-
-      ping.connect(pingGain);
-      pingGain.connect(this.sfxGain);
-      ping.start(t);
-      ping.stop(t + 0.65);
-    }, 5500);
+    // No periodic radar pings: they compete with combat feedback and become
+    // fatiguing in longer sessions. Radar remains purely visual in the HUD.
   }
 
   // Dynamic Procedural Biome Synthesizer Filter & Oscillator Retuning
@@ -1887,10 +1869,6 @@ class SynthAudio {
   }
 
   dispose() {
-    if (this.sonarInterval !== null) {
-      clearInterval(this.sonarInterval);
-      this.sonarInterval = null;
-    }
     if (this.heartbeatInterval !== null) {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;

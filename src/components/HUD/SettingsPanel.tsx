@@ -738,6 +738,27 @@ export const SettingsPanel = ({
                   className="w-full accent-cyan-400 bg-slate-800 h-1.5 appearance-none rounded-full outline-none cursor-pointer"
                 />
               </div>
+
+              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-4">
+                <div>
+                  <div className="text-xs text-cyan-300 font-bold tracking-wider">VOZ TÁCTICA</div>
+                  <p className="mt-1 text-[10px] text-slate-400">Anuncios hablados de combate. Desactivada por defecto.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    playSound('ui');
+                    updatePreferences({ voiceEnabled: !preferences.voiceEnabled });
+                  }}
+                  className={`shrink-0 px-3 py-1 text-[11px] font-bold rounded border cursor-pointer ${
+                    preferences.voiceEnabled
+                      ? 'border-cyan-500 bg-cyan-950/60 text-cyan-300'
+                      : 'border-slate-700 bg-slate-800/50 text-slate-400'
+                  }`}
+                >
+                  {preferences.voiceEnabled ? 'ACTIVADA' : 'DESACTIVADA'}
+                </button>
+              </div>
             </div>
 
             {/* Sensitivity */}
