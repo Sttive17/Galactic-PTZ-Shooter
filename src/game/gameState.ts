@@ -621,7 +621,7 @@ export const useGameStore = create<GameState>((set) => ({
     SceneState.isReloading = false;
     SceneState.reloadProgress = 0;
 
-    const shouldDeploy = state.currentRound === 1;
+    const shouldDeploy = false;
     if (shouldDeploy) {
       playSound('zoom');
       triggerHaptic('dash');

@@ -31,9 +31,10 @@ export const PauseMenu = () => {
           className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md pointer-events-auto p-4"
         >
           <motion.div
-            initial={{ scale: 0.9, y: 15 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.9, y: 15 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
             className="w-full max-w-xl"
           >
             <SettingsPanel

@@ -841,7 +841,7 @@ function createMapBox(
   };
 }
 
-function buildParkourLayout(
+export function buildParkourLayout(
   layoutName: LayoutArchetype,
   seed: number,
   obstacles: MapBox[],
@@ -1227,30 +1227,24 @@ export function generateMapForLevel(level: number, randomizeSalt = false): Gener
   const rng = createSeededRng(seed || 1337);
   const obstacles: MapBox[] = [];
 
-  buildParkourLayout(layoutName, seed, obstacles, rng);
-
-  // Keep the vertical traversal data available for future mission variants,
-  // but play standard missions in a readable combat bowl: four cover lanes,
-  // a clear central duel space and two obvious traversal points.
-  obstacles.length = 0;
+  // Arena floor: clean, open, professional sci-fi combat bowl.
+  // Flank defensive walls and corner radar towers enclose the combat perimeter cleanly,
+  // leaving the central duel corridor (x: -20 to +20) completely open and unobstructed.
   const authoredCover = [
-    { id: 'cover-nw', kind: 'wall' as const, x: -18, z: -18, w: 8.5, h: 4.8, d: 2.0, accent: 'primary' as const },
-    { id: 'cover-ne', kind: 'wall' as const, x: 18, z: -18, w: 8.5, h: 4.8, d: 2.0, accent: 'secondary' as const },
-    { id: 'cover-sw', kind: 'barrier' as const, x: -20, z: 2, w: 6.5, h: 1.6, d: 1.5, accent: 'secondary' as const },
-    { id: 'cover-se', kind: 'barrier' as const, x: 20, z: 2, w: 6.5, h: 1.6, d: 1.5, accent: 'primary' as const },
-    { id: 'cover-west', kind: 'tower' as const, x: -34, z: -34, w: 3.6, h: 8.5, d: 3.6, accent: 'primary' as const },
-    { id: 'cover-east', kind: 'tower' as const, x: 34, z: -34, w: 3.6, h: 8.5, d: 3.6, accent: 'secondary' as const },
+    { id: 'cover-nw', kind: 'wall' as const, x: -26, z: -24, w: 7.5, h: 4.5, d: 2.0, accent: 'primary' as const },
+    { id: 'cover-ne', kind: 'wall' as const, x: 26, z: -24, w: 7.5, h: 4.5, d: 2.0, accent: 'secondary' as const },
+    { id: 'cover-sw', kind: 'barrier' as const, x: -28, z: 6, w: 6.0, h: 1.5, d: 1.5, accent: 'secondary' as const },
+    { id: 'cover-se', kind: 'barrier' as const, x: 28, z: 6, w: 6.0, h: 1.5, d: 1.5, accent: 'primary' as const },
+    { id: 'cover-west', kind: 'tower' as const, x: -38, z: -38, w: 3.6, h: 9.0, d: 3.6, accent: 'primary' as const },
+    { id: 'cover-east', kind: 'tower' as const, x: 38, z: -38, w: 3.6, h: 9.0, d: 3.6, accent: 'secondary' as const },
   ];
   for (const cover of authoredCover) {
     obstacles.push(createMapBox(`authored-${seed}-${cover.id}`, cover.kind, cover.x, 0, cover.z, cover.w, cover.h, cover.d, cover.accent));
   }
-  for (const [index, [x, z]] of ([[-11, -34], [11, -34]] as [number, number][]).entries()) {
-    obstacles.push(createMapBox(`authored-jump-${seed}-${index}`, 'jumppad', x, 0, z, 2.6, 0.25, 2.6, index === 0 ? 'primary' : 'secondary'));
-  }
 
-  // Keep the sightline legible: a small number of deliberate cover zones is
-  // more useful (and more attractive) than filling the arena with random props.
-  const targetGroundCount = 2;
+  // Clean sightlines: authored perimeter cover provides balanced tactical flank defense
+  // without spawning random clutter in the central duel area.
+  const targetGroundCount = 0;
   const arenaCenterZ = -10;
   const spawnX = 0;
   const spawnZ = 14;

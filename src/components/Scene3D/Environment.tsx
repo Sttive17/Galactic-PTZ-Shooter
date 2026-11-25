@@ -619,51 +619,39 @@ const UndergroundLabWorld = ({
         <meshBasicMaterial color={theme.secondaryGlow} transparent opacity={0.5} toneMapped={false} />
       </mesh>
 
-      {/* Modular landing deck: the GLB tiles add a readable industrial scale below combat. */}
-      {[-30, 0, 30].flatMap((x) => [-34, -6, 22].map((z) => ({ x, z }))).map(({ x, z }) => (
-        <ModelProp key={`deck-${x}-${z}`} modelKey="HANGAR_FLOOR" scale={5.2} position={[x, 0.02, z]} />
-      ))}
-      <ModelProp modelKey="HANGAR_STAIRS" scale={3.6} position={[-34, 0, 8]} rotation={[0, Math.PI / 2, 0]} />
-      <ModelProp modelKey="HANGAR_STAIRS" scale={3.6} position={[34, 0, 8]} rotation={[0, -Math.PI / 2, 0]} />
+      {/* Grand Architectural Hangar Perimeter (Clean combat floor, perimeter-framed walls) */}
+      {/* North Blast Door & Perimeter Boundary Walls */}
+      <ModelProp modelKey="HANGAR_DOOR" scale={5.2} position={[0, 0, -52]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={5.0} position={[-24, 0, -52]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={5.0} position={[24, 0, -52]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={5.0} position={[-44, 0, -46]} rotation={[0, 0.35, 0]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={5.0} position={[44, 0, -46]} rotation={[0, -0.35, 0]} />
 
-      {/* Real 3D Modular Hangar Architecture & Logistics */}
-      {/* Front Blast Door & Perimeter Walls */}
-      <ModelProp modelKey="HANGAR_DOOR" scale={4.6} position={[0, 0, -48]} />
-      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[-20, 0, -48]} />
-      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[20, 0, -48]} />
-      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[-38, 0, -42]} rotation={[0, 0.35, 0]} />
-      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[38, 0, -42]} rotation={[0, -0.35, 0]} />
+      {/* East & West Flank Enclosure Walls */}
+      <ModelProp modelKey="HANGAR_WALL" scale={5.0} position={[-50, 0, -24]} rotation={[0, Math.PI / 2, 0]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={5.0} position={[-50, 0, 2]} rotation={[0, Math.PI / 2, 0]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={5.0} position={[-50, 0, 26]} rotation={[0, Math.PI / 2, 0]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={5.0} position={[50, 0, -24]} rotation={[0, -Math.PI / 2, 0]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={5.0} position={[50, 0, 2]} rotation={[0, -Math.PI / 2, 0]} />
+      <ModelProp modelKey="HANGAR_WALL" scale={5.0} position={[50, 0, 26]} rotation={[0, -Math.PI / 2, 0]} />
 
-      {/* East & West Perimeter Hangar Walls */}
-      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[-46, 0, -22]} rotation={[0, Math.PI / 2, 0]} />
-      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[-46, 0, 2]} rotation={[0, Math.PI / 2, 0]} />
-      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[-46, 0, 24]} rotation={[0, Math.PI / 2, 0]} />
-      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[46, 0, -22]} rotation={[0, -Math.PI / 2, 0]} />
-      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[46, 0, 2]} rotation={[0, -Math.PI / 2, 0]} />
-      <ModelProp modelKey="HANGAR_WALL" scale={4.6} position={[46, 0, 24]} rotation={[0, -Math.PI / 2, 0]} />
+      {/* Perimeter Architectural Columns supporting the roof truss (framed at edges) */}
+      {[-46, 46].map((x) =>
+        [-36, -12, 12, 28].map((z) => (
+          <ModelProp key={`col-${x}-${z}`} modelKey="HANGAR_COLUMN" scale={4.5} position={[x, 0, z]} />
+        ))
+      )}
 
-      {/* Structural Gantry Columns */}
-      {[-30, -15, 15, 30].map((x) => (
-        <group key={`col-${x}`}>
-          <ModelProp modelKey="HANGAR_COLUMN" scale={4.2} position={[x, 0, -34]} />
-          <ModelProp modelKey="HANGAR_COLUMN" scale={4.2} position={[x, 0, 18]} />
-        </group>
-      ))}
+      {/* Flank Power Generators docked at perimeter corners */}
+      <ModelProp modelKey="POWER_GENERATOR" scale={3.0} position={[-38, 0.1, -44]} rotation={[0, 0.4, 0]} />
+      <ModelProp modelKey="POWER_GENERATOR" scale={3.0} position={[38, 0.1, -44]} rotation={[0, -0.4, 0]} />
 
-      {/* Base Defense Turrets guarding the flanks */}
-      <ModelProp modelKey="TURRET_DEFENSE" scale={2.6} position={[-25, 0.1, -14]} rotation={[0, 0.5, 0]} />
-      <ModelProp modelKey="TURRET_DEFENSE" scale={2.6} position={[25, 0.1, -14]} rotation={[0, -0.5, 0]} />
-
-      {/* High-Tech Power Generators / Glowing Plasma Reactors */}
-      <ModelProp modelKey="POWER_GENERATOR" scale={2.8} position={[-16, 0.1, -38]} rotation={[0, 0.25, 0]} />
-      <ModelProp modelKey="POWER_GENERATOR" scale={2.8} position={[16, 0.1, -38]} rotation={[0, -0.25, 0]} />
-
-      {/* Logistics Cargo: Sci-Fi Crates & Energy Capsules */}
-      <ModelProp modelKey="SCIFI_CRATE" scale={2.4} position={[-11, 0, -18]} rotation={[0, 0.35, 0]} />
-      <ModelProp modelKey="SCIFI_CRATE" scale={2.0} position={[-8, 0, -21]} rotation={[0, -0.2, 0]} />
-      <ModelProp modelKey="SCIFI_CRATE" scale={2.4} position={[12, 0, -17]} rotation={[0, -0.4, 0]} />
-      <ModelProp modelKey="SCIFI_CAPSULE" scale={2.2} position={[-22, 0, -6]} />
-      <ModelProp modelKey="SCIFI_CAPSULE" scale={2.2} position={[22, 0, -6]} />
+      {/* Logistics Cargo neatly organized in side maintenance alcoves (leaving center open) */}
+      <ModelProp modelKey="SCIFI_CRATE" scale={2.4} position={[-42, 0, -8]} rotation={[0, 0.2, 0]} />
+      <ModelProp modelKey="SCIFI_CRATE" scale={2.0} position={[-42, 0, -12]} rotation={[0, -0.15, 0]} />
+      <ModelProp modelKey="SCIFI_CRATE" scale={2.4} position={[42, 0, -8]} rotation={[0, -0.2, 0]} />
+      <ModelProp modelKey="SCIFI_CAPSULE" scale={2.2} position={[-43, 0, 8]} />
+      <ModelProp modelKey="SCIFI_CAPSULE" scale={2.2} position={[43, 0, 8]} />
 
       {/* 4 Active Floor Steam Vent Grates with Rising Vapor */}
       {LAB_STEAM_VENTS.map(([vx, vy, vz], i) => (
@@ -2394,37 +2382,26 @@ export const Environment = () => {
         if (prop.kind === 'platform') {
           return (
             <group key={prop.id} position={prop.pos}>
-              {/* Sleek floating deck slab */}
+              {/* Sleek solid structural deck slab */}
               <mesh material={materials.wallMat} castShadow receiveShadow>
                 <boxGeometry args={prop.size} />
               </mesh>
               <mesh position={[0, prop.size[1] / 2 + 0.03, 0]} material={materials.crateMat} receiveShadow>
-                <boxGeometry args={[prop.size[0] * 0.92, 0.05, prop.size[2] * 0.92]} />
+                <boxGeometry args={[prop.size[0] * 0.94, 0.05, prop.size[2] * 0.94]} />
               </mesh>
-              {/* Neon edge perimeter trim rails */}
-              <mesh position={[0, 0, prop.size[2] / 2 + 0.02]} material={glowMat}>
-                <boxGeometry args={[prop.size[0], 0.12, 0.06]} />
+              {/* Subtle edge perimeter trim */}
+              <mesh position={[0, 0, prop.size[2] / 2 + 0.01]} material={glowMat}>
+                <boxGeometry args={[prop.size[0], 0.08, 0.02]} />
               </mesh>
-              <mesh position={[0, 0, -prop.size[2] / 2 - 0.02]} material={glowMat}>
-                <boxGeometry args={[prop.size[0], 0.12, 0.06]} />
+              <mesh position={[0, 0, -prop.size[2] / 2 - 0.01]} material={glowMat}>
+                <boxGeometry args={[prop.size[0], 0.08, 0.02]} />
               </mesh>
-              <mesh position={[prop.size[0] / 2 + 0.02, 0, 0]} material={glowMat}>
-                <boxGeometry args={[0.06, 0.12, prop.size[2]]} />
+              <mesh position={[prop.size[0] / 2 + 0.01, 0, 0]} material={glowMat}>
+                <boxGeometry args={[0.02, 0.08, prop.size[2]]} />
               </mesh>
-              <mesh position={[-prop.size[0] / 2 - 0.02, 0, 0]} material={glowMat}>
-                <boxGeometry args={[0.06, 0.12, prop.size[2]]} />
+              <mesh position={[-prop.size[0] / 2 - 0.01, 0, 0]} material={glowMat}>
+                <boxGeometry args={[0.02, 0.08, prop.size[2]]} />
               </mesh>
-              {/* Twin glowing anti-gravity thruster rings beneath platform */}
-              {[-prop.size[0] * 0.28, prop.size[0] * 0.28].map((xOff, idx) => (
-                <mesh
-                  key={idx}
-                  position={[xOff, -prop.size[1] / 2 - 0.08, 0]}
-                  rotation={[-Math.PI / 2, 0, 0]}
-                >
-                  <torusGeometry args={[0.62, 0.075, 8, 24]} />
-                  <meshBasicMaterial color={glowColor} toneMapped={false} />
-                </mesh>
-              ))}
             </group>
           );
         }
@@ -2434,39 +2411,26 @@ export const Environment = () => {
           return (
             <group key={prop.id} position={prop.pos}>
               <mesh material={materials.wallMat} receiveShadow>
-                <cylinderGeometry args={[1.28, 1.45, 0.22, 8]} />
+                <cylinderGeometry args={[1.2, 1.35, 0.16, 16]} />
               </mesh>
-              <mesh position={[0, 0.12, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-                <ringGeometry args={[0.92, 1.18, 24]} />
+              <mesh position={[0, 0.09, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                <ringGeometry args={[0.85, 1.05, 24]} />
                 <meshBasicMaterial color="#22d3ee" toneMapped={false} />
               </mesh>
-              <mesh position={[0, 0.13, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-                <circleGeometry args={[0.58, 24]} />
+              <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                <circleGeometry args={[0.5, 24]} />
                 <meshBasicMaterial color="#34d399" toneMapped={false} />
               </mesh>
-              {/* Translucent upward antigrav energy column */}
-              <mesh position={[0, 0.85, 0]}>
-                <cylinderGeometry args={[0.98, 1.12, 1.5, 24, 1, true]} />
-                <meshBasicMaterial
-                  color="#22d3ee"
-                  transparent
-                  opacity={0.28}
-                  blending={THREE.AdditiveBlending}
-                  side={THREE.DoubleSide}
-                  depthWrite={false}
-                  toneMapped={false}
-                />
-              </mesh>
-              {/* Floating Holographic Jump Ring Gate */}
+              {/* Subtle floating Holographic Jump Ring */}
               <mesh
                 ref={(el) => {
                   jumpGateRefs.current[gateIdx] = el;
                 }}
-                position={[0, 1.35, 0]}
+                position={[0, 0.5, 0]}
                 rotation={[Math.PI / 2, 0, 0]}
               >
-                <torusGeometry args={[1.15, 0.08, 10, 32]} />
-                <meshBasicMaterial color={glowColor} toneMapped={false} />
+                <torusGeometry args={[0.9, 0.04, 8, 24]} />
+                <meshBasicMaterial color={glowColor} transparent opacity={0.6} toneMapped={false} />
               </mesh>
             </group>
           );
