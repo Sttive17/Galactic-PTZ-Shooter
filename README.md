@@ -259,19 +259,24 @@ Al destruir enemigos, jefes y cajas de suministros, el jugador recolecta **Nanit
 ### Mesa Giratoria 3D en Tiempo Real (`ShipTurntable.tsx`)
 - Renderiza un lienzo WebGL dedicado con el modelo 3D de la nave **`Vanguard MK-IV` (`player_ship.glb`)** rotando en tiempo real con iluminación de estudio y plumas de propulsión iónica que cambian de color según el camuflaje equipado.
 
-### 4 Mejoras Permanentes del Taller (`UPGRADE_CATALOG`)
-Cada mejora tiene hasta **5 niveles permanentes** que se aplican a todas tus partidas:
-1. 🛡️ **Blindaje de Escudo (`MAX_SHIELD`):** Incrementa la capacidad máxima del escudo deflector en **`+25` puntos por nivel** (hasta +125 extra).
-2. ❤️ **Aleación de Casco (`MAX_HEALTH`):** Refuerza la estructura vital aumentando la salud máxima en **`+25` puntos por nivel** (hasta +125 extra).
-3. 🧲 **Imán de Botín Cuántico (`LOOT_MAGNET`):** Amplía el radio de atracción automática de cajas y recompensas en **`+35%` por nivel**.
-4. ⚡ **Propulsor Táctico (`DASH_COOLDOWN`):** Reduce el tiempo de enfriamiento del Dash (`[C]`) en **`-12%` por nivel**.
+### 4 Mejoras Permanentes del Taller (`UPGRADE_TIERS`)
+Las mejoras se guardan en `localStorage` y se aplican al iniciar, reiniciar o seleccionar una misión:
+1. 🛡️ **Blindaje de Escudo:** tres niveles, hasta **+45%** de escudo base.
+2. ❤️ **Integridad del Casco:** tres niveles, hasta **+45%** de salud base.
+3. 🧲 **Imán de Botín Cuántico:** tres niveles, hasta **+10 m** de radio de recolección.
+4. ⚡ **Propulsores Tácticos:** dos niveles, hasta **-40%** de enfriamiento de propulsor.
 
-### 5 Camuflajes y Skins de Nave (`SKIN_CATALOG`)
-- **Interceptor Estándar (`DEFAULT`):** Azul cian táctico de la Federación (Desbloqueado de serie).
-- **Vanguardia Dorada (`GOLD_VANGUARD`):** Aleación de oro imperial reflectante con propulsores ámbar (250 Nanitas).
-- **Sombra Furtiva (`STEALTH_SHADOW`):** Chasis negro carbono con trazadores violeta de baja firma (180 Nanitas).
-- **Furia Carmesí (`INFERNO_RED`):** Revestimiento térmico rojo volcánico de asalto pesado (200 Nanitas).
-- **Pulso Ciber-Neón (`CYBER_NEON`):** Estética sintética magenta y turquesa de alta visibilidad (220 Nanitas).
+### Árbol de Doctrina Táctica (`DOCTRINE_NODES`)
+La pestaña **ÁRBOL DE DOCTRINA** añade decisiones permanentes conectadas a efectos de juego, no solo a la interfaz. Cada rama avanzada requiere desbloquear antes su núcleo:
+
+- **Rama de asalto:** Matriz de Capacitores reduce el enfriamiento del EMP; Reactor de Sobrecarga añade 2 segundos a Frenesí y reduce su enfriamiento.
+- **Rama de soporte:** Protocolo de Recuperación incrementa un 25% las nanitas recogidas; Malla de Autor reparación acelera un 35% la recarga de escudo fuera de combate.
+
+### 4 Camuflajes y Skins de Nave (`SKIN_CATALOG`)
+- **Titanio Estándar (`DEFAULT`):** Chasis militar de aleación de titanio (desbloqueado de serie).
+- **Cyberpunk Neón (`CYBERPUNK_NEON`):** Acabado cian y fucsia de alto voltaje (50 Nanitas).
+- **Oro Galáctico (`GALACTIC_GOLD`):** Blindaje de oro cuántico de grado almirante (100 Nanitas).
+- **Espectro del Vacío (`VOID_PHANTOM`):** Recubrimiento obsidiana de baja firma (150 Nanitas).
 
 ---
 

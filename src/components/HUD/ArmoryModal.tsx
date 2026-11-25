@@ -3,8 +3,8 @@ import { motion } from 'framer-motion';
 import { useGameStore } from '../../game/gameState';
 import { playSound } from '../../game/AudioSystem';
 import { triggerHaptic } from '../../game/haptics';
-import { UPGRADE_TIERS, SKIN_CATALOG } from '../../game/armory';
-import type { WeaponSkinId } from '../../game/armory';
+import { DOCTRINE_NODES, UPGRADE_TIERS, SKIN_CATALOG } from '../../game/armory';
+import type { TacticalDoctrineId, WeaponSkinId } from '../../game/armory';
 import { ShipTurntable } from './ShipTurntable';
 import {
   Shield,
@@ -27,11 +27,12 @@ interface ArmoryModalProps {
 }
 
 export const ArmoryModal = ({ isOpen, onClose }: ArmoryModalProps) => {
-  const [tab, setTab] = useState<'UPGRADES' | 'SKINS' | 'PILOT'>('UPGRADES');
+  const [tab, setTab] = useState<'UPGRADES' | 'DOCTRINE' | 'SKINS' | 'PILOT'>('UPGRADES');
   const nanites = useGameStore((state) => state.nanites);
   const armory = useGameStore((state) => state.armory);
   const pilotStats = useGameStore((state) => state.pilotStats);
   const purchaseArmoryUpgrade = useGameStore((state) => state.purchaseArmoryUpgrade);
+  const unlockDoctrine = useGameStore((state) => state.unlockDoctrine);
   const selectArmorySkin = useGameStore((state) => state.selectArmorySkin);
 
   useEffect(() => {
@@ -59,6 +60,12 @@ export const ArmoryModal = ({ isOpen, onClose }: ArmoryModalProps) => {
   const handleSkin = (skinId: WeaponSkinId) => {
     playSound('ui');
     selectArmorySkin(skinId);
+  };
+
+  const handleDoctrine = (id: TacticalDoctrineId) => {
+    if (!unlockDoctrine(id)) {
+      playSound('empty');
+    }
   };
 
   const getPilotRank = (kills: number) => {
@@ -160,7 +167,7 @@ export const ArmoryModal = ({ isOpen, onClose }: ArmoryModalProps) => {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex border-b border-slate-800 bg-slate-950/40 px-6">
+        <div className="flex flex-wrap border-b border-slate-800 bg-slate-950/40 px-6">
           <button
             onClick={() => {
               playSound('ui');
@@ -174,6 +181,20 @@ export const ArmoryModal = ({ isOpen, onClose }: ArmoryModalProps) => {
           >
             <Shield size={16} />
             MEJORAS PERMANENTES
+          </button>
+          <button
+            onClick={() => {
+              playSound('ui');
+              setTab('DOCTRINE');
+            }}
+            className={`flex items-center gap-2 py-3 px-4 text-xs font-orbitron font-bold border-b-2 transition-all ${
+              tab === 'DOCTRINE'
+                ? 'border-violet-400 text-violet-300 bg-violet-950/20'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Sparkles size={16} />
+            ÁRBOL DE DOCTRINA
           </button>
           <button
             onClick={() => {
@@ -278,6 +299,89 @@ export const ArmoryModal = ({ isOpen, onClose }: ArmoryModalProps) => {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {tab === 'DOCTRINE' && (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-violet-500/30 bg-violet-950/20 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div className="font-orbitron text-sm font-black tracking-wider text-violet-200">
+                      DOCTRINA DE COMBATE
+                    </div>
+                    <p className="mt-1 text-xs font-mono text-slate-400">
+                      Elige rutas permanentes. Cada nodo avanzado requiere el núcleo de su propia rama.
+                    </p>
+                  </div>
+                  <div className="rounded-full border border-violet-400/30 bg-slate-950/70 px-3 py-1 text-xs font-mono text-violet-200">
+                    {armory.unlockedDoctrines.length}/{Object.keys(DOCTRINE_NODES).length} NODOS ACTIVOS
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {(Object.keys(DOCTRINE_NODES) as TacticalDoctrineId[]).map((id) => {
+                  const node = DOCTRINE_NODES[id];
+                  const isUnlocked = armory.unlockedDoctrines.includes(id);
+                  const prerequisiteMet = !node.prerequisite || armory.unlockedDoctrines.includes(node.prerequisite);
+                  const canUnlock = prerequisiteMet && nanites >= node.cost;
+                  const isCombat = node.branch === 'COMBAT';
+
+                  return (
+                    <div
+                      key={id}
+                      className={`relative overflow-hidden rounded-xl border p-4 transition-colors ${
+                        isUnlocked
+                          ? isCombat
+                            ? 'border-cyan-400/70 bg-cyan-950/35 shadow-[0_0_18px_rgba(34,211,238,0.16)]'
+                            : 'border-emerald-400/70 bg-emerald-950/35 shadow-[0_0_18px_rgba(52,211,153,0.14)]'
+                          : prerequisiteMet
+                            ? 'border-violet-500/40 bg-slate-950/60'
+                            : 'border-slate-800 bg-slate-950/35 opacity-70'
+                      }`}
+                    >
+                      <div className="mb-3 flex items-start justify-between gap-3">
+                        <div>
+                          <div className={`text-[10px] font-mono tracking-[0.18em] ${isCombat ? 'text-cyan-300' : 'text-emerald-300'}`}>
+                            {node.branch === 'COMBAT' ? 'RAMA DE ASALTO' : 'RAMA DE SOPORTE'}
+                          </div>
+                          <h3 className="mt-1 font-orbitron text-sm font-bold text-white">{node.name}</h3>
+                        </div>
+                        {isUnlocked ? (
+                          <Check size={18} className="shrink-0 text-emerald-300" />
+                        ) : (
+                          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-mono text-slate-300">
+                            {node.cost} N
+                          </span>
+                        )}
+                      </div>
+                      <p className="min-h-10 text-xs font-mono text-slate-400">{node.description}</p>
+                      <div className="mt-3 border-t border-slate-800 pt-3">
+                        <div className="text-xs font-mono text-violet-200">{node.effectText}</div>
+                        {node.prerequisite && !prerequisiteMet && (
+                          <div className="mt-1 text-[10px] font-mono text-amber-300">
+                            REQUIERE: {DOCTRINE_NODES[node.prerequisite].name}
+                          </div>
+                        )}
+                        <button
+                          onClick={() => handleDoctrine(id)}
+                          disabled={isUnlocked || !canUnlock}
+                          className={`mt-3 w-full rounded-lg px-3 py-2 text-xs font-orbitron font-bold transition-all ${
+                            isUnlocked
+                              ? 'bg-emerald-950/60 text-emerald-300'
+                              : canUnlock
+                                ? 'bg-gradient-to-r from-violet-500 to-fuchsia-600 text-white hover:brightness-110'
+                                : 'cursor-not-allowed bg-slate-800 text-slate-500'
+                          }`}
+                        >
+                          {isUnlocked ? 'DOCTRINA ACTIVA' : prerequisiteMet ? `INVESTIGAR · ${node.cost} N` : 'RUTA BLOQUEADA'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

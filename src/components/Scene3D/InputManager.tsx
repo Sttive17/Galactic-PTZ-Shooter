@@ -45,10 +45,15 @@ const tryJump = (state: GameState, airJumpsUsed: { current: number }) => {
 };
 
 const DASH_IMPULSE = 26;
+const getDashCooldown = (state: GameState) => {
+  const turboStacks = state.activePowers.TURBO_SPRINT || 0;
+  const armoryReduction = state.armory.dashLevel * 0.2;
+  return Math.max(0.7, (1.8 - turboStacks * 0.25) * (1 - armoryReduction));
+};
+
 const tryDash = (state: GameState) => {
   if (SceneState.dashCooldownTimer > 0) return;
-  const turboStacks = state.activePowers.TURBO_SPRINT || 0;
-  const cooldown = Math.max(0.7, 1.8 - turboStacks * 0.25);
+  const cooldown = getDashCooldown(state);
   SceneState.dashCooldownTimer = cooldown;
   SceneState.dashDurationTimer = 0.22;
   SceneState.isDashing = true;
@@ -652,8 +657,7 @@ export const InputManager = () => {
     }
     if (SceneState.dashCooldownTimer > 0) {
       SceneState.dashCooldownTimer = Math.max(0, SceneState.dashCooldownTimer - clampedDelta);
-      const turboStacks = state.activePowers.TURBO_SPRINT || 0;
-      const totalCooldown = Math.max(0.7, 1.8 - turboStacks * 0.25);
+      const totalCooldown = getDashCooldown(state);
       state.setDashCooldown(SceneState.dashCooldownTimer / totalCooldown);
     } else if (state.dashCooldown > 0) {
       state.setDashCooldown(0);

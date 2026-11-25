@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGameStore, getRoundTotalTargets, isChapterBossLevel } from '../../game/gameState';
 import { playSound, setAudioMood, playTensionAlarm, playShieldBreak, playPortalOpen } from '../../game/AudioSystem';
+import { getDoctrineModifiers } from '../../game/armory';
 import type { SoundMood } from '../../game/AudioSystem';
 
 export const GameManager = () => {
@@ -38,7 +39,7 @@ export const GameManager = () => {
         shieldRegenAccumRef.current -= 0.2;
         const gs = useGameStore.getState();
         if (!gs.isPaused && gs.playerShield < gs.maxPlayerShield) {
-          regenShield(2.0);
+          regenShield(2.0 * getDoctrineModifiers(gs.armory).shieldRegenMultiplier);
         }
       }
     }

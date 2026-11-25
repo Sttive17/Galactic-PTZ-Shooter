@@ -1,4 +1,9 @@
 export type WeaponSkinId = 'DEFAULT' | 'CYBERPUNK_NEON' | 'GALACTIC_GOLD' | 'VOID_PHANTOM';
+export type TacticalDoctrineId =
+  | 'CAPACITOR_ARRAY'
+  | 'REACTOR_OVERDRIVE'
+  | 'SALVAGE_PROTOCOL'
+  | 'AUTO_REPAIR';
 
 export interface ArmoryState {
   shieldLevel: number;
@@ -7,6 +12,7 @@ export interface ArmoryState {
   dashLevel: number;
   unlockedSkins: WeaponSkinId[];
   activeSkin: WeaponSkinId;
+  unlockedDoctrines: TacticalDoctrineId[];
 }
 
 const ARMORY_STORAGE_KEY = 'galactic_ptz_armory_v1';
@@ -18,7 +24,77 @@ export const DEFAULT_ARMORY_STATE: ArmoryState = {
   dashLevel: 0,
   unlockedSkins: ['DEFAULT'],
   activeSkin: 'DEFAULT',
+  unlockedDoctrines: [],
 };
+
+export const DOCTRINE_NODES: Record<
+  TacticalDoctrineId,
+  {
+    name: string;
+    cost: number;
+    description: string;
+    effectText: string;
+    branch: 'COMBAT' | 'SUPPORT';
+    prerequisite?: TacticalDoctrineId;
+  }
+> = {
+  CAPACITOR_ARRAY: {
+    name: 'MATRIZ DE CAPACITORES',
+    cost: 75,
+    description: 'Condensadores de pulso conectados a la red EMP.',
+    effectText: 'EMP: -25% de enfriamiento',
+    branch: 'COMBAT',
+  },
+  REACTOR_OVERDRIVE: {
+    name: 'REACTOR DE SOBRECARGA',
+    cost: 110,
+    description: 'Inyectores térmicos que prolongan la ventana de Frenesí.',
+    effectText: 'Frenesí: +2 s y -20% de enfriamiento',
+    branch: 'COMBAT',
+    prerequisite: 'CAPACITOR_ARRAY',
+  },
+  SALVAGE_PROTOCOL: {
+    name: 'PROTOCOLO DE RECUPERACIÓN',
+    cost: 65,
+    description: 'Drones de apoyo clasifican y recuperan nanitas de combate.',
+    effectText: '+25% nanitas recogidas',
+    branch: 'SUPPORT',
+  },
+  AUTO_REPAIR: {
+    name: 'MALLA DE AUTORREPARACIÓN',
+    cost: 95,
+    description: 'Nanofibras reactivos aceleran la reparación de deflectores.',
+    effectText: '+35% recarga de escudo',
+    branch: 'SUPPORT',
+    prerequisite: 'SALVAGE_PROTOCOL',
+  },
+};
+
+export interface DoctrineModifiers {
+  empCooldown: number;
+  overdriveCooldown: number;
+  overdriveDuration: number;
+  naniteMultiplier: number;
+  shieldRegenMultiplier: number;
+}
+
+export function getDoctrineModifiers(armory: ArmoryState): DoctrineModifiers {
+  const unlocked = new Set(armory.unlockedDoctrines);
+  return {
+    empCooldown: unlocked.has('CAPACITOR_ARRAY') ? 11.25 : 15,
+    overdriveCooldown: unlocked.has('REACTOR_OVERDRIVE') ? 20 : 25,
+    overdriveDuration: unlocked.has('REACTOR_OVERDRIVE') ? 8 : 6,
+    naniteMultiplier: unlocked.has('SALVAGE_PROTOCOL') ? 1.25 : 1,
+    shieldRegenMultiplier: unlocked.has('AUTO_REPAIR') ? 1.35 : 1,
+  };
+}
+
+export function getArmoryVitalStats(armory: ArmoryState): { shield: number; health: number } {
+  return {
+    shield: Math.round(100 * (1 + armory.shieldLevel * 0.15)),
+    health: Math.round(100 * (1 + armory.healthLevel * 0.15)),
+  };
+}
 
 export const UPGRADE_TIERS = {
   shield: [
@@ -93,6 +169,9 @@ export function loadArmoryState(): ArmoryState {
         ? parsed.unlockedSkins
         : ['DEFAULT'],
       activeSkin: parsed.activeSkin && SKIN_CATALOG[parsed.activeSkin] ? parsed.activeSkin : 'DEFAULT',
+      unlockedDoctrines: Array.isArray(parsed.unlockedDoctrines)
+        ? [...new Set(parsed.unlockedDoctrines.filter((id): id is TacticalDoctrineId => id in DOCTRINE_NODES))]
+        : [],
     };
   } catch {
     return { ...DEFAULT_ARMORY_STATE };

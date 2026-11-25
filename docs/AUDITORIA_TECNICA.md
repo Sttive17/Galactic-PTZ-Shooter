@@ -22,7 +22,7 @@ Se revisaron el `README.md`, los componentes React, el estado Zustand, los siste
 | Menú, mapa estelar, armería y ajustes | Implementados y visibles en ejecución. |
 | Transición de despliegue y HUD | Implementados; la campaña inicia con una elección de poder. |
 | Combate | Disparo, cinco arquetipos de arma, munición, recarga, EMP, Frenesí, enemigos, jefes, cajas y botín están conectados al estado de juego. |
-| Progresión | Niveles, mapa por capítulos, nanitas, mejoras, skins, logros y estadísticas persistentes están presentes. |
+| Progresión | Niveles, mapa por capítulos, nanitas, mejoras, árbol de doctrina con dependencias, skins, logros y estadísticas persistentes están presentes. |
 | Escenas | Cinco familias de biomas con obstáculos, iluminación, partículas, clima y props. |
 | Recursos 3D | Modelos GLB locales organizados bajo `public/models/` y `public/assets/models/`, con atribución CC0 documentada. |
 | Controles | Componentes y hooks para PC, táctil y mando están presentes. |
@@ -32,6 +32,8 @@ Se revisaron el `README.md`, los componentes React, el estado Zustand, los siste
 1. Se eliminó la precarga global de todos los modelos GLB al abrir la aplicación. Cada modelo se carga bajo demanda desde el componente que lo utiliza; `preloadModels` queda disponible para precargar únicamente un conjunto concreto antes de una transición.
 2. El menú ahora toma el número de poderes y arquetipos desde los catálogos de código. Así evita desajustes entre la interfaz, el README y el contenido real.
 3. Se reforzó el paquete visual prioritario: plataforma de hangar para la Vanguard, módulos GLB de suelo y escaleras en el capítulo inicial, drones de logística que usan los assets nuevos y rigs visibles para identificar los jefes en combate.
+4. Se añadió un árbol de doctrina persistente con dos ramas y cuatro nodos desbloqueables. Sus efectos modifican enfriamientos de EMP/Frenesí, duración de Frenesí, nanitas recogidas y regeneración de escudo.
+5. Se corrigió la inicialización de misión para que el escudo y casco de las mejoras permanentes se apliquen también al reiniciar, comenzar una misión o elegir un nivel desde el mapa.
 
 ## Riesgos y trabajo técnico pendiente
 

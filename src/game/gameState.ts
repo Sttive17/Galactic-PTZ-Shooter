@@ -15,13 +15,23 @@ import type { GraphicsConfig, GraphicsPreset, HardwareInfo } from './graphicsSet
 import type { BossStyle, PTZOpticalMode, WeaponArchetype, CinematicState, BossIntroData, PilotStats } from '../types/game';
 import { audioSystem, playSound } from './AudioSystem';
 import { triggerHaptic } from './haptics';
-import { loadArmoryState, saveArmoryState, UPGRADE_TIERS, SKIN_CATALOG } from './armory';
-import type { ArmoryState, WeaponSkinId } from './armory';
+import {
+  DOCTRINE_NODES,
+  getArmoryVitalStats,
+  getDoctrineModifiers,
+  loadArmoryState,
+  saveArmoryState,
+  UPGRADE_TIERS,
+  SKIN_CATALOG,
+} from './armory';
+import type { ArmoryState, TacticalDoctrineId, WeaponSkinId } from './armory';
 import { unlockAchievement } from './achievements';
 import { speakTacticalCue } from './tacticalVoice';
 import { loadPilotStats, recordStatUpdate } from './pilotStats';
 
 const initialMap = generateRandomMap();
+const initialArmory = loadArmoryState();
+const initialVitals = getArmoryVitalStats(initialArmory);
 SceneState.colliders = initialMap.obstacles;
 
 export type GameMode = 'MENU' | 'TRAINING' | 'CHALLENGE' | 'GAMEOVER' | 'LEVEL_MAP';
@@ -263,6 +273,7 @@ export interface GameState {
   cycleWeapon: (dir: 1 | -1) => void;
   setArmoryOpen: (open: boolean) => void;
   purchaseArmoryUpgrade: (type: 'shield' | 'health' | 'magnet' | 'dash') => boolean;
+  unlockDoctrine: (id: TacticalDoctrineId) => boolean;
   selectArmorySkin: (skinId: WeaponSkinId) => void;
   selectPower: (powerId: PowerId) => void;
   clearWaveBanner: () => void;
@@ -324,10 +335,10 @@ export const useGameStore = create<GameState>((set) => ({
   activePowers: {},
   powerChoices: [],
   currentMap: initialMap,
-  playerShield: 100,
-  maxPlayerShield: 100,
-  playerHealth: 100,
-  maxPlayerHealth: 100,
+  playerShield: initialVitals.shield,
+  maxPlayerShield: initialVitals.shield,
+  playerHealth: initialVitals.health,
+  maxPlayerHealth: initialVitals.health,
   lastDamageTime: 0,
   bossInfo: null,
   waveBanner: null,
@@ -336,7 +347,7 @@ export const useGameStore = create<GameState>((set) => ({
   nanites: 0,
   dashCooldown: 0,
   selectedWeapon: 'PLASMA_RIFLE',
-  armory: loadArmoryState(),
+  armory: initialArmory,
   isArmoryOpen: false,
   cinematicState: 'NONE',
   activeBossIntro: null,
@@ -365,7 +376,8 @@ export const useGameStore = create<GameState>((set) => ({
         }
       }
     }
-    set({ empCooldown: 15 });
+    const { empCooldown } = getDoctrineModifiers(state.armory);
+    set({ empCooldown, maxEmpCooldown: empCooldown });
     return true;
   },
 
@@ -375,10 +387,12 @@ export const useGameStore = create<GameState>((set) => ({
     playSound('overdrive');
     triggerHaptic('crit');
     useGameStore.getState().addCameraShake(0.35);
+    const { overdriveCooldown, overdriveDuration } = getDoctrineModifiers(state.armory);
     set({
       overdriveActive: true,
-      overdriveDuration: 6,
-      overdriveCooldown: 25,
+      overdriveDuration,
+      overdriveCooldown,
+      maxOverdriveCooldown: overdriveCooldown,
     });
     return true;
   },
@@ -431,13 +445,30 @@ export const useGameStore = create<GameState>((set) => ({
       [`${type}Level`]: currentTier + 1,
     };
     saveArmoryState(newArmory);
+    const vitals = getArmoryVitalStats(newArmory);
     set({
       nanites: state.nanites - nextTier.cost,
       armory: newArmory,
-      maxPlayerShield: Math.round(100 * (1 + newArmory.shieldLevel * 0.15)),
-      maxPlayerHealth: Math.round(100 * (1 + newArmory.healthLevel * 0.15)),
+      maxPlayerShield: vitals.shield,
+      maxPlayerHealth: vitals.health,
     });
     playSound('ui');
+    triggerHaptic('crit');
+    return true;
+  },
+  unlockDoctrine: (id) => {
+    const state = useGameStore.getState();
+    const node = DOCTRINE_NODES[id];
+    if (!node || state.armory.unlockedDoctrines.includes(id) || state.nanites < node.cost) return false;
+    if (node.prerequisite && !state.armory.unlockedDoctrines.includes(node.prerequisite)) return false;
+
+    const newArmory: ArmoryState = {
+      ...state.armory,
+      unlockedDoctrines: [...state.armory.unlockedDoctrines, id],
+    };
+    saveArmoryState(newArmory);
+    set({ nanites: state.nanites - node.cost, armory: newArmory });
+    playSound('powerup');
     triggerHaptic('crit');
     return true;
   },
@@ -483,7 +514,7 @@ export const useGameStore = create<GameState>((set) => ({
     return { opticalMode: next };
   }),
   addNanites: (amount) => set((state) => {
-    const validAmount = Math.max(0, amount);
+    const validAmount = Math.ceil(Math.max(0, amount) * getDoctrineModifiers(state.armory).naniteMultiplier);
     const newCount = state.nanites + validAmount;
     if (newCount >= 50) {
       unlockAchievement('NANITE_HOARDER');
@@ -888,6 +919,7 @@ export const useGameStore = create<GameState>((set) => ({
     SceneState.resetPlayerPosition();
     SceneState.resetAllies();
     const isPlayingMode = mode === 'CHALLENGE' || mode === 'TRAINING';
+    const vitals = getArmoryVitalStats(useGameStore.getState().armory);
     set({
       mode,
       ...(isPlayingMode ? { lastPlayedMode: mode } : {}),
@@ -906,10 +938,10 @@ export const useGameStore = create<GameState>((set) => ({
       activePowers: {},
       powerChoices: isPlayingMode ? getRandomPowerChoices(3, {}) : [],
       currentMap: newMap,
-      maxPlayerShield: 100,
-      playerShield: 100,
-      maxPlayerHealth: 100,
-      playerHealth: 100,
+      maxPlayerShield: vitals.shield,
+      playerShield: vitals.shield,
+      maxPlayerHealth: vitals.health,
+      playerHealth: vitals.health,
       lastDamageTime: 0,
       bossInfo: null,
       waveBanner: null,
@@ -971,6 +1003,7 @@ export const useGameStore = create<GameState>((set) => ({
     SceneState.reloadProgress = 0;
     SceneState.resetPlayerPosition();
     SceneState.resetAllies();
+    const vitals = getArmoryVitalStats(useGameStore.getState().armory);
     set({
       mode: 'CHALLENGE',
       lastPlayedMode: 'CHALLENGE',
@@ -989,10 +1022,10 @@ export const useGameStore = create<GameState>((set) => ({
       activePowers: {},
       powerChoices: getRandomPowerChoices(3, {}),
       currentMap: newMap,
-      maxPlayerShield: 100,
-      playerShield: 100,
-      maxPlayerHealth: 100,
-      playerHealth: 100,
+      maxPlayerShield: vitals.shield,
+      playerShield: vitals.shield,
+      maxPlayerHealth: vitals.health,
+      playerHealth: vitals.health,
       lastDamageTime: 0,
       bossInfo: null,
       waveBanner: null,
