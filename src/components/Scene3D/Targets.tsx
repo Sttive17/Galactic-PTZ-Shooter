@@ -465,6 +465,9 @@ const BossMesh = ({ target, currentRound }: { target: Target; currentRound: numb
     target.position[2] = z;
     groupRef.current.position.set(x, y, z);
     groupRef.current.lookAt(SceneState.playerPosition.x, y, SceneState.playerPosition.z);
+    // Menacing dynamic banking into turns for massive boss craft
+    const bossBank = THREE.MathUtils.clamp((x - (target.velocity ? target.velocity[0] : 0)) * -0.008, -0.28, 0.28);
+    groupRef.current.rotation.z = bossBank;
 
     if (coreRef.current) {
       coreRef.current.rotation.y += delta * (1.4 + tier * 0.25);
@@ -730,6 +733,7 @@ const DroneMesh = ({ target, currentRound }: { target: Target; currentRound: num
   const currentTargetId = useGameStore((state) => state.currentTarget?.id);
   const isTargeted = currentTargetId === target.id;
   const archetype: EnemyArchetype = target.enemyType || 'SCOUT';
+  const isGroundUnit = archetype === 'JUGGERNAUT' || archetype === 'ARTILLERY' || archetype === 'SNIPER';
 
   const [timeOffset] = useState(() => Math.random() * 100);
   const orbitAngleRef = useRef<number>(target.flankAngle ?? 0);
@@ -744,6 +748,13 @@ const DroneMesh = ({ target, currentRound }: { target: Target; currentRound: num
   const flankSideRef = useRef<1 | -1>(target.flankDir || 1);
   const strafeFlipTimerRef = useRef(2.4);
   const peekBoostRef = useRef(0);
+
+  // Physical motion simulation refs (inertia, banking, impact knockback, and stride physics)
+  const prevPosRef = useRef<[number, number, number]>([...target.position]);
+  const knockbackVecRef = useRef<THREE.Vector3>(new THREE.Vector3());
+  const bankAngleRef = useRef(0);
+  const pitchAngleRef = useRef(0);
+  const stepCycleRef = useRef(0);
 
   useEffect(() => {
     dodgeCooldownRef.current = 0.6 + Math.random() * 0.8;
@@ -1231,8 +1242,60 @@ const DroneMesh = ({ target, currentRound }: { target: Target; currentRound: num
       }
     }
 
+    // 5. Physical Dynamics: Real velocity calculation, impact knockback, and banking
+    const dt = Math.max(0.001, Math.min(delta, 0.05));
+    const vx = (target.position[0] - prevPosRef.current[0]) / dt;
+    const vz = (target.position[2] - prevPosRef.current[2]) / dt;
+    prevPosRef.current = [target.position[0], target.position[1], target.position[2]];
+
+    // Immediate reactive knockback impulse when taking damage
+    if (tookHit) {
+      const hitDirX = target.position[0] - playerPos.x;
+      const hitDirZ = target.position[2] - playerPos.z;
+      const hitDist = Math.hypot(hitDirX, hitDirZ) || 1;
+      const knockForce = (isGroundUnit ? 5.2 : 8.5) / Math.max(0.6, target.scale);
+      knockbackVecRef.current.x += (hitDirX / hitDist) * knockForce;
+      knockbackVecRef.current.z += (hitDirZ / hitDist) * knockForce;
+      knockbackVecRef.current.y += isGroundUnit ? 0.35 : 1.6;
+    }
+
+    // Integrate & spring-decay knockback vector
+    target.position[0] += knockbackVecRef.current.x * dt;
+    target.position[1] += knockbackVecRef.current.y * dt;
+    target.position[2] += knockbackVecRef.current.z * dt;
+    knockbackVecRef.current.multiplyScalar(Math.exp(-dt * 8.2));
+
+    // Ground clamping & vertical physics
+    if (isGroundUnit) {
+      target.position[1] = THREE.MathUtils.lerp(target.position[1], 1.25, Math.min(1, dt * 8.0));
+      stepCycleRef.current += Math.hypot(vx, vz) * dt * 4.2;
+    } else {
+      target.position[1] = Math.max(2.8, target.position[1]);
+    }
+
     groupRef.current.position.set(...target.position);
     groupRef.current.lookAt(playerPos.x, target.position[1], playerPos.z);
+
+    // Dynamic Banking (Roll into turns) & Pitch for aerial units
+    if (!isGroundUnit) {
+      const yaw = groupRef.current.rotation.y;
+      const relStrafe = vx * Math.cos(-yaw) - vz * Math.sin(-yaw);
+      const relForward = vx * Math.sin(-yaw) + vz * Math.cos(-yaw);
+
+      const targetRoll = THREE.MathUtils.clamp(-relStrafe * 0.045, -0.62, 0.62);
+      const targetPitch = THREE.MathUtils.clamp(relForward * 0.03, -0.4, 0.4);
+
+      bankAngleRef.current = THREE.MathUtils.damp(bankAngleRef.current, targetRoll, 9.0, dt);
+      pitchAngleRef.current = THREE.MathUtils.damp(pitchAngleRef.current, targetPitch, 9.0, dt);
+
+      groupRef.current.rotation.z += bankAngleRef.current;
+      groupRef.current.rotation.x += pitchAngleRef.current;
+    } else {
+      // Mechanical footstep bobbing and shoulder sway for walkers/cyborgs
+      const stepBob = Math.sin(stepCycleRef.current) * 0.08;
+      groupRef.current.position.y += Math.abs(stepBob);
+      groupRef.current.rotation.z = Math.sin(stepCycleRef.current * 0.5) * 0.04;
+    }
 
     if (ring1Ref.current) {
       ring1Ref.current.rotation.x += delta * 2.2;
@@ -1449,8 +1512,8 @@ export const Targets = () => {
             enemyType === 'HEALER' ||
             enemyType === 'KAMIKAZE';
           const rawX = isFlankingClass ? Math.cos(flankAngle) * 28 : (Math.random() - 0.5) * 56;
-          const rawY =
-            enemyType === 'SNIPER' || enemyType === 'ARTILLERY' ? 12 + Math.random() * 6 : 3.8 + Math.random() * 8.0;
+          const isGroundSpawn = enemyType === 'JUGGERNAUT' || enemyType === 'ARTILLERY' || enemyType === 'SNIPER';
+          const rawY = isGroundSpawn ? 1.25 : 4.2 + Math.random() * 7.5;
           const rawZ = isFlankingClass ? 14 + Math.sin(flankAngle) * 28 : -20 - Math.random() * 28;
           const pos = getSafeSpawnPosition(rawX, rawY, rawZ);
 

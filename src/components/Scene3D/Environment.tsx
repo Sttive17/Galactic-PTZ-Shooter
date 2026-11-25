@@ -646,6 +646,87 @@ const UndergroundLabWorld = ({
       <ModelProp modelKey="POWER_GENERATOR" scale={3.0} position={[-38, 0.1, -44]} rotation={[0, 0.4, 0]} />
       <ModelProp modelKey="POWER_GENERATOR" scale={3.0} position={[38, 0.1, -44]} rotation={[0, -0.4, 0]} />
 
+      {/* Flank Reactor Containment Vat & Toxic Plasma Pool (West Dock - inspired by reference) */}
+      <group position={[-36, 0, -16]}>
+        <mesh position={[0, 0.4, 0]} material={wallMat}>
+          <cylinderGeometry args={[4.2, 4.6, 0.8, 8]} />
+        </mesh>
+        {/* Glowing Animated Liquid Coolant Pool */}
+        <mesh position={[0, 0.82, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[3.6, 16]} />
+          <meshBasicMaterial color="#10b981" transparent opacity={0.85} toneMapped={false} />
+        </mesh>
+        <pointLight color="#10b981" intensity={2.8} distance={16} decay={2} position={[0, 1.8, 0]} />
+        {/* 3 Vertical Containment Rods */}
+        {[-2.2, 0, 2.2].map((rx, idx) => (
+          <group key={`rod-${idx}`} position={[rx, 1.8, -1.8]}>
+            <mesh material={crateMat}>
+              <cylinderGeometry args={[0.22, 0.22, 2.8, 8]} />
+            </mesh>
+            <mesh position={[0, 1.4, 0]}>
+              <sphereGeometry args={[0.3, 8, 8]} />
+              <meshBasicMaterial color="#34d399" toneMapped={false} />
+            </mesh>
+          </group>
+        ))}
+      </group>
+
+      {/* Flank Maintenance Bay: Service Rover & Diagnostics (East Flank) */}
+      <group position={[38, 0, 10]} rotation={[0, -0.4, 0]}>
+        <ModelProp modelKey="ROVER" scale={2.6} position={[0, 0, 0]} />
+        <ModelProp modelKey="COMPUTER_TERMINAL" scale={2.2} position={[4, 0, -3]} rotation={[0, -1.2, 0]} />
+        <ModelProp modelKey="PLASMA_BARREL" scale={2.2} position={[-3.5, 0, 2]} />
+        <ModelProp modelKey="PLASMA_BARREL" scale={2.2} position={[-2.2, 0, 3.2]} />
+      </group>
+
+      {/* Flank Operations & Command Post: Tactical Hologram War-Table (West Flank) */}
+      <group position={[-38, 0, 10]} rotation={[0, 0.4, 0]}>
+        <ModelProp modelKey="HOLOGRAM_TABLE" scale={2.5} position={[0, 0, 0]} />
+        <ModelProp modelKey="COMPUTER_TERMINAL" scale={2.2} position={[-4, 0, -3]} rotation={[0, 1.2, 0]} />
+        <pointLight color={theme.primaryGlow} intensity={2.2} distance={14} decay={2} position={[0, 1.6, 0]} />
+      </group>
+
+      {/* Upper Perimeter Observation Gantry Catwalks with Railings */}
+      {[-47, 47].map((gx) => (
+        <group key={`gantry-${gx}`} position={[gx, 4.5, -8]}>
+          <mesh material={wallMat}>
+            <boxGeometry args={[4.5, 0.4, 54]} />
+          </mesh>
+          {/* Neon safety rail edge */}
+          <mesh position={[gx > 0 ? -2.2 : 2.2, 0.6, 0]}>
+            <boxGeometry args={[0.08, 0.9, 54]} />
+            <meshBasicMaterial color={theme.secondaryGlow} transparent opacity={0.65} toneMapped={false} />
+          </mesh>
+          <ModelProp modelKey="SATELLITE_DISH" scale={0.8} position={[0, 1.2, -18]} />
+        </group>
+      ))}
+
+      {/* Mid-Height Overhead Steel Roof Truss Girders & Industrial Lighting (y: 13.5) */}
+      {[-30, -10, 12].map((tz, idx) => (
+        <group key={`truss-${idx}`} position={[0, 13.5, tz]}>
+          {/* Main Transverse Steel Girder */}
+          <mesh material={wallMat}>
+            <boxGeometry args={[96, 1.2, 1.8]} />
+          </mesh>
+          {/* Triangular Cross-Bracing Struts */}
+          {[-32, -16, 16, 32].map((tx) => (
+            <mesh key={`strut-${tx}`} position={[tx, -1.1, 0]} rotation={[0, 0, tx > 0 ? 0.35 : -0.35]} material={crateMat}>
+              <boxGeometry args={[0.4, 2.6, 1.2]} />
+            </mesh>
+          ))}
+          {/* Industrial Warm Downlights illuminating perimeter docking bays */}
+          {[-34, 0, 34].map((lx) => (
+            <group key={`flood-${lx}`} position={[lx, -0.7, 0]}>
+              <mesh>
+                <boxGeometry args={[3.2, 0.3, 1.4]} />
+                <meshBasicMaterial color="#fef08a" toneMapped={false} />
+              </mesh>
+              <pointLight color="#fef08a" intensity={1.8} distance={22} decay={2} position={[0, -1.2, 0]} />
+            </group>
+          ))}
+        </group>
+      ))}
+
       {/* Logistics Cargo neatly organized in side maintenance alcoves (leaving center open) */}
       <ModelProp modelKey="SCIFI_CRATE" scale={2.4} position={[-42, 0, -8]} rotation={[0, 0.2, 0]} />
       <ModelProp modelKey="SCIFI_CRATE" scale={2.0} position={[-42, 0, -12]} rotation={[0, -0.15, 0]} />
@@ -804,13 +885,14 @@ const EARTH_MOUNTAINS = Array.from({ length: 24 }, (_, i) => {
     shade: i % 3 === 0 ? '#1e4d38' : i % 3 === 1 ? '#255c42' : '#2d6a4c',
   };
 });
-const EARTH_TREES = Array.from({ length: 18 }, (_, i) => {
-  const ang = (i / 18) * Math.PI * 2 + 0.12;
-  const dist = 60 + (i % 3) * 6;
+const EARTH_TREES = Array.from({ length: 24 }, (_, i) => {
+  const ang = (i / 24) * Math.PI * 2 + 0.12;
+  // Natural layered groves: foreground flank tree lines (38-46m) and outer mountain forest (52-64m)
+  const dist = i % 2 === 0 ? 38 + (i % 4) * 2.5 : 52 + (i % 3) * 4.5;
   return {
     x: Math.cos(ang) * dist,
     z: Math.sin(ang) * dist - 10,
-    scale: 0.85 + (i % 3) * 0.25,
+    scale: 0.95 + (i % 3) * 0.35,
   };
 });
 const EARTH_TURBINES = [
@@ -968,10 +1050,14 @@ const EarthOpenFieldWorld = ({ theme }: { theme: MapTheme }) => {
         <ModelProp modelKey="ROVER" scale={2.4} position={[0, 0, 0]} />
       </group>
 
-      {/* Natural Tall Rock Pillars & Outcroppings */}
+      {/* Natural Tall Rock Pillars, Boulders & Foliage framing the valley flanks */}
       <group>
         <ModelProp modelKey="ROCK_TALL" scale={3.2} position={[-42, 0, -22]} rotation={[0, 0.4, 0]} />
         <ModelProp modelKey="ROCK_TALL" scale={2.8} position={[44, 0, -18]} rotation={[0, -0.8, 0]} />
+        <ModelProp modelKey="ROCK_TALL" scale={2.6} position={[-36, 0, 14]} rotation={[0, 1.2, 0]} />
+        <ModelProp modelKey="PLANT_BUSH" scale={2.0} position={[-38, 0, -18]} />
+        <ModelProp modelKey="PLANT_BUSH" scale={2.2} position={[40, 0, -12]} />
+        <ModelProp modelKey="PLANT_BUSH" scale={1.8} position={[28, 0, -8]} />
       </group>
 
       {/* 4 Spinning Green-Energy Wind Turbines */}
@@ -2631,23 +2717,63 @@ export const Environment = () => {
         </>
       )}
 
-      {/* Floor Energy Conduit Strips & Tactical Spawn Pad */}
-      {!isEarthDay &&
-        [
-          { pos: [-14, 0.03, 14] as [number, number, number], args: [24, 0.02, 0.24] as [number, number, number] },
-          { pos: [14, 0.03, 14] as [number, number, number], args: [24, 0.02, 0.24] as [number, number, number] },
-          { pos: [0, 0.03, -8] as [number, number, number], args: [0.28, 0.02, 40] as [number, number, number] },
-        ].map((conduit, idx) => (
-          <mesh key={`conduit-${idx}`} position={conduit.pos}>
-            <boxGeometry args={conduit.args} />
-            <meshBasicMaterial
-              color={idx === 2 ? theme.secondaryGlow : theme.primaryGlow}
-              transparent
-              opacity={0.42}
-              toneMapped={false}
-            />
-          </mesh>
-        ))}
+      {/* Floor Energy Conduit Strips & Tactical Runway Markings (Inspired by Reference Hangar) */}
+      {!isEarthDay && (
+        <>
+          {/* Main Central Runway Flight Lane Boundary Stripes */}
+          {[-7.5, 7.5].map((rx) => (
+            <mesh key={`runway-line-${rx}`} position={[rx, 0.03, -12]}>
+              <boxGeometry args={[0.3, 0.02, 64]} />
+              <meshBasicMaterial color="#f8fafc" transparent opacity={0.65} />
+            </mesh>
+          ))}
+
+          {/* Central Directional Arrow Chevrons leading toward front blast doors */}
+          {[-34, -22, -10, 2].map((cz) => (
+            <group key={`chevron-${cz}`} position={[0, 0.035, cz]}>
+              <mesh position={[-1.2, 0, 0.8]} rotation={[0, 0.65, 0]}>
+                <boxGeometry args={[0.45, 0.02, 2.8]} />
+                <meshBasicMaterial color="#facc15" transparent opacity={0.75} toneMapped={false} />
+              </mesh>
+              <mesh position={[1.2, 0, 0.8]} rotation={[0, -0.65, 0]}>
+                <boxGeometry args={[0.45, 0.02, 2.8]} />
+                <meshBasicMaterial color="#facc15" transparent opacity={0.75} toneMapped={false} />
+              </mesh>
+            </group>
+          ))}
+
+          {/* Lateral Docking Bay Warning Stripes (Yellow/Black Hazard Borders) */}
+          {[-36, 36].map((hx) => (
+            <group key={`hazard-border-${hx}`} position={[hx, 0.035, -8]}>
+              <mesh>
+                <boxGeometry args={[14, 0.02, 0.4]} />
+                <meshBasicMaterial color="#eab308" transparent opacity={0.8} />
+              </mesh>
+              <mesh position={[0, 0, 24]}>
+                <boxGeometry args={[14, 0.02, 0.4]} />
+                <meshBasicMaterial color="#eab308" transparent opacity={0.8} />
+              </mesh>
+            </group>
+          ))}
+
+          {/* Primary & Secondary Energy Conduits */}
+          {[
+            { pos: [-16, 0.03, 14] as [number, number, number], args: [20, 0.02, 0.28] as [number, number, number] },
+            { pos: [16, 0.03, 14] as [number, number, number], args: [20, 0.02, 0.28] as [number, number, number] },
+            { pos: [0, 0.03, -8] as [number, number, number], args: [0.32, 0.02, 44] as [number, number, number] },
+          ].map((conduit, idx) => (
+            <mesh key={`conduit-${idx}`} position={conduit.pos}>
+              <boxGeometry args={conduit.args} />
+              <meshBasicMaterial
+                color={idx === 2 ? theme.secondaryGlow : theme.primaryGlow}
+                transparent
+                opacity={0.52}
+                toneMapped={false}
+              />
+            </mesh>
+          ))}
+        </>
+      )}
 
       {/* Glowing Tactical Spawn Pad under Player Start (0, 0.05, 14) */}
       <group position={[0, 0.05, 14]}>
