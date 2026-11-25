@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 export const MODEL_PATHS = {
   // Enemies & Craft Archetypes
@@ -119,20 +120,32 @@ export async function loadModel(key: ModelKey): Promise<THREE.Group> {
     loader.load(
       url,
       (gltf) => {
-        // Auto-center model at local origin (0, 0, 0)
-        const box = new THREE.Box3().setFromObject(gltf.scene);
-        const center = new THREE.Vector3();
-        box.getCenter(center);
-        for (const child of gltf.scene.children) {
-          child.position.sub(center);
-        }
-
+        let hasArmature = false;
         gltf.scene.traverse((child) => {
+          if ((child as THREE.SkinnedMesh).isSkinnedMesh || (child as THREE.Bone).isBone) {
+            hasArmature = true;
+          }
           if ((child as THREE.Mesh).isMesh) {
             child.castShadow = true;
             child.receiveShadow = true;
           }
         });
+
+        // Only auto-center static props; keep character/drone armatures aligned with their rig origin
+        if (!hasArmature) {
+          const box = new THREE.Box3().setFromObject(gltf.scene);
+          const center = new THREE.Vector3();
+          box.getCenter(center);
+          for (const child of gltf.scene.children) {
+            child.position.sub(center);
+          }
+        }
+
+        // Store animations in userData for instanced mixers
+        if (gltf.animations && gltf.animations.length > 0) {
+          gltf.scene.userData.animations = gltf.animations;
+        }
+
         modelCache.set(url, gltf.scene);
         pendingLoads.delete(url);
         resolve(gltf.scene);
@@ -148,6 +161,19 @@ export async function loadModel(key: ModelKey): Promise<THREE.Group> {
 
   pendingLoads.set(url, promise);
   return promise;
+}
+
+/**
+ * Correctly clone 3D models including rigged SkinnedMesh skeletons.
+ * Standard Object3D.clone() does not rebind bones to the cloned hierarchy,
+ * which caused models to stay anchored at world [0, 0, 0].
+ */
+export function cloneModel(scene: THREE.Group): THREE.Group {
+  const cloned = SkeletonUtils.clone(scene) as THREE.Group;
+  if (scene.userData?.animations) {
+    cloned.userData.animations = scene.userData.animations;
+  }
+  return cloned;
 }
 
 /**
@@ -187,6 +213,6 @@ export function usePreloadedModel(key: ModelKey): THREE.Group | null {
 
   return useMemo(() => {
     if (!cachedScene) return null;
-    return cachedScene.clone(true);
+    return cloneModel(cachedScene);
   }, [cachedScene]);
 }
