@@ -1083,27 +1083,27 @@ const DroneMesh = ({ target, currentRound }: { target: Target; currentRound: num
         24
       );
     } else {
-      if (target.position[0] > 40) {
-        target.position[0] = 40;
+      if (target.position[0] > 48) {
+        target.position[0] = 48;
         if (target.velocity) target.velocity[0] = -Math.abs(target.velocity[0]);
-      } else if (target.position[0] < -40) {
-        target.position[0] = -40;
+      } else if (target.position[0] < -48) {
+        target.position[0] = -48;
         if (target.velocity) target.velocity[0] = Math.abs(target.velocity[0]);
       }
 
-      if (target.position[1] > 25) {
-        target.position[1] = 25;
+      if (target.position[1] > 26) {
+        target.position[1] = 26;
         if (target.velocity) target.velocity[1] = -Math.abs(target.velocity[1]);
       } else if (target.position[1] < (isGroundUnit ? 1.0 : 2.8)) {
         target.position[1] = isGroundUnit ? 1.25 : 2.8;
         if (target.velocity) target.velocity[1] = Math.abs(target.velocity[1]);
       }
 
-      if (target.position[2] > -10) {
-        target.position[2] = -10;
+      if (target.position[2] > -6) {
+        target.position[2] = -6;
         if (target.velocity) target.velocity[2] = -Math.abs(target.velocity[2]);
-      } else if (target.position[2] < -60) {
-        target.position[2] = -60;
+      } else if (target.position[2] < -65) {
+        target.position[2] = -65;
         if (target.velocity) target.velocity[2] = Math.abs(target.velocity[2]);
       }
     }
@@ -1515,10 +1515,10 @@ export const Targets = () => {
             enemyType === 'JUGGERNAUT' ||
             enemyType === 'HEALER' ||
             enemyType === 'KAMIKAZE';
-          const rawX = isFlankingClass ? Math.cos(flankAngle) * 28 : (Math.random() - 0.5) * 56;
+          const rawX = isFlankingClass ? Math.cos(flankAngle) * 36 : (Math.random() - 0.5) * 76;
           const isGroundSpawn = enemyType === 'JUGGERNAUT' || enemyType === 'ARTILLERY' || enemyType === 'SNIPER';
-          const rawY = isGroundSpawn ? 1.25 : 4.2 + Math.random() * 7.5;
-          const rawZ = isFlankingClass ? 14 + Math.sin(flankAngle) * 28 : -20 - Math.random() * 28;
+          const rawY = isGroundSpawn ? 1.25 : 4.5 + Math.random() * 9.0;
+          const rawZ = isFlankingClass ? 14 + Math.sin(flankAngle) * 34 : -24 - Math.random() * 34;
           const pos = getSafeSpawnPosition(rawX, rawY, rawZ);
 
           const cappedRound = Math.min(30, currentRound);

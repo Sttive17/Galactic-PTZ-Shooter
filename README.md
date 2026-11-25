@@ -395,11 +395,18 @@ El proyecto sigue una arquitectura desacoplada de alto rendimiento diseñada par
   - Eliminación de loops de luces puntuales (`pointLight`) en el sombreador WebGL delantero, reemplazándolos con geometría emisiva de alto brillo (`toneMapped={false}`).
   - Transición de materiales del suelo y estructuras a `MeshStandardMaterial` PBR optimizado, eliminando pases costosos de `clearcoat` en superficies masivas.
   - Estabilización física en unidades terrestres (cyborgs y mechas bípedos) con interpolación de altura lerp sin conflicto de clamps verticales.
-- **Rediseño Arquitectónico del Hangar (Inmersión y Densidad Visual):**
-  - Escala táctica cerrada (56m x 58m) en lugar de planos vacíos infinitos, enmarcando la cámara con vigas transversales de acero a `y = 12.2m` y paneles de iluminación industrial.
-  - Puerta de contención blindada (`HANGAR_DOOR` escala 4.5) en la cabecera norte (`z = -36m`), columnas perimetrales de acero y pasarelas de observación superiores a `y = 4.0m`.
-  - Bahías de atraque temáticas: piscina de refrigerante de reactor con líquido tóxico esmeralda animado en el muelle oeste, y bahía de mantenimiento vehicular con Rover, consolas de diagnóstico y contenedores de plasma en el muelle este.
-  - Señalizaciones tácticas en el suelo inspiradas en hangares militares ("AREA 22" y chevrons directores de pista) que guían el encuadre y la puntería del jugador.
+- **Complejo de Hangar Espacial Masivo y Vivo (110m x 104m):**
+  - **Escala Gran Hangar:** El escenario se expande a un complejo militar espacial colosal con techo industrial de gran altura (`y = 19.5m`), 5 vigas maestras de celosía de acero de 104 metros de luz y paneles de iluminación industrial cálida.
+  - **4 Sectores Temáticos de Alto Detalle:**
+    - *Zona Alpha (Muelle de Vuelo Oeste):* Plataforma de aterrizaje iluminada con el caza estelar 3D *Fighter Interceptor* atracado, baterías de plasma, depósitos de combustible y escaleras modulares de servicio (`HANGAR_STAIRS`).
+    - *Zona Beta (Reactor Cuántico de Plasma):* Foso de contención hexagonal de 12m con núcleo de fusión flotante animado, anillos de contención magnética giratorios en tiempo real, estanque de refrigerante esmeralda tóxico y 2 generadores masivos de soporte.
+    - *Zona Gamma (Depósito Técnico y Logístico Este):* Vehículo de exploración *Rover* en su estación de servicio, pilas de contenedores de carga y terminales de diagnóstico.
+    - *Zona Delta (Centro de Mando Táctico):* Mesa holográfica con globo planetario 3D rotatorio en tiempo real y baterías de servidores con LEDs de actividad estocástica.
+  - **Sistemas Vivos y Dinámicos:**
+    - Drones autónomos de patrulla aérea (`DRONE_SCOUT`) volando rutas paramétricas a 12m de altura con conos de luz exploradores proyectados al suelo.
+    - 6 chimeneas y rejillas de ventilación de vapor a presión en el suelo con columnas de vapor ascendente animadas.
+    - Antenas y radares de seguimiento espacial (`SATELLITE_DISH`) con barrido oscilatorio en las pasarelas superiores a `y = 5.2m`.
+    - Señalizaciones tácticas en el suelo ("AREA 22", chevrons de pista de aproximación y delimitaciones de bahía) que enriquecen la orientación visual y la inmersión del combate.
 - **Optimización Zero-GC (Cero Basura en Memoria):**
   - Vectores y matrices preasignados a nivel de módulo (`_tempVec`, `_leadPos`, ` Box3`) para evitar pausas del recolector de basura durante el combate.
 - **Perfiles Gráficos y Autocalibración (`⚡ ACOMODAR A MI PC`):**

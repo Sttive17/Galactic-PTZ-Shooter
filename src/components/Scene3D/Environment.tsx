@@ -542,14 +542,16 @@ const LAUNCH_SKY_FRAGMENT = `
 
 /* ========================= CHAPTER 1: UNDERGROUND LAB (Levels 1-10) ========================= */
 const LAB_STEAM_VENTS = [
-  [-16, 0, -22],
-  [16, 0, -22],
-  [-16, 0, 6],
-  [16, 0, 6],
+  [-18, 0, -42],
+  [18, 0, -42],
+  [-24, 0, -14],
+  [24, 0, -14],
+  [-18, 0, 10],
+  [18, 0, 10],
 ];
-const LAB_TRUSS_ZS = [-28, -14, 0, 14];
-const FLANK_WALL_ZS = [-22, -10, 2, 14];
-const FLANK_COL_ZS = [-28, -16, -4, 8, 20];
+const LAB_TRUSS_ZS = [-58, -40, -22, -4, 14];
+const FLANK_WALL_ZS = [-58, -44, -30, -16, -2, 12, 26];
+const FLANK_COL_ZS = [-64, -50, -36, -22, -8, 6, 20];
 
 const UndergroundLabWorld = ({
   theme,
@@ -557,47 +559,110 @@ const UndergroundLabWorld = ({
   crateMat,
 }: BiomeLandmarksProps) => {
   const steamVentRefs = useRef<(THREE.Mesh | null)[]>([]);
+  const drone1Ref = useRef<THREE.Group>(null);
+  const drone2Ref = useRef<THREE.Group>(null);
+  const reactorCoreRef = useRef<THREE.Mesh>(null);
+  const reactorRing1Ref = useRef<THREE.Mesh>(null);
+  const reactorRing2Ref = useRef<THREE.Mesh>(null);
+  const holoGlobeRef = useRef<THREE.Group>(null);
+  const dishRefs = useRef<(THREE.Group | null)[]>([]);
+  const serverBlinkRefs = useRef<(THREE.MeshBasicMaterial | null)[]>([]);
 
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
-    // Animated Floor Steam Vents
+
+    // 1. Animated Floor Steam Vents (Periodic pressurized burst)
     for (let i = 0; i < steamVentRefs.current.length; i++) {
       const vent = steamVentRefs.current[i];
       if (!vent) continue;
-      const cycle = (t * 0.7 + i * 0.28) % 1;
-      vent.position.y = 0.6 + cycle * 4.2;
-      vent.scale.setScalar(0.8 + cycle * 2.2);
+      const cycle = (t * 0.65 + i * 0.22) % 1;
+      vent.position.y = 0.6 + cycle * 4.6;
+      vent.scale.setScalar(0.85 + cycle * 2.4);
       const mat = vent.material as THREE.MeshBasicMaterial;
-      mat.opacity = Math.sin(cycle * Math.PI) * 0.26;
+      mat.opacity = Math.sin(cycle * Math.PI) * 0.28;
+    }
+
+    // 2. Autonomous Ambient Patrol Drones gliding overhead
+    if (drone1Ref.current) {
+      const a1 = t * 0.28;
+      drone1Ref.current.position.set(
+        Math.cos(a1) * 32,
+        11.5 + Math.sin(t * 0.7) * 1.2,
+        -26 + Math.sin(a1 * 2) * 18
+      );
+      drone1Ref.current.rotation.y = -a1 + Math.PI / 2;
+      drone1Ref.current.rotation.z = Math.sin(a1) * 0.22;
+    }
+    if (drone2Ref.current) {
+      const a2 = t * 0.22 + 2.8;
+      drone2Ref.current.position.set(
+        Math.sin(a2) * 36,
+        13.0 + Math.cos(t * 0.6) * 1.4,
+        -32 + Math.cos(a2 * 2) * 20
+      );
+      drone2Ref.current.rotation.y = a2;
+      drone2Ref.current.rotation.z = -Math.cos(a2) * 0.2;
+    }
+
+    // 3. Hyper-Core Quantum Plasma Reactor Animations
+    if (reactorCoreRef.current) {
+      reactorCoreRef.current.rotation.y += 0.02;
+      reactorCoreRef.current.position.y = 3.6 + Math.sin(t * 2.4) * 0.35;
+    }
+    if (reactorRing1Ref.current) {
+      reactorRing1Ref.current.rotation.x += 0.018;
+      reactorRing1Ref.current.rotation.y += 0.012;
+    }
+    if (reactorRing2Ref.current) {
+      reactorRing2Ref.current.rotation.z -= 0.022;
+      reactorRing2Ref.current.rotation.x += 0.015;
+    }
+
+    // 4. Tactical Command Hologram Table
+    if (holoGlobeRef.current) {
+      holoGlobeRef.current.rotation.y += 0.015;
+    }
+
+    // 5. Catwalk Radar Dishes slowly sweeping
+    for (let i = 0; i < dishRefs.current.length; i++) {
+      const d = dishRefs.current[i];
+      if (d) d.rotation.y = Math.sin(t * 0.4 + i * 1.5) * 0.6;
+    }
+
+    // 6. Server Rack Blinking LED Arrays
+    for (let i = 0; i < serverBlinkRefs.current.length; i++) {
+      const mat = serverBlinkRefs.current[i];
+      if (!mat) continue;
+      mat.opacity = Math.sin(t * 8.2 + i * 1.7) > 0.15 ? 1.0 : 0.25;
     }
   });
 
   return (
     <group>
-      {/* Enclosed Industrial Titanium Ceiling Slab at Architectural Height (y: 12.8m) */}
-      <mesh position={[0, 12.8, -8]} rotation={[Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[62, 70]} />
-        <meshStandardMaterial color="#0b0f17" roughness={0.7} metalness={0.4} />
+      {/* Grand Industrial Titanium Ceiling at High-Bay Height (y: 19.5m, 110m x 104m) */}
+      <mesh position={[0, 19.5, -20]} rotation={[Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[112, 104]} />
+        <meshStandardMaterial color="#090d14" roughness={0.75} metalness={0.4} />
       </mesh>
 
-      {/* 4 Overhead Heavy Structural Steel Truss Girders & Emissive Downlights (y: 12.2m) */}
+      {/* 5 Massive Overhead Suspension Lattice Truss Girders & Industrial LED Flood Panels (y: 18.5m) */}
       {LAB_TRUSS_ZS.map((tz, idx) => (
-        <group key={`truss-${idx}`} position={[0, 12.2, tz]}>
-          {/* Main Transverse Girder spanning arena */}
+        <group key={`truss-${idx}`} position={[0, 18.5, tz]}>
+          {/* Main 104m Transverse Steel Box Girder */}
           <mesh material={wallMat}>
-            <boxGeometry args={[58, 0.85, 1.4]} />
+            <boxGeometry args={[106, 1.2, 1.8]} />
           </mesh>
-          {/* Triangular Cross-Bracing Struts */}
-          {[-20, -10, 0, 10, 20].map((tx) => (
-            <mesh key={`strut-${tx}`} position={[tx, -0.7, 0]} rotation={[0, 0, tx >= 0 ? 0.35 : -0.35]} material={crateMat}>
-              <boxGeometry args={[0.35, 1.8, 0.9]} />
+          {/* Triangular Lattice Support Struts */}
+          {[-42, -28, -14, 0, 14, 28, 42].map((tx) => (
+            <mesh key={`strut-${tx}`} position={[tx, -1.0, 0]} rotation={[0, 0, tx >= 0 ? 0.35 : -0.35]} material={crateMat}>
+              <boxGeometry args={[0.45, 2.4, 1.2]} />
             </mesh>
           ))}
-          {/* Industrial Warm Downlight Panels (Zero point lights for pure 60fps) */}
-          {[-18, 0, 18].map((lx) => (
-            <group key={`flood-${lx}`} position={[lx, -0.5, 0]}>
+          {/* Industrial Warm Downlight Panels (Zero forward point lights for rock-solid 60fps) */}
+          {[-38, -18, 0, 18, 38].map((lx) => (
+            <group key={`flood-${lx}`} position={[lx, -0.7, 0]}>
               <mesh>
-                <boxGeometry args={[3.6, 0.2, 1.2]} />
+                <boxGeometry args={[4.5, 0.25, 1.4]} />
                 <meshBasicMaterial color="#fef08a" toneMapped={false} />
               </mesh>
             </group>
@@ -605,158 +670,266 @@ const UndergroundLabWorld = ({
         </group>
       ))}
 
-      {/* North Armored Blast Gate Wall (z: -36m - Directly framing player FOV) */}
-      <ModelProp modelKey="HANGAR_DOOR" scale={4.5} position={[0, 0, -36]} />
-      <ModelProp modelKey="HANGAR_WALL" scale={3.4} position={[-12, 0, -36]} />
-      <ModelProp modelKey="HANGAR_WALL" scale={3.4} position={[12, 0, -36]} />
-      <ModelProp modelKey="HANGAR_WALL" scale={3.4} position={[-23, 0, -34]} rotation={[0, 0.35, 0]} />
-      <ModelProp modelKey="HANGAR_WALL" scale={3.4} position={[23, 0, -34]} rotation={[0, -0.35, 0]} />
-
-      {/* North Wall Structural Columns */}
-      {[-6, 6, -18, 18].map((cx) => (
-        <ModelProp key={`ncol-${cx}`} modelKey="HANGAR_COLUMN" scale={3.4} position={[cx, 0, -36]} />
+      {/* North Armored Blast Gate Bastion (z: -68m - Colossal Rear Wall of the Complex) */}
+      <ModelProp modelKey="HANGAR_DOOR" scale={5.5} position={[0, 0, -68]} />
+      {[-14, -28, -42, 14, 28, 42].map((wx) => (
+        <ModelProp key={`nwall-${wx}`} modelKey="HANGAR_WALL" scale={4.4} position={[wx, 0, -68]} />
       ))}
+      {[-7, 7, -21, 21, -35, 35].map((cx) => (
+        <ModelProp key={`ncol-${cx}`} modelKey="HANGAR_COLUMN" scale={4.5} position={[cx, 0, -68]} />
+      ))}
+      {/* Parapet Defense Turret Battery overlooking the north gate */}
+      <ModelProp modelKey="TURRET_DEFENSE" scale={2.4} position={[-14, 5.5, -67]} rotation={[0, 0.25, 0]} />
+      <ModelProp modelKey="TURRET_DEFENSE" scale={2.4} position={[14, 5.5, -67]} rotation={[0, -0.25, 0]} />
 
-      {/* Wall-Mounted Defense Security Turrets */}
-      <ModelProp modelKey="TURRET_DEFENSE" scale={2.0} position={[-12, 4.4, -35.2]} rotation={[0, 0.2, 0]} />
-      <ModelProp modelKey="TURRET_DEFENSE" scale={2.0} position={[12, 4.4, -35.2]} rotation={[0, -0.2, 0]} />
-
-      {/* West Flank Enclosure Wall & Columns (x: -28m) */}
+      {/* West Flank Perimeter Wall & Structural Columns (x: -52m) */}
       {FLANK_WALL_ZS.map((wz) => (
-        <ModelProp key={`wwall-${wz}`} modelKey="HANGAR_WALL" scale={3.4} position={[-28, 0, wz]} rotation={[0, Math.PI / 2, 0]} />
+        <ModelProp key={`wwall-${wz}`} modelKey="HANGAR_WALL" scale={4.4} position={[-52, 0, wz]} rotation={[0, Math.PI / 2, 0]} />
       ))}
       {FLANK_COL_ZS.map((cz) => (
-        <ModelProp key={`wcol-${cz}`} modelKey="HANGAR_COLUMN" scale={3.5} position={[-27.5, 0, cz]} />
+        <ModelProp key={`wcol-${cz}`} modelKey="HANGAR_COLUMN" scale={4.5} position={[-51.5, 0, cz]} />
       ))}
 
-      {/* East Flank Enclosure Wall & Columns (x: +28m) */}
+      {/* East Flank Perimeter Wall & Structural Columns (x: +52m) */}
       {FLANK_WALL_ZS.map((wz) => (
-        <ModelProp key={`ewall-${wz}`} modelKey="HANGAR_WALL" scale={3.4} position={[28, 0, wz]} rotation={[0, -Math.PI / 2, 0]} />
+        <ModelProp key={`ewall-${wz}`} modelKey="HANGAR_WALL" scale={4.4} position={[52, 0, wz]} rotation={[0, -Math.PI / 2, 0]} />
       ))}
       {FLANK_COL_ZS.map((cz) => (
-        <ModelProp key={`ecol-${cz}`} modelKey="HANGAR_COLUMN" scale={3.5} position={[27.5, 0, cz]} />
+        <ModelProp key={`ecol-${cz}`} modelKey="HANGAR_COLUMN" scale={4.5} position={[51.5, 0, cz]} />
       ))}
 
-      {/* South Wall Enclosure (behind player at z: +22m) */}
-      <ModelProp modelKey="HANGAR_WALL" scale={3.4} position={[-10, 0, 22]} />
-      <ModelProp modelKey="HANGAR_WALL" scale={3.4} position={[10, 0, 22]} />
-      <ModelProp modelKey="HANGAR_COLUMN" scale={3.5} position={[-18, 0, 22]} />
-      <ModelProp modelKey="HANGAR_COLUMN" scale={3.5} position={[0, 0, 22]} />
-      <ModelProp modelKey="HANGAR_COLUMN" scale={3.5} position={[18, 0, 22]} />
+      {/* South Wall Enclosure (behind player at z: +28m) */}
+      {[-36, -18, 0, 18, 36].map((sx) => (
+        <ModelProp key={`swall-${sx}`} modelKey="HANGAR_WALL" scale={4.4} position={[sx, 0, 28]} />
+      ))}
+      {[-45, -27, -9, 9, 27, 45].map((scx) => (
+        <ModelProp key={`scol-${scx}`} modelKey="HANGAR_COLUMN" scale={4.5} position={[scx, 0, 28]} />
+      ))}
 
-      {/* Upper Observation Catwalk Gantries (y: 4.0m) */}
-      {[-26, 26].map((gx) => (
-        <group key={`gantry-${gx}`} position={[gx, 4.0, -6]}>
+      {/* Multi-Level Observation Catwalk Gantries (y: 5.2m, spanning 80m along each flank) */}
+      {[-48, 48].map((gx, gIdx) => (
+        <group key={`gantry-${gx}`} position={[gx, 5.2, -18]}>
           <mesh material={wallMat}>
-            <boxGeometry args={[3.6, 0.35, 48]} />
+            <boxGeometry args={[4.2, 0.45, 82]} />
           </mesh>
           {/* Luminous Safety Handrail Edge */}
-          <mesh position={[gx > 0 ? -1.8 : 1.8, 0.55, 0]}>
-            <boxGeometry args={[0.08, 0.85, 48]} />
+          <mesh position={[gx > 0 ? -2.1 : 2.1, 0.65, 0]}>
+            <boxGeometry args={[0.08, 0.95, 82]} />
             <meshBasicMaterial color={theme.secondaryGlow} transparent opacity={0.65} toneMapped={false} />
           </mesh>
-          <ModelProp modelKey="SATELLITE_DISH" scale={0.8} position={[0, 1.1, -16]} />
+          {/* Tracking Sensor Radar Dishes on Catwalk */}
+          {[-26, 26].map((dz, dIdx) => (
+            <group
+              key={`dish-${dIdx}`}
+              ref={(el) => {
+                dishRefs.current[gIdx * 2 + dIdx] = el;
+              }}
+              position={[0, 1.2, dz]}
+            >
+              <ModelProp modelKey="SATELLITE_DISH" scale={0.9} />
+            </group>
+          ))}
         </group>
       ))}
 
-      {/* West Dock: Toxic Reactor Vat & Containment Coolant Pool */}
-      <group position={[-18, 0, -12]}>
-        {/* Yellow/Black Hazard Floor Border */}
+      {/* Access Stairs leading to Upper Catwalks */}
+      <ModelProp modelKey="HANGAR_STAIRS" scale={2.4} position={[-46, 0, 8]} rotation={[0, Math.PI / 2, 0]} />
+      <ModelProp modelKey="HANGAR_STAIRS" scale={2.4} position={[46, 0, 8]} rotation={[0, -Math.PI / 2, 0]} />
+
+      {/* ================= ZONE ALPHA: FLIGHT DECK (West Wing: x = -38m, z = -28m) ================= */}
+      <group position={[-38, 0, -28]}>
+        {/* Flight Pad Illuminated Stencil Platform */}
         <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[9.5, 9.5]} />
-          <meshBasicMaterial color="#f59e0b" transparent opacity={0.35} toneMapped={false} />
+          <planeGeometry args={[18, 22]} />
+          <meshBasicMaterial color="#0284c7" transparent opacity={0.2} toneMapped={false} />
         </mesh>
-        <mesh position={[0, 0.35, 0]} material={wallMat}>
-          <cylinderGeometry args={[3.4, 3.8, 0.7, 8]} />
+        <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[7.5, 7.9, 48]} />
+          <meshBasicMaterial color={theme.secondaryGlow} transparent opacity={0.6} toneMapped={false} />
         </mesh>
-        {/* Glowing Toxic Emerald Coolant Pool */}
-        <mesh position={[0, 0.72, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[2.9, 16]} />
-          <meshBasicMaterial color="#10b981" transparent opacity={0.9} toneMapped={false} />
+        {/* Docked Real 3D Heavy Assault Fighter Craft */}
+        <ModelProp modelKey="FIGHTER_INTERCEPTOR" scale={1.9} position={[0, 1.35, 0]} rotation={[0, 0.45, 0]} />
+        {/* Flight Line Power & Plasma Fuel Cells */}
+        <ModelProp modelKey="PLASMA_BARREL" scale={2.2} position={[-6.5, 0, -4]} />
+        <ModelProp modelKey="PLASMA_BARREL" scale={2.2} position={[-5.2, 0, -5.2]} />
+        <ModelProp modelKey="POWER_GENERATOR" scale={2.5} position={[-7.5, 0.1, 4]} rotation={[0, 0.6, 0]} />
+        {/* Ground Diagnostic Station */}
+        <ModelProp modelKey="COMPUTER_TERMINAL" scale={2.0} position={[6.5, 0, -5]} rotation={[0, -1.8, 0]} />
+      </group>
+
+      {/* ================= ZONE BETA: HYPER-CORE QUANTUM REACTOR (Center-North: x = 0, z = -52m) ================= */}
+      <group position={[0, 0, -52]}>
+        {/* Outer Hexagonal Blast Pit Rim */}
+        <mesh position={[0, 0.4, 0]} material={wallMat}>
+          <cylinderGeometry args={[5.8, 6.4, 0.85, 8]} />
         </mesh>
-        {/* 3 Vertical Containment Rods */}
-        {[-1.8, 0, 1.8].map((rx, idx) => (
-          <group key={`rod-${idx}`} position={[rx, 1.5, -1.4]}>
-            <mesh material={crateMat}>
-              <cylinderGeometry args={[0.18, 0.18, 2.2, 8]} />
+        {/* Glowing Emerald Coolant Pool */}
+        <mesh position={[0, 0.85, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[5.2, 24]} />
+          <meshBasicMaterial color="#10b981" transparent opacity={0.88} toneMapped={false} />
+        </mesh>
+        {/* Central Levitating Fusion Core */}
+        <mesh ref={reactorCoreRef} position={[0, 3.6, 0]}>
+          <octahedronGeometry args={[1.6, 0]} />
+          <meshBasicMaterial color="#34d399" toneMapped={false} />
+        </mesh>
+        {/* Rotating Magnetic Containment Rings */}
+        <mesh ref={reactorRing1Ref} position={[0, 3.6, 0]}>
+          <torusGeometry args={[3.2, 0.14, 8, 32]} />
+          <meshBasicMaterial color={theme.primaryGlow} transparent opacity={0.8} toneMapped={false} />
+        </mesh>
+        <mesh ref={reactorRing2Ref} position={[0, 3.6, 0]}>
+          <torusGeometry args={[4.2, 0.12, 8, 32]} />
+          <meshBasicMaterial color={theme.secondaryGlow} transparent opacity={0.7} toneMapped={false} />
+        </mesh>
+        {/* 4 Massive Power Conduit Feeder Pipes */}
+        {[-3.8, 3.8].map((px) => (
+          <mesh key={`pipe-${px}`} position={[px, 1.8, -4.5]} rotation={[0.4, 0, 0]} material={crateMat}>
+            <cylinderGeometry args={[0.35, 0.35, 6.5, 12]} />
+          </mesh>
+        ))}
+        {/* Dual Flanking Colossal Power Substations */}
+        <ModelProp modelKey="POWER_GENERATOR" scale={3.0} position={[-11, 0.1, 0]} rotation={[0, 0.5, 0]} />
+        <ModelProp modelKey="POWER_GENERATOR" scale={3.0} position={[11, 0.1, 0]} rotation={[0, -0.5, 0]} />
+      </group>
+
+      {/* ================= ZONE GAMMA: LOGISTICS & VEHICLE DEPOT (East Wing: x = +38m, z = -28m) ================= */}
+      <group position={[38, 0, -28]}>
+        {/* Yellow/Black Staging Pad Border */}
+        <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[18, 22]} />
+          <meshBasicMaterial color="#f59e0b" transparent opacity={0.2} toneMapped={false} />
+        </mesh>
+        {/* Ground Exploration & Defense Rover */}
+        <ModelProp modelKey="ROVER" scale={2.8} position={[0, 0, 0]} rotation={[0, -0.4, 0]} />
+        {/* Workstation & Cargo Depot */}
+        <ModelProp modelKey="COMPUTER_TERMINAL" scale={2.4} position={[6.5, 0, -4.5]} rotation={[0, -1.2, 0]} />
+        <ModelProp modelKey="SCIFI_CRATE" scale={2.6} position={[5.5, 0, 4.5]} />
+        <ModelProp modelKey="SCIFI_CRATE" scale={2.2} position={[5.5, 0, 8]} rotation={[0, 0.3, 0]} />
+        <ModelProp modelKey="SCIFI_CAPSULE" scale={2.4} position={[-6, 0, 4.5]} />
+        <ModelProp modelKey="PLASMA_BARREL" scale={2.2} position={[-5.5, 0, -4.5]} />
+        <ModelProp modelKey="PLASMA_BARREL" scale={2.2} position={[-4.2, 0, -5.8]} />
+        {/* Perimeter Defense Battery */}
+        <ModelProp modelKey="TURRET_DEFENSE" scale={2.2} position={[-6.5, 0.1, -9]} rotation={[0, 0.4, 0]} />
+      </group>
+
+      {/* ================= ZONE DELTA: COMMAND & TACTICAL OPS (South-West: x = -36m, z = +8m) ================= */}
+      <group position={[-36, 0, 8]}>
+        <ModelProp modelKey="HOLOGRAM_TABLE" scale={2.6} position={[0, 0, 0]} />
+        {/* Floating Rotating Wireframe Planetary Hologram */}
+        <group ref={holoGlobeRef} position={[0, 2.8, 0]}>
+          <mesh>
+            <icosahedronGeometry args={[1.3, 1]} />
+            <meshBasicMaterial color={theme.primaryGlow} wireframe transparent opacity={0.65} toneMapped={false} />
+          </mesh>
+          <mesh rotation={[Math.PI / 3, 0, 0]}>
+            <torusGeometry args={[2.0, 0.04, 6, 24]} />
+            <meshBasicMaterial color={theme.secondaryGlow} transparent opacity={0.7} toneMapped={false} />
+          </mesh>
+        </group>
+        <ModelProp modelKey="COMPUTER_TERMINAL" scale={2.2} position={[-4.5, 0, -3]} rotation={[0, 1.2, 0]} />
+        {/* Server Mainframe Banks with Blinking LED Arrays */}
+        {[-3, 0, 3].map((sx, sIdx) => (
+          <group key={`srv-${sIdx}`} position={[sx, 0, 4.5]}>
+            <mesh position={[0, 3.2, 0]} material={wallMat}>
+              <boxGeometry args={[2.4, 6.4, 1.4]} />
             </mesh>
-            <mesh position={[0, 1.15, 0]}>
-              <sphereGeometry args={[0.26, 8, 8]} />
-              <meshBasicMaterial color="#34d399" toneMapped={false} />
-            </mesh>
+            {[-1.8, 0, 1.8].map((sy, lIdx) => (
+              <mesh key={`led-${lIdx}`} position={[0, 3.2 + sy, 0.72]}>
+                <boxGeometry args={[1.8, 0.14, 0.04]} />
+                <meshBasicMaterial
+                  ref={(el) => {
+                    serverBlinkRefs.current[sIdx * 3 + lIdx] = el;
+                  }}
+                  color={lIdx % 2 === 0 ? theme.primaryGlow : theme.secondaryGlow}
+                  transparent
+                  toneMapped={false}
+                />
+              </mesh>
+            ))}
           </group>
         ))}
-        {/* Power Generator docked behind reactor */}
-        <ModelProp modelKey="POWER_GENERATOR" scale={2.6} position={[0, 0.1, -7]} rotation={[0, 0.3, 0]} />
       </group>
 
-      {/* East Dock: Maintenance Vehicle Bay & Diagnostics */}
-      <group position={[18, 0, -12]}>
-        {/* Yellow Caution Bay Outline on Floor */}
-        <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[10.5, 12]} />
-          <meshBasicMaterial color="#f59e0b" transparent opacity={0.25} toneMapped={false} />
+      {/* Logistics Cargo Depot (South-East: x = +36m, z = +8m) */}
+      <group position={[36, 0, 8]}>
+        <ModelProp modelKey="SCIFI_CRATE" scale={2.8} position={[0, 0, 0]} rotation={[0, 0.2, 0]} />
+        <ModelProp modelKey="SCIFI_CRATE" scale={2.4} position={[0, 0, 3.8]} rotation={[0, -0.15, 0]} />
+        <ModelProp modelKey="SCIFI_CAPSULE" scale={2.4} position={[-4, 0, 2]} />
+        <ModelProp modelKey="PLASMA_BARREL" scale={2.2} position={[4, 0, -1]} />
+      </group>
+
+      {/* ================= ALIVE: AUTONOMOUS OVERHEAD PATROL DRONES ================= */}
+      <group ref={drone1Ref} position={[0, 12, -26]}>
+        <ModelProp modelKey="DRONE_SCOUT" scale={1.4} />
+        {/* Subtle Downward Searchlight Cone */}
+        <mesh position={[0, -4.5, 0]} rotation={[0, 0, 0]}>
+          <coneGeometry args={[3.2, 9, 16, 1, true]} />
+          <meshBasicMaterial
+            color={theme.primaryGlow}
+            transparent
+            opacity={0.06}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+            side={THREE.DoubleSide}
+          />
         </mesh>
-        <ModelProp modelKey="ROVER" scale={2.5} position={[0, 0, 0]} rotation={[0, -0.3, 0]} />
-        <ModelProp modelKey="COMPUTER_TERMINAL" scale={2.0} position={[4, 0, -3.5]} rotation={[0, -1.2, 0]} />
-        <ModelProp modelKey="SCIFI_CRATE" scale={2.2} position={[3, 0, 3]} />
-        <ModelProp modelKey="PLASMA_BARREL" scale={2.0} position={[-3.5, 0, -3]} />
-        <ModelProp modelKey="PLASMA_BARREL" scale={2.0} position={[-2.3, 0, -4]} />
       </group>
 
-      {/* West Operations Station: Holographic Command War-Table */}
-      <group position={[-18, 0, 6]}>
-        <ModelProp modelKey="HOLOGRAM_TABLE" scale={2.4} position={[0, 0, 0]} />
-        <ModelProp modelKey="COMPUTER_TERMINAL" scale={2.0} position={[-3.5, 0, -2.5]} rotation={[0, 1.2, 0]} />
-        <ModelProp modelKey="SCIFI_CAPSULE" scale={2.0} position={[3.5, 0, 2]} />
+      <group ref={drone2Ref} position={[0, 13, -32]}>
+        <ModelProp modelKey="DRONE_SCOUT" scale={1.4} />
+        <mesh position={[0, -5.0, 0]} rotation={[0, 0, 0]}>
+          <coneGeometry args={[3.6, 10, 16, 1, true]} />
+          <meshBasicMaterial
+            color={theme.secondaryGlow}
+            transparent
+            opacity={0.06}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
       </group>
 
-      {/* East Logistics Alcove: Cargo Stacks */}
-      <group position={[18, 0, 6]}>
-        <ModelProp modelKey="SCIFI_CRATE" scale={2.4} position={[0, 0, 0]} rotation={[0, 0.2, 0]} />
-        <ModelProp modelKey="SCIFI_CRATE" scale={2.0} position={[0, 0, 3.2]} rotation={[0, -0.15, 0]} />
-        <ModelProp modelKey="SCIFI_CAPSULE" scale={2.0} position={[-3.5, 0, 1.5]} />
-      </group>
-
-      {/* Tactical Runway Centerline Chevron Stripes (Guiding aim forward - Image 4) */}
-      {[-24, -16, -8, 0, 8].map((cz) => (
+      {/* ================= TACTICAL RUNWAY CHEVRONS & AREA 22 FLOOR DECALS ================= */}
+      {[-46, -38, -30, -22, -14, -6, 2, 10].map((cz) => (
         <group key={`chevron-${cz}`} position={[0, 0.03, cz]}>
           <mesh rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[1.8, 0.35]} />
-            <meshBasicMaterial color="#38bdf8" transparent opacity={0.55} toneMapped={false} />
+            <planeGeometry args={[2.4, 0.45]} />
+            <meshBasicMaterial color="#38bdf8" transparent opacity={0.6} toneMapped={false} />
           </mesh>
-          <mesh position={[-2.4, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[0.8, 0.15]} />
+          <mesh position={[-3.2, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[1.2, 0.2]} />
             <meshBasicMaterial color="#f59e0b" transparent opacity={0.5} toneMapped={false} />
           </mesh>
-          <mesh position={[2.4, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[0.8, 0.15]} />
+          <mesh position={[3.2, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[1.2, 0.2]} />
             <meshBasicMaterial color="#f59e0b" transparent opacity={0.5} toneMapped={false} />
           </mesh>
         </group>
       ))}
 
       {/* "AREA 22" Hangar Tactical Floor Stencil Decal */}
-      <group position={[0, 0.03, -12]}>
+      <group position={[0, 0.03, -14]}>
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[5.2, 5.5, 32]} />
-          <meshBasicMaterial color={theme.primaryGlow} transparent opacity={0.5} toneMapped={false} />
+          <ringGeometry args={[6.5, 6.9, 48]} />
+          <meshBasicMaterial color={theme.primaryGlow} transparent opacity={0.55} toneMapped={false} />
         </mesh>
         <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[7.8, 8.1, 40]} />
-          <meshBasicMaterial color={theme.secondaryGlow} transparent opacity={0.35} toneMapped={false} />
+          <ringGeometry args={[9.8, 10.2, 56]} />
+          <meshBasicMaterial color={theme.secondaryGlow} transparent opacity={0.4} toneMapped={false} />
         </mesh>
       </group>
 
-      {/* 4 Active Floor Steam Vent Grates with Rising Vapor */}
+      {/* 6 Active Floor Steam Vent Grates with Rising Vapor Plumes */}
       {LAB_STEAM_VENTS.map(([vx, vy, vz], i) => (
         <group key={`steam-vent-${i}`} position={[vx, vy, vz]}>
           <mesh position={[0, 0.08, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <circleGeometry args={[1.4, 12]} />
-            <meshStandardMaterial color="#0f172a" metalness={0.9} roughness={0.3} />
+            <circleGeometry args={[1.5, 16]} />
+            <meshStandardMaterial color="#0b0f17" metalness={0.9} roughness={0.25} />
           </mesh>
           <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[1.2, 1.4, 12]} />
+            <ringGeometry args={[1.3, 1.5, 16]} />
             <meshBasicMaterial color="#f59e0b" toneMapped={false} />
           </mesh>
           <mesh
@@ -765,8 +938,8 @@ const UndergroundLabWorld = ({
             }}
             position={[0, 1.2, 0]}
           >
-            <cylinderGeometry args={[1.3, 0.5, 2.4, 10, 1, true]} />
-            <meshBasicMaterial color="#e2e8f0" transparent opacity={0.22} depthWrite={false} />
+            <cylinderGeometry args={[1.5, 0.55, 2.6, 12, 1, true]} />
+            <meshBasicMaterial color="#e2e8f0" transparent opacity={0.25} depthWrite={false} />
           </mesh>
         </group>
       ))}

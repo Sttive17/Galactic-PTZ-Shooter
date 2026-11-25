@@ -1231,12 +1231,14 @@ export function generateMapForLevel(level: number, randomizeSalt = false): Gener
   // Flank defensive walls and corner radar towers enclose the combat perimeter cleanly,
   // leaving the central duel corridor (x: -20 to +20) completely open and unobstructed.
   const authoredCover = [
-    { id: 'cover-nw', kind: 'wall' as const, x: -18, z: -20, w: 7.5, h: 4.5, d: 2.0, accent: 'primary' as const },
-    { id: 'cover-ne', kind: 'wall' as const, x: 18, z: -20, w: 7.5, h: 4.5, d: 2.0, accent: 'secondary' as const },
-    { id: 'cover-sw', kind: 'barrier' as const, x: -22, z: 2, w: 6.0, h: 1.5, d: 1.5, accent: 'secondary' as const },
-    { id: 'cover-se', kind: 'barrier' as const, x: 22, z: 2, w: 6.0, h: 1.5, d: 1.5, accent: 'primary' as const },
-    { id: 'cover-west', kind: 'tower' as const, x: -26, z: -30, w: 3.6, h: 9.0, d: 3.6, accent: 'primary' as const },
-    { id: 'cover-east', kind: 'tower' as const, x: 26, z: -30, w: 3.6, h: 9.0, d: 3.6, accent: 'secondary' as const },
+    { id: 'cover-nw', kind: 'wall' as const, x: -22, z: -26, w: 7.5, h: 4.5, d: 2.0, accent: 'primary' as const },
+    { id: 'cover-ne', kind: 'wall' as const, x: 22, z: -26, w: 7.5, h: 4.5, d: 2.0, accent: 'secondary' as const },
+    { id: 'cover-sw', kind: 'barrier' as const, x: -26, z: 4, w: 6.5, h: 1.6, d: 1.8, accent: 'secondary' as const },
+    { id: 'cover-se', kind: 'barrier' as const, x: 26, z: 4, w: 6.5, h: 1.6, d: 1.8, accent: 'primary' as const },
+    { id: 'cover-mid-w', kind: 'barrier' as const, x: -16, z: -12, w: 5.2, h: 1.8, d: 1.6, accent: 'secondary' as const },
+    { id: 'cover-mid-e', kind: 'barrier' as const, x: 16, z: -12, w: 5.2, h: 1.8, d: 1.6, accent: 'primary' as const },
+    { id: 'cover-west', kind: 'tower' as const, x: -34, z: -46, w: 4.0, h: 9.0, d: 4.0, accent: 'primary' as const },
+    { id: 'cover-east', kind: 'tower' as const, x: 34, z: -46, w: 4.0, h: 9.0, d: 4.0, accent: 'secondary' as const },
   ];
   for (const cover of authoredCover) {
     obstacles.push(createMapBox(`authored-${seed}-${cover.id}`, cover.kind, cover.x, 0, cover.z, cover.w, cover.h, cover.d, cover.accent));
