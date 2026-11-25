@@ -385,7 +385,7 @@ El proyecto sigue una arquitectura desacoplada de alto rendimiento diseñada par
   - **Zustand ([gameState.ts](src/game/gameState.ts)):** Gestiona el estado de UI, rondas, puntuación, inventario de poderes, armería, configuración y persistencia en `localStorage`.
   - **Estado Mutativo de Escena ([sceneState.ts](src/game/sceneState.ts)):** Almacena posiciones a 60+ Hz (`playerPosition`, `muzzlePosition`, `targets`, `projectiles`, `colliders`, `weaponRecoil`) leídas directamente dentro de `useFrame` sin disparar re-renders de React.
 - **Cargador y Caché de Modelos 3D ([modelLoader.ts](src/game/modelLoader.ts)):**
-  - Precarga asíncrona mediante `GLTFLoader`, caché en memoria de escenas originales y clonación rápida (`scene.clone(true)`) que reutiliza geometrías y texturas en la GPU.
+  - Carga bajo demanda mediante `GLTFLoader`, caché en memoria de escenas originales y clonación rápida (`scene.clone(true)`) que reutiliza geometrías y texturas en la GPU. `preloadModels` permite anticipar solo los recursos de la próxima transición, sin descargar todo el catálogo al abrir el juego.
 - **Optimización Zero-GC (Cero Basura en Memoria):**
   - Vectores y matrices preasignados a nivel de módulo (`_tempVec`, `_leadPos`, ` Box3`) para evitar pausas del recolector de basura durante el combate.
 - **Perfiles Gráficos y Autocalibración (`⚡ ACOMODAR A MI PC`):**
@@ -480,6 +480,8 @@ Galactic-PTZ-Shooter/
 │       └── game.ts                 # Tipos e interfaces TypeScript de todo el juego
 ├── tests/
 │   └── e2e/                        # Suite de pruebas automatizadas End-to-End con Playwright Core
+├── docs/
+│   └── AUDITORIA_TECNICA.md         # Hallazgos, verificación y deuda técnica priorizada
 ├── package.json
 ├── tsconfig.json
 └── vite.config.ts
@@ -546,7 +548,8 @@ El proyecto cuenta con una suite de pruebas End-to-End reales en navegador Chrom
 - [x] **Fase 9:** Optimización WebGL Zero-GC, caché de modelos GLB y autocalibrador de hardware.
 - [x] **Fase 10:** Verificación de compilación limpia TypeScript y suite E2E Playwright.
 - [x] **Fase 11:** Documentación técnica y contextual exhaustiva en `README.md`.
-- [ ] **Fase 12:** Tablas de clasificación globales en línea y modo cooperativo orbital (futuro).
+- [x] **Fase 12:** Paquete visual prioritario: plataforma de exposición para la Vanguard, módulos de suelo y escaleras GLB en el hangar inicial, drones logísticos 3D y núcleos/baterías visibles para los ocho jefes.
+- [ ] **Fase 13:** Tablas de clasificación globales en línea y modo cooperativo orbital (futuro).
 
 ---
 

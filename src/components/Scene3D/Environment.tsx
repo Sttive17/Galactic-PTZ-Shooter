@@ -619,6 +619,13 @@ const UndergroundLabWorld = ({
         <meshBasicMaterial color={theme.secondaryGlow} transparent opacity={0.5} toneMapped={false} />
       </mesh>
 
+      {/* Modular landing deck: the GLB tiles add a readable industrial scale below combat. */}
+      {[-30, 0, 30].flatMap((x) => [-34, -6, 22].map((z) => ({ x, z }))).map(({ x, z }) => (
+        <ModelProp key={`deck-${x}-${z}`} modelKey="HANGAR_FLOOR" scale={5.2} position={[x, 0.02, z]} />
+      ))}
+      <ModelProp modelKey="HANGAR_STAIRS" scale={3.6} position={[-34, 0, 8]} rotation={[0, Math.PI / 2, 0]} />
+      <ModelProp modelKey="HANGAR_STAIRS" scale={3.6} position={[34, 0, 8]} rotation={[0, -Math.PI / 2, 0]} />
+
       {/* Real 3D Modular Hangar Architecture & Logistics */}
       {/* Front Blast Door & Perimeter Walls */}
       <ModelProp modelKey="HANGAR_DOOR" scale={4.6} position={[0, 0, -48]} />
@@ -2541,8 +2548,8 @@ export const Environment = () => {
               position={[cfg.rx, cfg.y, -10]}
             >
               <ModelProp
-                modelKey={idx % 2 === 0 ? 'CRAFT_BOSS' : 'CRAFT_TANK'}
-                scale={2.2}
+                modelKey={idx % 2 === 0 ? 'DRONE_SCOUT' : 'DRONE_GUNNER'}
+                scale={idx % 2 === 0 ? 1.65 : 1.45}
                 rotation={[0, Math.PI / 2, 0]}
               />
               {[-1.3, 1.3].map((tx, tIdx) => (

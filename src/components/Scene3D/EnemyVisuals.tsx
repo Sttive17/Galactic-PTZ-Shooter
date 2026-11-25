@@ -1,5 +1,7 @@
+import { useRef } from 'react';
 import type { RefObject } from 'react';
 import * as THREE from 'three';
+import { useFrame } from '@react-three/fiber';
 import type { EnemyArchetype } from '../../types/game';
 import { usePreloadedModel } from '../../game/modelLoader';
 import type { ModelKey } from '../../game/modelLoader';
@@ -17,7 +19,143 @@ const ModelCraft = ({
 }) => {
   const model = usePreloadedModel(modelKey);
   if (!model) return null;
-  return <primitive object={model} scale={scale} rotation={rotation} position={position} />;
+  const isDrone = modelKey === 'DRONE_GUNNER' || modelKey === 'DRONE_SCOUT';
+  const isHeavyUnit = modelKey === 'ROBOT_WALKER' || modelKey === 'HEAVY_CYBORG';
+
+  return (
+    <group scale={scale} rotation={rotation} position={position}>
+      <primitive object={model} />
+      {isDrone && (
+        <>
+          {/* Targeting lens and twin engine glow make the small GLB silhouettes readable at range. */}
+          <mesh position={[0, 0.06, -0.62]}>
+            <sphereGeometry args={[0.09, 12, 12]} />
+            <meshBasicMaterial color="#fb7185" toneMapped={false} />
+          </mesh>
+          {[-0.28, 0.28].map((x) => (
+            <mesh key={x} position={[x, -0.12, 0.42]} rotation={[Math.PI / 2, 0, 0]}>
+              <coneGeometry args={[0.08, 0.36, 8]} />
+              <meshBasicMaterial color="#22d3ee" transparent opacity={0.82} toneMapped={false} />
+            </mesh>
+          ))}
+        </>
+      )}
+      {isHeavyUnit && (
+        <>
+          {/* Heavy silhouettes receive a powered spine and shoulder warning lamps. */}
+          <mesh position={[0, 0.6, 0.12]}>
+            <boxGeometry args={[0.07, 0.52, 0.05]} />
+            <meshBasicMaterial color="#f59e0b" toneMapped={false} />
+          </mesh>
+          {[-0.32, 0.32].map((x) => (
+            <mesh key={x} position={[x, 0.72, -0.08]}>
+              <sphereGeometry args={[0.06, 8, 8]} />
+              <meshBasicMaterial color="#ef4444" toneMapped={false} />
+            </mesh>
+          ))}
+        </>
+      )}
+    </group>
+  );
+};
+
+const BOSS_RIGS = {
+  1: { color: '#38bdf8', accent: '#fbbf24', radius: 2.25, batteries: 2 },
+  2: { color: '#22d3ee', accent: '#a855f7', radius: 2.5, batteries: 3 },
+  3: { color: '#f59e0b', accent: '#fb7185', radius: 2.6, batteries: 4 },
+  4: { color: '#a855f7', accent: '#67e8f9', radius: 2.15, batteries: 2 },
+  5: { color: '#f97316', accent: '#facc15', radius: 2.7, batteries: 4 },
+  6: { color: '#c084fc', accent: '#22d3ee', radius: 2.75, batteries: 3 },
+  7: { color: '#fb7185', accent: '#f59e0b', radius: 2.9, batteries: 4 },
+  8: { color: '#f43f5e', accent: '#facc15', radius: 3.15, batteries: 4 },
+} as const;
+
+/** Visible weak-core and weapon silhouette shared by every boss family. */
+const BossThreatRig = ({
+  tier,
+  isTargeted,
+  isShielded,
+}: {
+  tier: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+  isTargeted: boolean;
+  isShielded: boolean;
+}) => {
+  const coreRef = useRef<THREE.Mesh>(null);
+  const innerRingRef = useRef<THREE.Mesh>(null);
+  const outerRingRef = useRef<THREE.Mesh>(null);
+  const config = BOSS_RIGS[tier];
+
+  useFrame(({ clock }, delta) => {
+    const dt = Math.min(delta, 0.05);
+    const pulse = 1 + Math.sin(clock.elapsedTime * (isTargeted ? 10 : 4)) * 0.09;
+    if (coreRef.current) {
+      coreRef.current.scale.setScalar(pulse);
+      coreRef.current.rotation.y += dt * 1.8;
+    }
+    if (innerRingRef.current) {
+      innerRingRef.current.rotation.x += dt * 1.25;
+      innerRingRef.current.rotation.z -= dt * 0.8;
+    }
+    if (outerRingRef.current) {
+      outerRingRef.current.rotation.y -= dt * 0.95;
+      outerRingRef.current.rotation.x += dt * 0.45;
+    }
+  });
+
+  return (
+    <group position={[0, 1.25, 0]}>
+      <mesh ref={coreRef}>
+        <octahedronGeometry args={[0.43, 1]} />
+        <meshStandardMaterial
+          color={config.color}
+          emissive={config.color}
+          emissiveIntensity={isTargeted ? 5.5 : 3.2}
+          metalness={0.7}
+          roughness={0.18}
+          toneMapped={false}
+        />
+      </mesh>
+      <mesh ref={innerRingRef} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.74, 0.045, 8, 24]} />
+        <meshBasicMaterial color={config.accent} toneMapped={false} />
+      </mesh>
+      <mesh ref={outerRingRef} rotation={[0.65, 0, 0.3]}>
+        <torusGeometry args={[1.05, 0.026, 8, 28]} />
+        <meshBasicMaterial color={config.color} transparent opacity={0.78} toneMapped={false} />
+      </mesh>
+
+      {Array.from({ length: config.batteries }, (_, index) => {
+        const side = index % 2 === 0 ? -1 : 1;
+        const row = Math.floor(index / 2);
+        return (
+          <group key={index} position={[side * (1.35 + row * 0.26), 0.9 + row * 0.45, -0.15]} rotation={[0, side * 0.32, 0]}>
+            <mesh>
+              <boxGeometry args={[0.5, 0.36, 1.15]} />
+              <meshStandardMaterial color="#111827" metalness={0.9} roughness={0.23} />
+            </mesh>
+            <mesh position={[0, 0, -0.59]}>
+              <circleGeometry args={[0.13, 12]} />
+              <meshBasicMaterial color={config.accent} toneMapped={false} />
+            </mesh>
+          </group>
+        );
+      })}
+
+      {isShielded && (
+        <mesh scale={[1, 0.76, 1]}>
+          <sphereGeometry args={[config.radius, 22, 16]} />
+          <meshBasicMaterial
+            color={config.color}
+            wireframe
+            transparent
+            opacity={0.16}
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </mesh>
+      )}
+    </group>
+  );
 };
 
 export interface BossHullProps {
@@ -248,26 +386,42 @@ export const BossVisual = ({
   tier,
   ...props
 }: BossHullProps & { tier: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 }) => {
+  let hull: React.ReactNode;
   switch (tier) {
     case 1:
-      return <StrikerHull {...props} />;
+      hull = <StrikerHull {...props} />;
+      break;
     case 2:
-      return <AegisHull {...props} />;
+      hull = <AegisHull {...props} />;
+      break;
     case 3:
-      return <StormHull {...props} />;
+      hull = <StormHull {...props} />;
+      break;
     case 4:
-      return <PhantomBossHull {...props} />;
+      hull = <PhantomBossHull {...props} />;
+      break;
     case 5:
-      return <ArtilleryBossHull {...props} />;
+      hull = <ArtilleryBossHull {...props} />;
+      break;
     case 6:
-      return <HydraBossHull {...props} />;
+      hull = <HydraBossHull {...props} />;
+      break;
     case 7:
-      return <VortexBossHull {...props} />;
+      hull = <VortexBossHull {...props} />;
+      break;
     case 8:
-      return <OmegaHull {...props} />;
+      hull = <OmegaHull {...props} />;
+      break;
     default:
-      return <StrikerHull {...props} />;
+      hull = <StrikerHull {...props} />;
   }
+
+  return (
+    <>
+      {hull}
+      <BossThreatRig tier={tier} isTargeted={props.isTargeted} isShielded={props.isShielded} />
+    </>
+  );
 };
 
 export interface DroneVisualProps {

@@ -4,6 +4,10 @@ import { useGamepadMenu } from '../../hooks/useGamepadMenu';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { initAudio, playSound } from '../../game/AudioSystem';
+import { ALL_POWER_IDS } from '../../game/powers';
+import { ENEMY_ARCHETYPES } from '../../types/game';
+import { MAX_LEVELS } from '../../game/gameState';
+import { THEMES } from '../../game/mapGenerator';
 import { SettingsPanel } from './SettingsPanel';
 import { ArmoryModal } from './ArmoryModal';
 import { Sliders, Shield } from 'lucide-react';
@@ -76,7 +80,13 @@ export const MainMenu = () => {
     visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 280, damping: 24 } },
   };
 
-  const featurePills = ['50 NIVELES', '18 PODERES', '9 CLASES', '8 JEFES', '10 BIOMAS'];
+  const featurePills = [
+    `${MAX_LEVELS} NIVELES`,
+    `${ALL_POWER_IDS.length} PODERES`,
+    `${ENEMY_ARCHETYPES.length} CLASES`,
+    '8 JEFES',
+    `${THEMES.length} BIOMAS`,
+  ];
 
   return (
     <div className="absolute inset-0 flex flex-col justify-between bg-[radial-gradient(ellipse_at_center,rgba(2,6,23,0.12)_0%,rgba(2,6,23,0.68)_75%,rgba(2,6,23,0.88)_100%)] p-6 md:p-8 select-none overflow-hidden">

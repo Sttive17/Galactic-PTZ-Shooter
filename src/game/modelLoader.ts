@@ -150,8 +150,15 @@ export async function loadModel(key: ModelKey): Promise<THREE.Group> {
   return promise;
 }
 
-export function preloadAllModels(): void {
-  for (const key of Object.keys(MODEL_PATHS) as ModelKey[]) {
+/**
+ * Preload only assets that the next interaction is expected to show.
+ *
+ * Models otherwise load when their owning scene component mounts. Loading the
+ * whole catalogue at boot caused unnecessary network, CPU and GPU work before
+ * the player had even selected a mode.
+ */
+export function preloadModels(keys: readonly ModelKey[]): void {
+  for (const key of keys) {
     loadModel(key).catch(() => {});
   }
 }

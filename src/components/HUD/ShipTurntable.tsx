@@ -43,6 +43,39 @@ const RotatingShip = () => {
   );
 };
 
+const HangarShowroomDeck = () => {
+  const ringRef = useRef<THREE.Group>(null);
+
+  useFrame((_state, delta) => {
+    if (ringRef.current) ringRef.current.rotation.y += delta * 0.12;
+  });
+
+  return (
+    <group position={[0, -0.92, 0]}>
+      <mesh receiveShadow>
+        <cylinderGeometry args={[1.72, 1.95, 0.22, 48]} />
+        <meshStandardMaterial color="#0b1324" metalness={0.88} roughness={0.22} />
+      </mesh>
+      <mesh position={[0, 0.13, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[1.28, 1.48, 48]} />
+        <meshBasicMaterial color="#22d3ee" transparent opacity={0.8} toneMapped={false} />
+      </mesh>
+      <group ref={ringRef} position={[0, 0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh>
+          <torusGeometry args={[1.9, 0.025, 6, 48]} />
+          <meshBasicMaterial color="#fbbf24" transparent opacity={0.65} toneMapped={false} />
+        </mesh>
+        {[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((angle) => (
+          <mesh key={angle} position={[Math.cos(angle) * 1.58, Math.sin(angle) * 1.58, 0]}>
+            <boxGeometry args={[0.18, 0.42, 0.04]} />
+            <meshBasicMaterial color="#67e8f9" toneMapped={false} />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  );
+};
+
 export const ShipTurntable = () => {
   const activeSkin = useGameStore((state) => state.armory.activeSkin);
   const skin = SKIN_CATALOG[activeSkin];
@@ -59,6 +92,8 @@ export const ShipTurntable = () => {
         <ambientLight intensity={0.8} />
         <directionalLight position={[4, 5, 3]} intensity={1.5} color="#ffffff" />
         <pointLight position={[-3, 2, -2]} intensity={1.2} color={skin?.accentColor || '#06b6d4'} />
+        <pointLight position={[2.5, 0.5, 2]} intensity={1.1} color="#fbbf24" />
+        <HangarShowroomDeck />
         <RotatingShip />
       </Canvas>
 

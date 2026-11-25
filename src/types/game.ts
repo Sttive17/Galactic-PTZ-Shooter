@@ -1,17 +1,20 @@
 import { Vector3 } from 'three';
 
-export type EnemyArchetype =
-  | 'SCOUT'
-  | 'STRIKER'
-  | 'FLANKER'
-  | 'SNIPER'
-  | 'TACTICIAN'
-  | 'SWARMER'
-  | 'ARTILLERY'
-  | 'PHANTOM_SNIPER'
-  | 'JUGGERNAUT'
-  | 'KAMIKAZE'
-  | 'HEALER';
+export const ENEMY_ARCHETYPES = [
+  'SCOUT',
+  'STRIKER',
+  'FLANKER',
+  'SNIPER',
+  'TACTICIAN',
+  'SWARMER',
+  'ARTILLERY',
+  'PHANTOM_SNIPER',
+  'JUGGERNAUT',
+  'KAMIKAZE',
+  'HEALER',
+] as const;
+
+export type EnemyArchetype = (typeof ENEMY_ARCHETYPES)[number];
 
 export type BossStyle =
   | 'STRIKER'

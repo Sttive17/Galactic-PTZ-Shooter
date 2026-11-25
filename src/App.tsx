@@ -1,15 +1,9 @@
-import { useEffect } from 'react';
 import { GameEngine } from './components/Scene3D/GameEngine';
 import { GameHUD } from './components/HUD/GameHUD';
 import { useDeviceProfile } from './hooks/useDeviceProfile';
-import { preloadAllModels } from './game/modelLoader';
 
 function App() {
   const deviceProfile = useDeviceProfile();
-
-  useEffect(() => {
-    preloadAllModels();
-  }, []);
 
   return (
     <div
